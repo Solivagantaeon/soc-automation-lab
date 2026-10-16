@@ -4,7 +4,7 @@
 
 <!-- After going public, add badges here (e.g. secret-scan workflow status, license). -->
 
-**Status:** 🚧 in progress — university team project, deadline 10 Nov 2026.
+
 
 ---
 
