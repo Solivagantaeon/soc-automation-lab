@@ -1,0 +1,56 @@
+# --- Secrets & credentials (never commit) ---
+.env
+.env.*
+!.env.example
+*credentials*
+secrets.*
+*.secret
+!secrets.example.*
+*.key
+*.pem
+*.p12
+*.pfx
+*.crt
+id_rsa*
+id_ed25519*
+*.conf.wg
+wg*.conf
+*.ovpn
+*.kdbx
+
+# --- Raw, unsanitised exports (sanitise first, see CONTRIBUTING.md) ---
+*.raw.json
+raw-exports/
+exports/
+
+# --- Large / sensitive lab artefacts ---
+*.vma
+*.vma.zst
+*.qcow2
+*.vmdk
+*.iso
+*.pcap
+*.pcapng
+*.evtx
+*.dmp
+*.mem
+*.ova
+
+# --- Logs ---
+*.log
+logs/
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+
+# --- Editors / OS ---
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+~$*

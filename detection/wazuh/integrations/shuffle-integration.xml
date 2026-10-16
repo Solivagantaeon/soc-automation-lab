@@ -1,0 +1,14 @@
+<!--
+  Wazuh -> Shuffle integration (fragment of /var/ossec/etc/ossec.conf on the manager).
+  The real webhook URL is a secret: keep it only on the server, never in this repo.
+  See docs/decisions/0001-wazuh-integration-filter-by-rule-id.md
+-->
+<ossec_config>
+  <integration>
+    <name>shuffle</name>
+    <hook_url>__SHUFFLE_WEBHOOK_URL__</hook_url>
+    <!-- 86601 = Suricata alert. Add further rule IDs deliberately. -->
+    <rule_id>86601</rule_id>
+    <alert_format>json</alert_format>
+  </integration>
+</ossec_config>

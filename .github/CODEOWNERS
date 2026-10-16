@@ -1,0 +1,8 @@
+# Kto robi review w danym obszarze. Zamień @TODO-* na loginy GitHub zespołu.
+# Działa automatycznie (prośba o review) po włączeniu ochrony gałęzi main.
+*                       @TODO-admin
+/detection/             @TODO-detection
+/soar/                  @TODO-soar
+/enrichment/            @TODO-soar
+/case-management/       @TODO-soar
+/docs/                  @TODO-admin

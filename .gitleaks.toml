@@ -1,0 +1,43 @@
+# gitleaks configuration: default rules + a few lab-specific ones.
+title = "soc-automation-lab"
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "wazuh-integration-api-key"
+description = "api_key inside a Wazuh <integration> block"
+regex = '''<api_key>\s*([^<\s]{8,})\s*</api_key>'''
+secretGroup = 1
+keywords = ["api_key"]
+
+[[rules]]
+id = "shuffle-webhook-url"
+description = "Shuffle webhook URL (anyone with it can trigger the workflow)"
+regex = '''/api/v1/hooks/(webhook_[0-9a-fA-F-]{36})'''
+secretGroup = 1
+keywords = ["webhook_"]
+
+[[rules]]
+id = "generic-apikey-json"
+description = "API key / password value in JSON (Shuffle, TheHive, Cortex, MISP exports)"
+regex = '''(?i)"(?:api_?key|apikey|password|secret|token|authorization)"\s*:\s*"([^"<]{12,})"'''
+secretGroup = 1
+keywords = ["apikey", "api_key", "password", "secret", "token", "authorization"]
+
+[[rules]]
+id = "wireguard-private-key"
+description = "WireGuard PrivateKey"
+regex = '''(?i)PrivateKey\s*=\s*([A-Za-z0-9+/]{42}[AEIMQUYcgkosw480]=)'''
+secretGroup = 1
+keywords = ["privatekey"]
+
+[allowlist]
+description = "Placeholders and redaction markers"
+regexes = [
+  '''<[A-Z0-9_]+>''',
+  '''REDACTED''',
+]
+paths = [
+  '''tests/fixtures/''',
+]

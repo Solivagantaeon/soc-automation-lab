@@ -1,0 +1,41 @@
+name: checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  secret-scan:
+    name: Secret scan (gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # full history, so old commits are scanned too
+      - name: Run gitleaks
+        run: |
+          docker run --rm --user "$(id -u):$(id -g)" \
+            -v "$PWD:/repo" -w /repo \
+            ghcr.io/gitleaks/gitleaks:latest \
+            git --config /repo/.gitleaks.toml --redact --verbose /repo
+
+  sanitizer-and-syntax:
+    name: Sanitiser check, syntax & tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: No secrets in exports and configs
+        run: python3 scripts/sanitize_export.py --check soar detection enrichment case-management samples
+      - name: JSON / XML / YAML syntax
+        run: |
+          pip install pyyaml
+          python3 scripts/validate_syntax.py
+      - name: Unit tests
+        run: python3 -m unittest discover -s tests -v

@@ -1,0 +1,28 @@
+name: Problem
+description: Coś w labie lub w przepływie nie działa
+title: "[Problem] "
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: Co nie działa
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Czego oczekiwaliśmy
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Jak odtworzyć
+      description: Kroki, host, komponent. Logi wklejaj BEZ kluczy i haseł.
+      render: text
+  - type: input
+    id: component
+    attributes:
+      label: Komponent i wersja
+      placeholder: np. Shuffle / TheHive 5.8.0

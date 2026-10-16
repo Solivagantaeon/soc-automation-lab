@@ -1,0 +1,29 @@
+repos:
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.24.2
+    hooks:
+      - id: gitleaks
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: detect-private-key
+      - id: check-added-large-files
+        args: ["--maxkb=5000"]
+      - id: check-json
+      - id: check-xml
+      - id: check-yaml
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: mixed-line-ending
+        args: ["--fix=lf"]
+        exclude: '\.(ps1|bat)$'
+
+  - repo: local
+    hooks:
+      - id: sanitize-check
+        name: no secrets in exports (sanitize_export.py --check)
+        entry: python scripts/sanitize_export.py --check
+        language: python
+        files: '\.(json|xml|conf|ya?ml)$'
+        exclude: '^tests/fixtures/'

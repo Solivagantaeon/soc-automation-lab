@@ -1,0 +1,33 @@
+{
+  "timestamp": "2026-10-12T10:15:42.123+0000",
+  "rule": {
+    "level": 3,
+    "description": "Suricata: Alert - ET SCAN Possible Nmap User-Agent Observed",
+    "id": "86601",
+    "groups": ["ids", "suricata"]
+  },
+  "agent": { "id": "005", "name": "opnsense" },
+  "manager": { "name": "wazuh" },
+  "id": "1760264142.1234567",
+  "decoder": { "name": "json" },
+  "data": {
+    "timestamp": "2026-10-12T10:15:41.987654+0000",
+    "event_type": "alert",
+    "src_ip": "10.10.30.10",
+    "src_port": "51544",
+    "dest_ip": "10.10.10.200",
+    "dest_port": "80",
+    "proto": "TCP",
+    "alert": {
+      "action": "allowed",
+      "gid": "1",
+      "signature_id": "2024364",
+      "rev": "4",
+      "signature": "ET SCAN Possible Nmap User-Agent Observed",
+      "category": "Web Application Attack",
+      "severity": "1"
+    },
+    "http": { "hostname": "10.10.10.200", "url": "/", "http_user_agent": "Mozilla/5.0 (compatible; Nmap Scripting Engine)" }
+  },
+  "location": "/var/log/suricata/eve.json"
+}

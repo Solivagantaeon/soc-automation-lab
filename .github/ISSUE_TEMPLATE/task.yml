@@ -1,0 +1,36 @@
+name: Zadanie
+description: Nowa praca do zrobienia w projekcie
+title: "[Zadanie] "
+labels: ["task"]
+body:
+  - type: dropdown
+    id: area
+    attributes:
+      label: Obszar
+      options:
+        - Detekcja (Wazuh / Suricata / Sysmon)
+        - SOAR (Shuffle)
+        - Enrichment (Cortex / MISP)
+        - Sprawy (TheHive)
+        - Infrastruktura (Proxmox / OPNsense / sieć)
+        - Dokumentacja / prezentacja
+    validations:
+      required: true
+  - type: textarea
+    id: goal
+    attributes:
+      label: Cel
+      description: Co ma działać po zakończeniu zadania?
+    validations:
+      required: true
+  - type: textarea
+    id: test
+    attributes:
+      label: Jak sprawdzimy, że działa
+      description: Konkretny test, np. „alert Suricaty 86601 tworzy alert w TheHive w < 1 min”.
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Uwagi / zależności
