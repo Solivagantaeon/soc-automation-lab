@@ -1,0 +1,237 @@
+{
+  "labels": [
+    {"name": "task", "color": "ededed", "description": "Zadanie projektowe"},
+    {"name": "obszar:detekcja", "color": "1f6feb", "description": "Wazuh, Suricata, Sysmon, agenci"},
+    {"name": "obszar:soar", "color": "8250df", "description": "Workflow Shuffle, logika triage"},
+    {"name": "obszar:enrichment", "color": "bf8700", "description": "Cortex, MISP, Threat Intelligence"},
+    {"name": "obszar:sprawy", "color": "cf222e", "description": "TheHive, incydenty dla analityka"},
+    {"name": "obszar:infra", "color": "6e7781", "description": "Proxmox, sieć, czas, dostęp"},
+    {"name": "obszar:testy", "color": "d93f0b", "description": "Testy wymagane i scenariusz końcowy"},
+    {"name": "obszar:docs", "color": "0e8a16", "description": "Dokumentacja, dowody, prezentacja"},
+    {"name": "wymagane", "color": "b60205", "description": "Wymóg zaliczenia z dokumentu projektu"},
+    {"name": "opcjonalne", "color": "c5def5", "description": "Dodatkowe, jeśli starczy czasu"},
+    {"name": "decyzja-zespolu", "color": "fbca04", "description": "Wymaga wspólnej decyzji przed implementacją"}
+  ],
+  "milestones": [
+    {"title": "Etap 1 – przepływ end-to-end", "due_on": "2026-10-23T21:59:59Z",
+     "description": "Infrastruktura domknięta, alert przechodzi Wazuh → Shuffle → Cortex/MISP → TheHive (prosta decyzja)."},
+    {"title": "Etap 2 – logika triage", "due_on": "2026-10-30T22:59:59Z",
+     "description": "Klasyfikacja, scoring, korelacja, deduplikacja, filtrowanie FP, obsługa błędów, pełny incydent."},
+    {"title": "Etap 3 – reakcja i testy", "due_on": "2026-11-06T22:59:59Z",
+     "description": "Automatyczna reakcja z warunkami bezpieczeństwa, scenariusz końcowy, 7 testów wymaganych, pomiar lejka."},
+    {"title": "Etap 4 – oddanie", "due_on": "2026-11-10T22:59:59Z",
+     "description": "Dokumentacja PDF/DOCX, dowody, pakiet do oddania, przygotowanie do prezentacji."}
+  ],
+  "issues": [
+    {
+      "title": "[Z1] Cortex: analyzery AbuseIPDB i VirusTotal",
+      "milestone": "Etap 1 – przepływ end-to-end",
+      "labels": ["task", "obszar:enrichment", "wymagane"],
+      "body": "## Cel\nCortex ma działające analyzery dla IP, domen i hashy, w tym AbuseIPDB i VirusTotal (darmowe konta).\n\n## Kryteria akceptacji\n- [ ] Analyzery AbuseIPDB i VirusTotal włączone, klucze API wpisane **tylko w Cortexie** (nie w repo, nie w Issues)\n- [ ] Co najmniej jeden dodatkowy analyzer dla domen (reputacja) i dla hashy\n- [ ] Ręczny test z poziomu TheHive/Cortex: znany złośliwy IP → raport z wynikiem\n- [ ] Limity darmowych API zapisane w `enrichment/cortex/README.md` (ile zapytań/dzień)\n\n## Wymaganie\nDokument projektu: Zadanie 1 (konfiguracja analyzerów) i Zadanie 3."
+    },
+    {
+      "title": "[Z1] MISP: źródła TI i testowe IOC do scenariuszy",
+      "milestone": "Etap 1 – przepływ end-to-end",
+      "labels": ["task", "obszar:enrichment", "wymagane"],
+      "body": "## Cel\nMISP przechowuje IOC i ma włączone źródła TI, a w osobnym evencie są nasze testowe IOC do testów 1–7.\n\n## Kryteria akceptacji\n- [ ] Włączone 1–2 darmowe feedy (np. CIRCL OSINT, abuse.ch) i pobrane dane\n- [ ] Event „SOC-LAB testowe IOC” z IOC oznaczonymi jako złośliwe (tagi, `to_ids`) oraz IOC oznaczonymi jako znane/bezpieczne\n- [ ] Test importu z MISP w TheHive (dotąd nieprzetestowany)\n- [ ] Opis w `enrichment/misp/README.md`: feedy, event testowy, jak dodać IOC\n\n## Wymaganie\nZadanie 1 i Zadanie 4."
+    },
+    {
+      "title": "[Z1] Endpoint Linux z agentem Wazuha",
+      "milestone": "Etap 1 – przepływ end-to-end",
+      "labels": ["task", "obszar:detekcja", "wymagane"],
+      "body": "## Cel\nW labie jest endpoint Linux raportujący do Wazuha 4.14 (stan początkowy w dokumencie projektu zakłada endpointy Linux).\n\n## Kryteria akceptacji\n- [ ] VM z Linuksem w VLAN VICTIM z agentem Wazuha (status *active*)\n- [ ] Przykładowe zdarzenie (np. nieudane logowanie SSH) widoczne jako alert w Wazuhu\n- [ ] Runbook w `docs/runbooks/`\n\n## Wymaganie\nZadanie 1, stan początkowy środowiska."
+    },
+    {
+      "title": "[Z1] Weryfikacja agentów Wazuha i Sysmona na Windows",
+      "milestone": "Etap 1 – przepływ end-to-end",
+      "labels": ["task", "obszar:detekcja", "wymagane"],
+      "body": "## Cel\nWszystkie źródła zdarzeń działają i raportują do właściwego managera.\n\n## Kryteria akceptacji\n- [ ] Wszyscy agenci *active* na Wazuhu 4.14 (VM 203), żaden nie raportuje do starego managera\n- [ ] Sysmon na SOC-WIN10-01 działa, zdarzenie Sysmon z tego hosta widoczne w Wazuhu\n- [ ] Alerty Suricaty z OPNsense nadal docierają (rule 86601)\n- [ ] Zrzut ekranu listy agentów (do dowodów, bez wrażliwych danych)\n\n## Wymaganie\nZadanie 1 (podłączenie Wazuha i IDS)."
+    },
+    {
+      "title": "[Z1] Synchronizacja czasu w labie (DC przesunięty o ~6 h)",
+      "milestone": "Etap 1 – przepływ end-to-end",
+      "labels": ["task", "obszar:infra", "wymagane"],
+      "body": "## Cel\nWszystkie hosty mają poprawny czas. Bez tego korelacja i deduplikacja w oknie czasowym (Zadanie 7) nie zadziała.\n\n## Kryteria akceptacji\n- [ ] Strefa czasowa i źródło NTP na DC poprawione (uwaga na Kerberos – zmiana stopniowa)\n- [ ] DC, WIN10, WIN11, Wazuh, OPNsense pokazują ten sam czas (± kilka sekund)\n- [ ] Logowanie do domeny działa po zmianie\n- [ ] Snapshot DC przed zmianą"
+    },
+    {
+      "title": "[Z1] Opis komponentów do dokumentacji",
+      "milestone": "Etap 1 – przepływ end-to-end",
+      "labels": ["task", "obszar:docs", "wymagane"],
+      "body": "## Cel\nSpisać, póki pamiętamy, jak zainstalowane są komponenty – dokument projektu wymaga tego w dokumentacji końcowej.\n\n## Kryteria akceptacji\nDla Shuffle, Cortex, MISP, TheHive, Wazuh, Suricata – w `docs/`:\n- [ ] co i w jaki sposób zostało zainstalowane (wersja, docker/pakiet)\n- [ ] porty i protokoły\n- [ ] sposób uwierzytelniania i wykorzystane API (**bez haseł i kluczy**)\n- [ ] napotkane problemy i rozwiązania\n- [ ] zaktualizowany diagram w `docs/architecture.md`\n\n## Wymaganie\nZadanie 1 (do dokumentacji) i sekcja 21.2."
+    },
+    {
+      "title": "[Z2] Wazuh i IDS → Shuffle: webhook",
+      "milestone": "Etap 1 – przepływ end-to-end",
+      "labels": ["task", "obszar:soar", "wymagane"],
+      "body": "## Cel\nAlerty z Wazuha i Suricaty automatycznie trafiają do Shuffle.\n\n## Kryteria akceptacji\n- [ ] Blok `<integration>` w `ossec.conf` (filtr po `rule_id`, ADR 0001), URL webhooka tylko na serwerze\n- [ ] Alerty Suricaty (86601) i co najmniej jedna reguła Windows (np. Sysmon/logowanie) docierają do Shuffle\n- [ ] Test: skan nmap z Kali → nowe wykonanie workflow w Shuffle\n- [ ] Udokumentowane, że IDS trafia do Shuffle przez Wazuha (decyzja – dokument pokazuje IDS → Shuffle bezpośrednio; dopisać do ADR 0001 i ewentualnie potwierdzić z prowadzącym)\n\n## Wymaganie\nZadanie 2."
+    },
+    {
+      "title": "[Z2] Normalizacja alertu i identyfikacja observable'i",
+      "milestone": "Etap 1 – przepływ end-to-end",
+      "labels": ["task", "obszar:soar", "wymagane"],
+      "body": "## Cel\nKrok `normalize` zamienia różne alerty na jeden wspólny format.\n\n## Kryteria akceptacji\n- [ ] Wynik zawiera minimum: źródło alertu, timestamp, hostname, IP, użytkownik (jeśli jest), typ alertu, severity, opis, IOC\n- [ ] Observable'e rozpoznane po typie: IP, domena, hash, host, użytkownik\n- [ ] Działa dla 3 typów alertów: Suricata, Windows/Sysmon, Linux – przykłady w `samples/alerts/`\n- [ ] Alert bez IOC idzie osobną ścieżką (wymóg z Zadania 11)\n- [ ] Format opisany w `docs/` (to będzie „kontrakt” dla kolejnych kroków)\n\n## Wymaganie\nZadanie 2."
+    },
+    {
+      "title": "[Z3] Enrichment IOC w Cortexie (per typ observable)",
+      "milestone": "Etap 1 – przepływ end-to-end",
+      "labels": ["task", "obszar:enrichment", "obszar:soar", "wymagane"],
+      "body": "## Cel\nDla każdego observable'a Shuffle uruchamia właściwe analyzery i zbiera wyniki w jednym miejscu.\n\n## Kryteria akceptacji\n- [ ] IP → AbuseIPDB + VirusTotal (+ inne); domena → reputacja + VirusTotal; hash → VirusTotal (+ inne)\n- [ ] Adresy prywatne labu nie są wysyłane do zewnętrznych analyzerów\n- [ ] Wyniki wszystkich analyzerów w jednym obiekcie JSON na alert\n- [ ] Test z alertem z `samples/alerts/`\n\n## Zależy od\nAnalyzery w Cortexie, normalizacja.\n\n## Wymaganie\nZadanie 3."
+    },
+    {
+      "title": "[Z4] Sprawdzanie IOC w MISP",
+      "milestone": "Etap 1 – przepływ end-to-end",
+      "labels": ["task", "obszar:enrichment", "obszar:soar", "wymagane"],
+      "body": "## Cel\nShuffle sprawdza każdy IOC w MISP.\n\n## Kryteria akceptacji\nDla IOC wynik odpowiada na pytania:\n- [ ] czy jest znany, czy występował wcześniej\n- [ ] jakie ma atrybuty/tagi\n- [ ] z jakim eventem/kampanią jest związany\n- [ ] czy jest oznaczony jako złośliwy\n- [ ] Test: IOC z eventu testowego → trafienie; losowy IOC → brak trafienia\n\n## Wymaganie\nZadanie 4."
+    },
+    {
+      "title": "[Z9] Alert w TheHive z podstawowym kontekstem (wersja minimalna)",
+      "milestone": "Etap 1 – przepływ end-to-end",
+      "labels": ["task", "obszar:sprawy", "wymagane"],
+      "body": "## Cel\nKoniec cienkiego przepływu: Shuffle tworzy alert w TheHive z obserwablami i wynikami enrichmentu.\n\n## Kryteria akceptacji\n- [ ] Alert w TheHive (org `demo`) z tytułem, hostem, IOC jako observable i podsumowaniem Cortex/MISP\n- [ ] Prosta decyzja (`if`) przed utworzeniem – pełna logika w Etapie 2\n- [ ] Workflow wyeksportowany do `soar/shuffle/workflows/` przez sanitizer\n- [ ] **Dowód:** pierwszy przebieg Alert → Enrichment → Ticket (zrzuty ekranu)\n\n## Wymaganie\nZadanie 9 (wersja minimalna)."
+    },
+    {
+      "title": "Pomiar bazowy liczby alertów (przed automatyzacją)",
+      "milestone": "Etap 1 – przepływ end-to-end",
+      "labels": ["task", "obszar:detekcja", "obszar:docs", "wymagane"],
+      "body": "## Cel\nPunkt odniesienia do pokazania redukcji alertów – główny wynik projektu (sekcja 6 i 25).\n\n## Kryteria akceptacji\n- [ ] Liczba alertów z 24 h (lub z wygenerowanego scenariusza) zapisana w `metrics/` jako CSV\n- [ ] Zapisane warunki: okno czasowe, agenci, wersja reguł\n- [ ] Te same warunki da się powtórzyć przy pomiarze końcowym"
+    },
+    {
+      "title": "[Z6] Wspólna decyzja: logika klasyfikacji i scoringu",
+      "milestone": "Etap 2 – logika triage",
+      "labels": ["task", "obszar:soar", "wymagane", "decyzja-zespolu"],
+      "body": "## Cel\nZespół uzgadnia logikę triage przed implementacją. Wynik: `docs/decisions/0003-logika-triage.md` zatwierdzony w PR przez cały zespół.\n\n## Do ustalenia\n- [ ] Sygnały i wagi punktowe (MISP, AbuseIPDB, VirusTotal, IDS, wiele alertów Wazuha, krytyczność hosta, whitelist, znane usługi wewnętrzne) + **uzasadnienie każdej wagi**\n- [ ] Progi dla 5 klas: Benign/Known, Likely False Positive, Suspicious, Likely Malicious, Confirmed Malicious\n- [ ] Co się dzieje w każdej klasie\n- [ ] Jak traktować sprzeczne wyniki analyzerów\n- [ ] Brak danych ≠ benign (sekcja 26: system nie zgaduje)\n- [ ] Klucz i okno czasowe korelacji alertów w incydent\n- [ ] Lista whitelist / zaufanych usług wewnętrznych\n\n## Wymaganie\nZadania 5–8, sekcja 21.5. Blokuje implementację scoringu, deduplikacji i filtrowania."
+    },
+    {
+      "title": "[Z5] Korelacja wyników źródeł w jeden wynik analizy",
+      "milestone": "Etap 2 – logika triage",
+      "labels": ["task", "obszar:soar", "wymagane"],
+      "body": "## Cel\nDecyzja nie opiera się na jednym źródle: wyniki AbuseIPDB, VirusTotal, MISP, IDS, Wazuha i endpointu składają się na jeden wynik.\n\n## Kryteria akceptacji\n- [ ] Jeden obiekt „wynik analizy” z wkładem każdego źródła\n- [ ] Final confidence + verdict (jedna z 5 klas)\n- [ ] Źródło, które nie odpowiedziało, jest oznaczone jako brak danych, a nie jako „czysto”\n\n## Zależy od\nDecyzji o logice (ADR 0003).\n\n## Wymaganie\nZadanie 5."
+    },
+    {
+      "title": "[Z6] Implementacja scoringu i klasyfikacji w Shuffle",
+      "milestone": "Etap 2 – logika triage",
+      "labels": ["task", "obszar:soar", "wymagane"],
+      "body": "## Cel\nKrok `decide` liczy wynik i przypisuje jedną z 5 klas zgodnie z ADR 0003.\n\n## Kryteria akceptacji\n- [ ] Wagi i progi w jednym miejscu (łatwo zmienić)\n- [ ] Wynik zawiera rozbicie: które sygnały dały ile punktów\n- [ ] Tabela przypadków testowych → oczekiwana klasa, wszystkie przechodzą\n- [ ] Zrzut ekranu scoringu (dowód)\n\n## Wymaganie\nZadanie 6."
+    },
+    {
+      "title": "[Z7] Deduplikacja i korelacja alertów w jeden incydent",
+      "milestone": "Etap 2 – logika triage",
+      "labels": ["task", "obszar:soar", "obszar:sprawy", "wymagane"],
+      "body": "## Cel\nWiele alertów dotyczących tego samego zdarzenia daje jeden incydent z listą powiązanych alertów.\n\n## Kryteria akceptacji\n- [ ] Własny klucz korelacji (np. host + IOC + typ zdarzenia) i okno czasowe z ADR 0003\n- [ ] Kolejny alert z tym samym kluczem dopina się do istniejącego incydentu (licznik, first/last seen), a nie tworzy nowego\n- [ ] Test: seria alertów z Wazuha i IDS o tym samym hoście i IOC → 1 incydent, N powiązanych alertów\n- [ ] Zachowanie przy 1000 identycznych alertów opisane (pytanie 16 z prezentacji)\n\n## Wymaganie\nZadanie 7."
+    },
+    {
+      "title": "[Z8] Automatyczne filtrowanie FP z zapisem uzasadnienia",
+      "milestone": "Etap 2 – logika triage",
+      "labels": ["task", "obszar:soar", "wymagane"],
+      "body": "## Cel\nZdarzenia z wystarczającymi dowodami benign/FP są zamykane lub oznaczane automatycznie, a każda decyzja jest zapisana.\n\n## Kryteria akceptacji\n- [ ] Ścieżka: IOC znany w MISP jako bezpieczny → zamknięcie/suppression\n- [ ] Ścieżka: zaufany wewnętrzny adres / znana usługa → bez eskalacji\n- [ ] Każda automatyczna decyzja zapisana (gdzie? np. alert w TheHive zamknięty z tagami i opisem albo log decyzji)\n- [ ] Da się odpowiedzieć na pytanie „dlaczego ten alert został automatycznie zamknięty?” dla dowolnego zamkniętego alertu\n\n## Wymaganie\nZadanie 8."
+    },
+    {
+      "title": "[Z9] Pełny incydent dla analityka w TheHive",
+      "milestone": "Etap 2 – logika triage",
+      "labels": ["task", "obszar:sprawy", "wymagane"],
+      "body": "## Cel\nAnalityk dostaje gotowy kontekst, a nie samo „Wazuh alert HIGH”.\n\n## Kryteria akceptacji\nIncydent zawiera:\n- [ ] tytuł opisujący zdarzenie, severity, confidence (%), werdykt automatyczny\n- [ ] host, użytkownik, IOC, first seen / last seen\n- [ ] liczbę powiązanych alertów Wazuha i IDS\n- [ ] podsumowanie TI (AbuseIPDB, VirusTotal, MISP)\n- [ ] rekomendowaną akcję\n- [ ] oznaczenie „analiza niepełna”, jeśli któreś źródło nie odpowiedziało\n\n## Wymaganie\nZadanie 9."
+    },
+    {
+      "title": "[Z11] Obsługa błędów: Cortex, MISP, analyzer, brak IOC",
+      "milestone": "Etap 2 – logika triage",
+      "labels": ["task", "obszar:soar", "wymagane"],
+      "body": "## Cel\nWorkflow nie podejmuje fałszywych decyzji, gdy coś nie działa.\n\n## Kryteria akceptacji\n- [ ] Cortex niedostępny → IOC **nie** jest uznawany za benign, incydent dla analityka\n- [ ] MISP niedostępny → analiza oznaczona jako niekompletna\n- [ ] Jeden analyzer nie odpowiada → pozostałe działają, wynik oznaczony\n- [ ] Brak IOC → osobna ścieżka analizy\n- [ ] Duplikat → brak nowego ticketu (powiązane z deduplikacją)\n- [ ] Timeouty ustawione, workflow nigdy nie wisi\n\n## Wymaganie\nZadanie 11."
+    },
+    {
+      "title": "Podział workflow na podworkflowy (triage-main, enrich-ioc, case-thehive)",
+      "milestone": "Etap 2 – logika triage",
+      "labels": ["task", "obszar:soar", "opcjonalne"],
+      "body": "## Cel\nWydzielenie enrichmentu i tworzenia spraw do osobnych workflow, żeby kilka osób mogło pracować równolegle i testować części osobno.\n\n## Kryteria akceptacji\n- [ ] `triage-main` wywołuje `enrich-ioc` i `case-thehive`\n- [ ] Każdy workflow wyeksportowany osobno do `soar/shuffle/workflows/`\n- [ ] Decyzja zapisana jako ADR"
+    },
+    {
+      "title": "Ocena reguł odszumiających Wazuha (v2)",
+      "milestone": "Etap 2 – logika triage",
+      "labels": ["task", "obszar:detekcja", "opcjonalne"],
+      "body": "## Cel\nSprawdzić efekt reguł `local_rules_noise_reduction.xml` v2 i dodać je do repo.\n\n## Kryteria akceptacji\n- [ ] Reguły w `detection/wazuh/rules/`\n- [ ] Porównanie liczby alertów przed/po w `metrics/`\n- [ ] Żaden alert z naszych scenariuszy ataku nie zniknął przez odszumianie"
+    },
+    {
+      "title": "[Z10] Automatyczna reakcja z warunkami bezpieczeństwa",
+      "milestone": "Etap 3 – reakcja i testy",
+      "labels": ["task", "obszar:soar", "opcjonalne"],
+      "body": "## Cel\nKontrolowana reakcja tylko w bezpiecznych przypadkach, z człowiekiem w pętli dla mniej pewnych.\n\n## Kryteria akceptacji\n- [ ] Warunki: wysoka confidence AND IOC potwierdzony AND endpoint nie na whiteliście AND endpoint nie krytyczny (DC nigdy)\n- [ ] Akcja w labie, np. Wazuh Active Response z timeoutem (blokada IP)\n- [ ] Human in the loop dla średniej confidence: ticket → analityk Approve/Reject → reakcja\n- [ ] Endpoint offline → workflow nie kończy się błędem\n- [ ] Opisane, jak cofnąć reakcję\n- [ ] Weryfikacja po reakcji i aktualizacja incydentu\n\n## Wymaganie\nZadanie 10 (opcjonalne, ale jeśli jest – warunki bezpieczeństwa obowiązkowe), sekcja 21.6."
+    },
+    {
+      "title": "[Z12] Scenariusz końcowy end-to-end",
+      "milestone": "Etap 3 – reakcja i testy",
+      "labels": ["task", "obszar:testy", "wymagane"],
+      "body": "## Cel\nPełny przebieg: Windows → podejrzane połączenie → IDS → Wazuh → Shuffle → IOC → Cortex → MISP → korelacja → scoring → decyzja → incydent / reakcja → weryfikacja → aktualizacja incydentu.\n\n## Kryteria akceptacji\n- [ ] Scenariusz opisany krok po kroku w `docs/runbooks/` (powtarzalny)\n- [ ] Bezpieczny sposób wywołania „podejrzanego połączenia” w labie (np. IOC testowy z MISP zamiast prawdziwej infrastruktury atakującego)\n- [ ] Nagranie/zrzuty całego przebiegu\n\n## Wymaganie\nZadanie 12 i sekcja 23 (dowód działania)."
+    },
+    {
+      "title": "Test 1 – Benign IOC: brak eskalacji",
+      "milestone": "Etap 3 – reakcja i testy",
+      "labels": ["task", "obszar:testy", "wymagane"],
+      "body": "## Scenariusz\nIOC jest znany jako bezpieczny.\n\n## Oczekiwany rezultat\nBrak eskalacji, alert zamknięty z zapisanym uzasadnieniem.\n\n## Do zrobienia\n- [ ] Przygotować dane wejściowe\n- [ ] Wykonać, zapisać wynik rzeczywisty i zrzuty\n- [ ] Wpisać wiersz do tabeli testów (sekcja 21.7): oczekiwany / rzeczywisty / PASS-FAIL"
+    },
+    {
+      "title": "Test 2 – Known malicious IOC: wysoka confidence + incydent",
+      "milestone": "Etap 3 – reakcja i testy",
+      "labels": ["task", "obszar:testy", "wymagane"],
+      "body": "## Scenariusz\nIOC występuje w kilku źródłach jako złośliwy.\n\n## Oczekiwany rezultat\nWysoka confidence i utworzony incydent.\n\n## Do zrobienia\n- [ ] Przygotować dane wejściowe\n- [ ] Wykonać, zapisać wynik rzeczywisty i zrzuty\n- [ ] Wpisać wiersz do tabeli testów"
+    },
+    {
+      "title": "Test 3 – Suspicious / sprzeczne wyniki: ticket dla analityka",
+      "milestone": "Etap 3 – reakcja i testy",
+      "labels": ["task", "obszar:testy", "wymagane"],
+      "body": "## Scenariusz\nŹródła TI dają sprzeczne wyniki.\n\n## Oczekiwany rezultat\nTicket dla analityka.\n\n## Do zrobienia\n- [ ] Przygotować dane wejściowe\n- [ ] Wykonać, zapisać wynik rzeczywisty i zrzuty\n- [ ] Wpisać wiersz do tabeli testów"
+    },
+    {
+      "title": "Test 4 – Duplicate: jeden incydent, wiele alertów",
+      "milestone": "Etap 3 – reakcja i testy",
+      "labels": ["task", "obszar:testy", "wymagane"],
+      "body": "## Scenariusz\nTen sam alert generowany wielokrotnie.\n\n## Oczekiwany rezultat\nJeden incydent z wieloma powiązanymi alertami.\n\n## Do zrobienia\n- [ ] Przygotować dane wejściowe (np. seria alertów wysłana na webhook)\n- [ ] Wykonać, zapisać wynik rzeczywisty i zrzuty\n- [ ] Wpisać wiersz do tabeli testów"
+    },
+    {
+      "title": "Test 5 – Cortex niedostępny: brak fałszywej decyzji",
+      "milestone": "Etap 3 – reakcja i testy",
+      "labels": ["task", "obszar:testy", "wymagane"],
+      "body": "## Scenariusz\nCortex wyłączony lub nieosiągalny.\n\n## Oczekiwany rezultat\nWorkflow nie podejmuje fałszywej decyzji (nie zamyka jako benign).\n\n## Do zrobienia\n- [ ] Zatrzymać kontener Cortexa (snapshot / informacja dla zespołu przed)\n- [ ] Wykonać, zapisać wynik rzeczywisty i zrzuty\n- [ ] Przywrócić Cortex i sprawdzić integrację z TheHive\n- [ ] Wpisać wiersz do tabeli testów"
+    },
+    {
+      "title": "Test 6 – MISP niedostępny: analiza niepełna",
+      "milestone": "Etap 3 – reakcja i testy",
+      "labels": ["task", "obszar:testy", "wymagane"],
+      "body": "## Scenariusz\nMISP wyłączony lub nieosiągalny.\n\n## Oczekiwany rezultat\nIncydent oznaczony jako niepełna analiza.\n\n## Do zrobienia\n- [ ] Zatrzymać MISP (informacja dla zespołu przed)\n- [ ] Wykonać, zapisać wynik rzeczywisty i zrzuty\n- [ ] Przywrócić MISP\n- [ ] Wpisać wiersz do tabeli testów"
+    },
+    {
+      "title": "Test 7 – False positive: brak niepotrzebnego containmentu",
+      "milestone": "Etap 3 – reakcja i testy",
+      "labels": ["task", "obszar:testy", "wymagane"],
+      "body": "## Scenariusz\nAlert technicznie poprawny, ale zachowanie jest uzasadnione (np. skan z zaufanego hosta administracyjnego).\n\n## Oczekiwany rezultat\nBrak containmentu, decyzja z uzasadnieniem.\n\n## Do zrobienia\n- [ ] Przygotować dane wejściowe\n- [ ] Wykonać, zapisać wynik rzeczywisty i zrzuty\n- [ ] Wpisać wiersz do tabeli testów"
+    },
+    {
+      "title": "Pomiar końcowy lejka alertów",
+      "milestone": "Etap 3 – reakcja i testy",
+      "labels": ["task", "obszar:docs", "wymagane"],
+      "body": "## Cel\nPokazać redukcję: N alertów → zdarzenia po deduplikacji → przypadki po korelacji → benign/suspicious → incydenty dla analityka.\n\n## Kryteria akceptacji\n- [ ] Te same warunki co w pomiarze bazowym\n- [ ] CSV w `metrics/` + wykres lejka do dokumentacji i README\n- [ ] Sprawdzone, że żaden atak z naszych scenariuszy nie został zamknięty jako benign"
+    },
+    {
+      "title": "Dokumentacja końcowa (PDF/DOCX)",
+      "milestone": "Etap 4 – oddanie",
+      "labels": ["task", "obszar:docs", "wymagane"],
+      "body": "## Cel\nDokument do oddania zgodny z sekcją 21 i 23.\n\n## Sekcje\n- [ ] 21.1 Architektura (diagram)\n- [ ] 21.2 Instalacja (co, jak, problemy, rozwiązania)\n- [ ] 21.3 Integracje (Wazuh/IDS → Shuffle → Cortex, MISP, ticketing)\n- [ ] 21.4 Workflow (każdy etap)\n- [ ] 21.5 Decision logic (scoring, confidence, deduplikacja, korelacja, FP, eskalacja)\n- [ ] 21.6 Reakcja (kiedy, kiedy analityk, jak cofnąć)\n- [ ] 21.7 Tabela testów\n- [ ] Problemy i rozwiązania, wnioski\n- [ ] Brak haseł, tokenów i kluczy API"
+    },
+    {
+      "title": "Dowody wykonania (zrzuty ekranu)",
+      "milestone": "Etap 4 – oddanie",
+      "labels": ["task", "obszar:docs", "wymagane"],
+      "body": "## Lista z sekcji 22\n- [ ] działający Wazuh\n- [ ] działający IDS\n- [ ] działający Shuffle\n- [ ] działający Cortex + skonfigurowane analyzery\n- [ ] działający MISP\n- [ ] przykładowy alert\n- [ ] wykonanie workflow\n- [ ] wyniki enrichmentu\n- [ ] scoring\n- [ ] deduplikacja\n- [ ] utworzony incydent\n- [ ] wynik automatycznej reakcji (jeśli jest)\n\nZrzuty w `docs/images/`. Przed dodaniem sprawdzić, czy nie widać kluczy, haseł ani publicznego IP."
+    },
+    {
+      "title": "Pakiet do oddania: workflow, konfiguracje, dane przykładowe",
+      "milestone": "Etap 4 – oddanie",
+      "labels": ["task", "obszar:docs", "wymagane"],
+      "body": "## Kryteria akceptacji (sekcja 23)\n- [ ] Eksporty workflow Shuffle (po sanitizacji)\n- [ ] Konfiguracje, reguły Wazuha, skrypty, przykładowe alerty, playbooki\n- [ ] Dowód pełnego przebiegu: Alert → Enrichment → Correlation → Decision → Incident → Analyst/Response\n- [ ] Tag/release w repo z wersją oddaną"
+    },
+    {
+      "title": "Przygotowanie do prezentacji: odpowiedzi na 20 pytań",
+      "milestone": "Etap 4 – oddanie",
+      "labels": ["task", "obszar:docs", "wymagane"],
+      "body": "## Cel\nZespół zna odpowiedzi na pytania z sekcji 27 dokumentu projektu (źródła TI, confidence score, sprzeczne wyniki, awarie Cortex/MISP, deduplikacja, reakcja i jej cofanie, ryzyka, zmiany przed produkcją…).\n\n## Kryteria akceptacji\n- [ ] Plik z krótkimi odpowiedziami na każde pytanie, z odnośnikami do dokumentacji\n- [ ] Każda osoba umie odpowiedzieć na pytania z co najmniej dwóch obszarów"
+    }
+  ]
+}
