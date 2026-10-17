@@ -73,6 +73,44 @@ An observed response was **HTTP 204 No Content**. This proves the server accepte
 | Repeat detection | `DUPLICATE_ALERT` path selected |
 | Existing alert update | HTTP 204 on PATCH of the existing `_id` |
 
+
+
+### Evidence: Existing Alert Lookup
+
+Shuffle successfully retrieved a previously created
+TheHive alert ID from its Datastore.
+
+![TheHive Alert ID Lookup](images/thehive-id-lookup.png)
+
+*Figure 1. Successful duplicate detection and retrieval
+of the associated TheHive alert identifier.*
+
+### Evidence: Duplicate Alert Update
+
+The existing alert was updated using the TheHive REST API:
+
+`PATCH /api/v1/alert/{alert_id}`
+
+The recorded API response was:
+
+```json
+{
+  "status": 204,
+  "body": "",
+  "success": true
+}
+```
+
+HTTP 204 confirms that TheHive accepted the update
+without returning a response body.
+
+The test did not create another alert. Instead, the
+workflow targeted the previously stored alert ID.
+
+**Limitation:** The current PATCH operation adds a
+diagnostic tag. Updating occurrence counts and
+first/last-seen timestamps in TheHive remains pending.
+
 ## Known export-specific configuration concern
 
 In the provided 17 October export, incoming connections to `Save_ID_MID`, `Save_ID_HIGH`, and `Save_ID_CRITICAL` check `$http_low.status == 201` rather than their respective POST action status. This is an **export finding**, not an assertion about the latest live version. Review those branches in Shuffle before considering all four mapping paths fully verified.
