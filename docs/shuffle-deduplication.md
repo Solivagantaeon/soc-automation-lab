@@ -24,6 +24,10 @@ flowchart TD
     J --> K[Increment_Duplicate_Counter]
     K --> L[Set_Duplicate_Counter]
 ```
+![Shuffle SOAR Deduplication Workflow](images/shuffle-deduplication.png)
+
+*Figure 1. Shuffle SOAR duplicate alert handling, including correlation, TheHive alert ID lookup, and PATCH updates.*
+
 
 **Important:** The PATCH and the counter branches currently execute independently. There is no guaranteed completion ordering between them, and the counter is not included in the PATCH body.
 
@@ -63,6 +67,10 @@ The `Increment_Duplicate_Counter` Python action:
 - passes a valid result to `Set_Duplicate_Counter`.
 
 **Observed evidence:** The workflow emitted `count: 2`, and `Set_Duplicate_Counter` successfully stored `value: "2"` in `soc_duplicate_counts_test`. A subsequent `2 → 3` increment has not yet been verified.
+
+![Duplicate Counter Verification](images/duplicate-counter.png)
+
+*Figure 2. Shuffle Debug results confirming successful counter initialization and persistence of occurrence count 2.*
 
 ## Existing TheHive alert mapping
 
