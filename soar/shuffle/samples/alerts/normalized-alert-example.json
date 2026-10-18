@@ -1,0 +1,69 @@
+
+{
+  "source": "wazuh",
+  "timestamp": "2026-10-18T12:00:00.000Z",
+  "hostname": "SOC-LAB-WIN01",
+  "agent_id": "001",
+  "source_alert_id": "1760788800.123457",
+  "rule_id": "100502",
+  "alert_type": [
+    "soc_test",
+    "file_integrity",
+    "suspicious_file"
+  ],
+  "severity": 5,
+  "severity_source": "wazuh_level",
+  "wazuh_level": 12,
+  "description": "SOC test - suspicious file detected",
+  "ip": [
+    "8.8.8.8"
+  ],
+  "user": "soc_test_user",
+  "observables": [
+    {
+      "type": "ip",
+      "value": "8.8.8.8"
+    },
+    {
+      "type": "domain",
+      "value": "example.com"
+    },
+    {
+      "type": "hash",
+      "algorithm": "md5",
+      "value": "44d88612fea8a8f36de82e1278abb02f"
+    }
+  ],
+  "original_alert": {
+    "timestamp": "2026-10-18T12:00:00.000+0000",
+    "rule": {
+      "level": 12,
+      "description": "SOC test - suspicious file detected",
+      "id": "100502",
+      "groups": [
+        "soc_test",
+        "file_integrity",
+        "suspicious_file"
+      ]
+    },
+    "agent": {
+      "id": "001",
+      "name": "SOC-LAB-WIN01"
+    },
+    "manager": {
+      "name": "wazuh-master"
+    },
+    "id": "1760788800.123457",
+    "data": {
+      "srcip": "8.8.8.8",
+      "domain": "example.com",
+      "srcuser": "soc_test_user",
+      "win": {
+        "eventdata": {
+          "hashes": "MD5=44d88612fea8a8f36de82e1278abb02f",
+          "user": "soc_test_user"
+        }
+      }
+    }
+  }
+}
