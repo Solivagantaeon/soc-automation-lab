@@ -63,7 +63,7 @@ Test on SOC-WIN10-01: a `.ps1` file created in `%TEMP%` produced Sysmon EID 11 â
 Wazuh rule **92213** "Executable file dropped in folder commonly used by malware"
 (level 15, MITRE T1105).
 
-![Sysmon-based alert from SOC-WIN10-01 (rule 92213)](../../docs/images/sysmon/04-win10-alert.png)
+![Sysmon-based alert from SOC-WIN10-01 (rule 92213)](../../docs/images/sysmon/04-sysmon-win10-alert.png)
 
 Full alert (anonymised): [`samples/alerts/sysmon-windows-example.json`](../../samples/alerts/sysmon-windows-example.json)
 
