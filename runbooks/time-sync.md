@@ -80,9 +80,11 @@ Wazuh, MISP, Shuffle, TheHive/Cortex: `System clock synchronized: no`; MISP and 
    - Protocol `UDP`, source `<interface> net`, destination `<interface> address`, port `NTP (123)`.
 3. **Services → Network Time → Status**: wait until one peer is shown as *Active Peer*.
 
-![NTP general settings](../images/network/5-opnsense-ntp-general.png)
-![NTP firewall rules](../images/network/5-opnsense-ntp-rules.png)
-![NTP status](../images/network/5-opnsense-ntp-status.png)
+![NTP general settings](/docs/images/network/5-opnsense-ntp-general.png)
+
+![NTP firewall rules](/docs/images/network/5-opnsense-ntp-rules.png)
+
+![NTP status](/docs/images/network/5-opnsense-ntp-status.png)
 
 Test from a client before changing any host:
 ```
