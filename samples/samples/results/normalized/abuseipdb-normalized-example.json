@@ -1,0 +1,11 @@
+{
+  "success": true,
+  "source": "AbuseIPDB",
+  "ip": "8.8.8.8",
+  "abuse_confidence_score": 0,
+  "total_reports": 65,
+  "is_whitelisted": true,
+  "usage_type": "Content Delivery Network",
+  "is_tor": false,
+  "country_code": "US"
+}
