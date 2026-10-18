@@ -189,6 +189,34 @@
               }
             ],
             "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "required": ["type", "value"],
+            "properties": {
+              "type": {
+                "const": "host"
+              },
+              "value": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "required": ["type", "value"],
+            "properties": {
+              "type": {
+                "const": "user"
+              },
+              "value": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "additionalProperties": false
           }
         ]
       }
