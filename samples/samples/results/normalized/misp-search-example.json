@@ -1,0 +1,102 @@
+{
+  "status": 200,
+  "body": {
+    "response": {
+      "Attribute": [
+        {
+          "id": "280051",
+          "event_id": "1331",
+          "category": "Network activity",
+          "type": "ip-dst",
+          "to_ids": false,
+          "value": "8.8.8.8",
+          "comment": "",
+          "disable_correlation": true,
+          "Event": {
+            "id": "1331",
+            "info": "Malicious File Creates Network Socket and Contacts fdh32fsdfhs.shop - Kunai Analysis Report sample - 2d266ab2597c72424aa21bc00718f9a13e5836e8",
+            "date": "2025-06-20",
+            "Org": {
+              "id": "1",
+              "name": "SOC-Lab"
+            },
+            "Orgc": {
+              "id": "3",
+              "name": "CIRCL"
+            }
+          }
+        },
+        {
+          "id": "281695",
+          "event_id": "1351",
+          "category": "Network activity",
+          "type": "ip-dst",
+          "to_ids": false,
+          "value": "8.8.8.8",
+          "comment": "[Auto] IDS disabled by warninglist checker. Matched: List of known IPv4 public DNS resolvers",
+          "disable_correlation": true,
+          "Event": {
+            "id": "1351",
+            "info": "Kunai Analysis Report - Malware Sample Abusing Open Recursive DNS for Exfiltration",
+            "date": "2025-12-15",
+            "Org": {
+              "id": "1",
+              "name": "SOC-Lab"
+            },
+            "Orgc": {
+              "id": "3",
+              "name": "CIRCL"
+            }
+          }
+        },
+        {
+          "id": "306886",
+          "event_id": "1411",
+          "category": "Network activity",
+          "type": "ip-dst",
+          "to_ids": true,
+          "value": "8.8.8.8",
+          "comment": "",
+          "disable_correlation": false,
+          "Event": {
+            "id": "1411",
+            "info": "Fake 7-Zip downloads are turning home PCs into proxy nodes",
+            "date": "2026-02-12",
+            "Org": {
+              "id": "1",
+              "name": "SOC-Lab"
+            },
+            "Orgc": {
+              "id": "3",
+              "name": "CIRCL"
+            }
+          }
+        },
+        {
+          "id": "586688",
+          "event_id": "1686",
+          "category": "Network activity",
+          "type": "ip-dst",
+          "to_ids": false,
+          "value": "8.8.8.8",
+          "comment": "Google DNS - known benign",
+          "disable_correlation": false,
+          "Event": {
+            "id": "1686",
+            "info": "SOC-LAB test IOCs – benign",
+            "date": "2026-10-18",
+            "Org": {
+              "id": "1",
+              "name": "SOC-Lab"
+            },
+            "Orgc": {
+              "id": "1",
+              "name": "SOC-Lab"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "success": true,
+  "result_count": 4
