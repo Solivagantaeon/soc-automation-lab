@@ -1,0 +1,76 @@
+{
+  "success": true,
+  "message": {
+    "source": "wazuh",
+    "timestamp": null,
+    "hostname": "SOC-LAB-WIN01",
+    "agent_id": "001",
+    "source_alert_id": "1760788800.123456",
+    "rule_id": "100501",
+    "alert_type": [
+      "soc_test",
+      "network",
+      "authentication_failed"
+    ],
+    "severity": 5,
+    "severity_source": "wazuh_level",
+    "wazuh_level": 12,
+    "description": "SOC test - suspicious network activity",
+    "ip": [
+      "198.51.100.25"
+    ],
+    "user": "soc_test_user",
+    "observables": [
+      {
+        "type": "ip",
+        "value": "198.51.100.25"
+      },
+      {
+        "type": "domain",
+        "value": "example.com"
+      },
+      {
+        "type": "hash",
+        "algorithm": "md5",
+        "value": "44d88612fea8a8f36de82e1278abb02f"
+      },
+      {
+        "type": "hash",
+        "algorithm": "sha256",
+        "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    ],
+    "original_alert": {
+      "timestamp": "2026-10-18T12:00:00.000+0000",
+      "rule": {
+        "level": 12,
+        "description": "SOC test - suspicious network activity",
+        "id": "100501",
+        "groups": [
+          "soc_test",
+          "network",
+          "authentication_failed"
+        ]
+      },
+      "agent": {
+        "id": "001",
+        "name": "SOC-LAB-WIN01"
+      },
+      "manager": {
+        "name": "wazuh-master"
+      },
+      "id": "1760788800.123456",
+      "data": {
+        "srcip": "198.51.100.25",
+        "domain": "example.com",
+        "srcuser": "soc_test_user",
+        "win": {
+          "eventdata": {
+            "hashes": "MD5=44d88612fea8a8f36de82e1278abb02f,SHA256=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "user": "soc_test_user"
+          }
+        }
+      }
+    }
+  }
+}
