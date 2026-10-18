@@ -63,14 +63,27 @@ A valid address returns `reason: "public_ipv4"`. Rejected addresses return an em
 
 ### File hashes
 
-The `Validate Hash` node extracts hashes from the Windows/Sysmon `hashes` field. It recognizes MD5, SHA1 and SHA256, validates their hexadecimal format and prefers SHA256, followed by SHA1 and MD5.
+The `Validate Hash` node extracts hashes from the normalized alert's `observables` list. It recognizes MD5, SHA1, SHA256 and SHA512, validates the expected hexadecimal length and format, and removes duplicate hashes.
+
+When multiple valid hashes are present, the node selects one hash for downstream VirusTotal and Team Cymru analysis using the following priority:
+
+1. SHA256
+2. SHA1
+3. MD5
+4. SHA512
+
+The `hashes` field retains all valid, unique hashes. The `hash` and `algorithm` fields identify the selected hash.
 
 Output fields:
 
 - `valid`
 - `hash`
 - `algorithm`
+- `hashes`
+- `count`
 - `reason`
+
+A successful validation returns `reason: "valid_hashes_found"`. If no valid hashes are found, `valid` remains `false` and `reason` is `"no_valid_hashes"`. Unexpected processing errors return `reason: "validation_error"`.
 
 ### Domains
 
