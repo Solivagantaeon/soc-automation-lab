@@ -37,6 +37,22 @@ The `Normalize Alert` node returns a JSON object with a `message` containing the
 
 ### Observable format
 
+### Severity mapping
+
+The `Normalize Alert` node maps the original Wazuh `rule.level` to a common severity scale from 1 to 5.
+
+| Wazuh rule level | Normalized severity | Meaning |
+|---|---:|---|
+| 0–3 | 1 | Informational / lowest priority |
+| 4–6 | 2 | Low |
+| 7–9 | 3 | Medium |
+| 10–11 | 4 | High |
+| 12 and above | 5 | Critical / highest priority |
+
+The original Wazuh level is retained in `wazuh_level`, and `severity_source` is set to `wazuh_level` to preserve traceability.
+
+This mapping is a project-defined normalization policy, not an official Wazuh severity classification.
+
 Observables use typed objects:
 
 - IP: `{"type": "ip", "value": "..."}`
