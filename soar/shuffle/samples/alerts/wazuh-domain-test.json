@@ -1,0 +1,27 @@
+
+{
+  "timestamp": "2026-10-18T12:00:00.000+0000",
+  "rule": {
+    "level": 7,
+    "description": "SOC test - suspicious DNS query",
+    "id": "100503",
+    "groups": [
+      "soc_test",
+      "dns",
+      "suspicious_domain"
+    ]
+  },
+  "agent": {
+    "id": "002",
+    "name": "SOC-LAB-WIN01"
+  },
+  "manager": {
+    "name": "wazuh-master"
+  },
+  "id": "1760788800.123458",
+  "data": {
+    "srcip": "8.8.8.8",
+    "domain": "example.com",
+    "srcuser": "soc_test_user"
+  }
+}
