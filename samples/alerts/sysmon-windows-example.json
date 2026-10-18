@@ -1,0 +1,74 @@
+{
+  "input": {
+    "type": "log"
+  },
+  "agent": {
+    "ip": "10.10.10.150",
+    "name": "SOC-WIN10-01",
+    "id": "007"
+  },
+  "manager": {
+    "name": "wazuh-master"
+  },
+  "data": {
+    "win": {
+      "eventdata": {
+        "image": "C:\\\\Windows\\\\System32\\\\WindowsPowerShell\\\\v1.0\\\\powershell.exe",
+        "processGuid": "{20649595-1dcd-6ac9-da0f-000000008200}",
+        "processId": "8916",
+        "utcTime": "2026-10-18 16:12:50.164",
+        "targetFilename": "C:\\\\Users\\\\user01\\\\AppData\\\\Local\\\\Temp\\\\z1-sysmon-test.ps1",
+        "ruleName": "technique_id=T1059.001,technique_name=PowerShell",
+        "creationUtcTime": "2026-10-18 16:12:50.164",
+        "user": "SOCLAB\\\\user01"
+      },
+      "system": {
+        "eventID": "11",
+        "keywords": "0x8000000000000000",
+        "providerGuid": "{5770385f-c22a-43e0-bf4c-06f5698ffbd9}",
+        "level": "4",
+        "channel": "Microsoft-Windows-Sysmon/Operational",
+        "opcode": "0",
+        "message": "\"File created:\r\nRuleName: technique_id=T1059.001,technique_name=PowerShell\r\nUtcTime: 2026-10-18 16:12:50.164\r\nProcessGuid: {20649595-1dcd-6ac9-da0f-000000008200}\r\nProcessId: 8916\r\nImage: C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe\r\nTargetFilename: C:\\Users\\user01\\AppData\\Local\\Temp\\z1-sysmon-test.ps1\r\nCreationUtcTime: 2026-10-18 16:12:50.164\r\nUser: SOCLAB\\user01\"",
+        "version": "2",
+        "systemTime": "2026-10-18T16:12:50.1663284Z",
+        "eventRecordID": "627000",
+        "threadID": "3988",
+        "computer": "SOC-WIN10-01.soclab.local",
+        "task": "11",
+        "processID": "2704",
+        "severityValue": "INFORMATION",
+        "providerName": "Microsoft-Windows-Sysmon"
+      }
+    }
+  },
+  "rule": {
+    "firedtimes": 3,
+    "mail": true,
+    "level": 15,
+    "description": "Executable file dropped in folder commonly used by malware",
+    "groups": [
+      "sysmon",
+      "sysmon_eid11_detections",
+      "windows"
+    ],
+    "mitre": {
+      "technique": [
+        "Ingress Tool Transfer"
+      ],
+      "id": [
+        "T1105"
+      ],
+      "tactic": [
+        "Command and Control"
+      ]
+    },
+    "id": "92213"
+  },
+  "location": "EventChannel",
+  "decoder": {
+    "name": "windows_eventchannel"
+  },
+  "id": "1792318356.2474021",
+  "timestamp": "2026-10-18T12:12:36.631+0200"
+}
