@@ -33,3 +33,34 @@ CIRCL and Feodo together provide full IOC coverage for lab purposes:
 - **CIRCL** covers diverse IOC types (IP, domain, hash) with contextual metadata
 - **Feodo** covers active C2 infrastructure with near-real-time updates
 Both feeds have **caching enabled** and are set to **Fetch and store**, so all fetched IOCs are saved as MISP events and are searchable via the REST API (`/attributes/restSearch`).
+
+![MISP feeds configuration](../../docs/images/misp/02-misp-feeds.png)
+
+## `soc-lab:*` tag convention
+
+Custom tags are used to label events by expected outcome and downstream routing:
+
+| Tag | Meaning |
+|-----|---------|
+| `soc-lab:malicious` | IOC is known-bad; attribute has `to_ids = true` |
+| `soc-lab:benign` | IOC is known-good; attribute has `to_ids = false` |
+| `soc-lab:thehive` | Event should be imported into TheHive (malicious events only) |
+
+## TheHive import filter
+
+TheHive is configured to import MISP events **only** when they carry the tag `soc-lab:thehive`.
+
+The tag is added automatically by Shuffle: when a MISP lookup returns a hit (`to_ids = true`), Shuffle writes the `soc-lab:thehive` tag back to the MISP event via the API. TheHive then picks up the tagged event and creates a case automatically.
+
+This prevents feed events (CIRCL, Feodo — thousands of events) from flooding TheHive — only events confirmed malicious by the automation pipeline appear as cases.
+
+![TheHive MISP import](../../docs/images/misp/02-thehive-misp-import.png)
+
+## How to add an IOC to MISP
+
+1. Open MISP → **Event Actions → Add Event**
+2. Give it a title, set the organisation to **SOC-Lab**, add tags (`soc-lab:malicious` or `soc-lab:benign`)
+3. Click **Add Attribute**
+4. Set the correct type (`ip-dst`, `domain`, `md5`, etc.)
+5. Set `to_ids = true` for malicious indicators, `to_ids = false` for benign
+6. Save — the IOC is now searchable via `/attributes/restSearch`
