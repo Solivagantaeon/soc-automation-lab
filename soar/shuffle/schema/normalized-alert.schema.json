@@ -1,1 +1,132 @@
 
+
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Normalized SOC Alert",
+  "description": "Common normalized alert format produced by the Shuffle Normalize Alert step.",
+  "type": "object",
+  "required": [
+    "source",
+    "timestamp",
+    "hostname",
+    "agent_id",
+    "source_alert_id",
+    "rule_id",
+    "alert_type",
+    "severity",
+    "severity_source",
+    "wazuh_level",
+    "description",
+    "ip",
+    "user",
+    "observables",
+    "original_alert"
+  ],
+  "properties": {
+    "source": {
+      "type": "string",
+      "minLength": 1
+    },
+    "timestamp": {
+      "type": ["string", "null"],
+      "format": "date-time"
+    },
+    "hostname": {
+      "type": ["string", "null"]
+    },
+    "agent_id": {
+      "type": ["string", "null"]
+    },
+    "source_alert_id": {
+      "type": ["string", "number", "null"]
+    },
+    "rule_id": {
+      "type": ["string", "number", "null"]
+    },
+    "alert_type": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "severity": {
+      "type": ["integer", "null"],
+      "minimum": 1,
+      "maximum": 5
+    },
+    "severity_source": {
+      "type": "string"
+    },
+    "wazuh_level": {
+      "type": ["integer", "null"]
+    },
+    "description": {
+      "type": "string"
+    },
+    "ip": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "user": {
+      "type": ["string", "null"]
+    },
+    "observables": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": ["type", "value"],
+            "properties": {
+              "type": {
+                "const": "ip"
+              },
+              "value": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "required": ["type", "value"],
+            "properties": {
+              "type": {
+                "const": "domain"
+              },
+              "value": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "required": ["type", "algorithm", "value"],
+            "properties": {
+              "type": {
+                "const": "hash"
+              },
+              "algorithm": {
+                "enum": ["md5", "sha1", "sha256", "sha512"]
+              },
+              "value": {
+                "type": "string",
+                "pattern": "^[a-f0-9]+$"
+              }
+            },
+            "additionalProperties": false
+          }
+        ]
+      }
+    },
+    "original_alert": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": false
+}
