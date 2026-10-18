@@ -1,0 +1,24 @@
+{
+  "success": true,
+  "message": {
+    "domain": "example.com",
+    "data_type": "domain",
+    "dns_status": "No Error",
+    "analysis_status": "complete",
+    "a_records": [],
+    "aaaa_records": [],
+    "cname_records": [],
+    "other_records": [
+      {
+        "type": "HINFO",
+        "data": "RFC8482 "
+      },
+      {
+        "type": "RRSIG",
+        "data": "hinfo 13 2 3600 1792443151 1792263151 34505 example.com. mior3gBx5wGT2mYX5ZDkFTBtAx2mYJDM04olhz+igi8X4p6WoHCSiRafNHyzxGxUqALjpYzHwOMAFMTcWzTY8g=="
+      }
+    ],
+    "answer_count": 2,
+    "question_count": 1
+  }
+}
