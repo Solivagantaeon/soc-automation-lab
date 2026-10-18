@@ -1,0 +1,212 @@
+{
+  "response": [
+    {
+      "Event": {
+        "id": "1686",
+        "orgc_id": "1",
+        "org_id": "1",
+        "date": "2026-10-18",
+        "threat_level_id": "3",
+        "info": "SOC-LAB test IOCs – benign",
+        "published": true,
+        "uuid": "5d056f64-9c12-49af-a593-181924a81c52",
+        "attribute_count": "2",
+        "analysis": "0",
+        "timestamp": "1792345266",
+        "distribution": "0",
+        "proposal_email_lock": false,
+        "locked": false,
+        "publish_timestamp": "1792345305",
+        "first_publication": "1792345305",
+        "sharing_group_id": "0",
+        "disable_correlation": false,
+        "extends_uuid": "",
+        "protected": null,
+        "event_creator_email": "admin@admin.test",
+        "Org": {
+          "id": "1",
+          "name": "SOC-Lab",
+          "uuid": "76a742c7-d5aa-4630-9e43-05a29208c952",
+          "local": true
+        },
+        "Orgc": {
+          "id": "1",
+          "name": "SOC-Lab",
+          "uuid": "76a742c7-d5aa-4630-9e43-05a29208c952",
+          "local": true
+        },
+        "Attribute": [
+          {
+            "id": "586688",
+            "type": "ip-dst",
+            "category": "Network activity",
+            "to_ids": false,
+            "uuid": "97212c99-4d75-475a-bbff-4752bb65908e",
+            "event_id": "1686",
+            "distribution": "5",
+            "timestamp": "1792345224",
+            "comment": "Google DNS - known benign",
+            "sharing_group_id": "0",
+            "deleted": false,
+            "disable_correlation": false,
+            "object_id": "0",
+            "object_relation": null,
+            "first_seen": null,
+            "last_seen": null,
+            "value": "8.8.8.8",
+            "Galaxy": [],
+            "ShadowAttribute": []
+          },
+          {
+            "id": "586689",
+            "type": "domain",
+            "category": "Network activity",
+            "to_ids": false,
+            "uuid": "dec3a663-e477-44a4-b156-d7b751ab5e1f",
+            "event_id": "1686",
+            "distribution": "5",
+            "timestamp": "1792345251",
+            "comment": "Google - known benign",
+            "sharing_group_id": "0",
+            "deleted": false,
+            "disable_correlation": false,
+            "object_id": "0",
+            "object_relation": null,
+            "first_seen": null,
+            "last_seen": null,
+            "value": "google.com",
+            "Galaxy": [],
+            "ShadowAttribute": []
+          }
+        ],
+        "ShadowAttribute": [],
+        "RelatedEvent": [
+          {
+            "Event": {
+              "id": "1411",
+              "date": "2026-02-12",
+              "threat_level_id": "4",
+              "info": "Fake 7-Zip downloads are turning home PCs into proxy nodes",
+              "published": true,
+              "uuid": "a1ddf106-025e-438c-947d-202ded0ee395",
+              "analysis": "0",
+              "timestamp": "1772440113",
+              "distribution": "3",
+              "org_id": "1",
+              "orgc_id": "3",
+              "Org": {
+                "id": "1",
+                "name": "SOC-Lab",
+                "uuid": "76a742c7-d5aa-4630-9e43-05a29208c952"
+              },
+              "Orgc": {
+                "id": "3",
+                "name": "CIRCL",
+                "uuid": "55f6ea5e-2c60-40e5-964f-47a8950d210f"
+              }
+            },
+            "RelationshipInbound": []
+          },
+          {
+            "Event": {
+              "id": "868",
+              "date": "2018-04-17",
+              "threat_level_id": "3",
+              "info": "OSINT - Talos/Cisco  Threat Roundup for April 6 - 13",
+              "published": true,
+              "uuid": "5ad5bc00-d988-48bb-9293-2135950d210f",
+              "analysis": "2",
+              "timestamp": "1524215517",
+              "distribution": "3",
+              "org_id": "1",
+              "orgc_id": "3",
+              "Org": {
+                "id": "1",
+                "name": "SOC-Lab",
+                "uuid": "76a742c7-d5aa-4630-9e43-05a29208c952"
+              },
+              "Orgc": {
+                "id": "3",
+                "name": "CIRCL",
+                "uuid": "55f6ea5e-2c60-40e5-964f-47a8950d210f"
+              }
+            },
+            "RelationshipInbound": []
+          },
+          {
+            "Event": {
+              "id": "167",
+              "date": "2015-11-05",
+              "threat_level_id": "4",
+              "info": "OSINT Expansion on Systematic cyber attacks against Israeli and Palestinian targets going on for a year by Norman",
+              "published": true,
+              "uuid": "563b3ea6-b26c-401f-a68b-4d84950d210b",
+              "analysis": "2",
+              "timestamp": "1596436859",
+              "distribution": "3",
+              "org_id": "1",
+              "orgc_id": "2",
+              "Org": {
+                "id": "1",
+                "name": "SOC-Lab",
+                "uuid": "76a742c7-d5aa-4630-9e43-05a29208c952"
+              },
+              "Orgc": {
+                "id": "2",
+                "name": "CthulhuSPRL.be",
+                "uuid": "55f6ea5f-fd34-43b8-ac1d-40cb950d210f"
+              }
+            },
+            "RelationshipInbound": []
+          },
+          {
+            "Event": {
+              "id": "228",
+              "date": "2015-04-03",
+              "threat_level_id": "4",
+              "info": "OSINT The Dyre Wolf report from IBM",
+              "published": true,
+              "uuid": "551e8745-ace0-461c-b9eb-ce36950d210b",
+              "analysis": "2",
+              "timestamp": "1428070986",
+              "distribution": "3",
+              "org_id": "1",
+              "orgc_id": "2",
+              "Org": {
+                "id": "1",
+                "name": "SOC-Lab",
+                "uuid": "76a742c7-d5aa-4630-9e43-05a29208c952"
+              },
+              "Orgc": {
+                "id": "2",
+                "name": "CthulhuSPRL.be",
+                "uuid": "55f6ea5f-fd34-43b8-ac1d-40cb950d210f"
+              }
+            },
+            "RelationshipInbound": []
+          }
+        ],
+        "Galaxy": [],
+        "Object": [],
+        "EventReport": [],
+        "CryptographicKey": [],
+        "Tag": [
+          {
+            "id": "1851",
+            "name": "soc-lab:benign",
+            "colour": "#00cc00",
+            "exportable": true,
+            "user_id": "0",
+            "hide_tag": false,
+            "numerical_value": null,
+            "is_galaxy": false,
+            "is_custom_galaxy": false,
+            "local_only": false,
+            "local": false,
+            "relationship_type": null
+          }
+        ]
+      }
+    }
+  ]
+}
