@@ -110,8 +110,7 @@ Expected result: a JSON response listing manager daemon statuses (authenticated 
 
 ### 2.6 Evidence and related files
 
-- ![Wazuh overview](images/wazuh/06-wazuh-overview.png)
-- ![Wazuh agent inventory](images/wazuh/06-wazuh-agents.png)
+- ![Wazuh agent inventory](images/wazuh/04-wazuh-agents.png)
 - Agent configuration: [`../detection/wazuh/agent-config/agent.conf`](../detection/wazuh/agent-config/agent.conf)
 - Related ingestion issue: [#4 — Wazuh agents, Sysmon and Suricata](https://github.com/Solivagantaeon/soc-automation-lab/issues/4)
 
@@ -408,7 +407,7 @@ On **17 October 2026**, the TheHive UI displayed numerous test records with the 
 
 ### 8.4 Evidence and references
 
-- ![TheHive alerts](images/thehive/06-thehive-running.png)
+- ![TheHive alerts](images/thhive/06-thehive-running.png)
 - TheHive configuration notes: [`../case-management/thehive/README.md`](../case-management/thehive/README.md)
 - Decision: TheHive was selected in place of DFIR-IRIS; see [architecture decisions](architecture.md#key-design-decisions).
 
