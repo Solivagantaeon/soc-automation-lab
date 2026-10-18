@@ -1,0 +1,24 @@
+{
+  "success": true,
+  "source": "DShield",
+  "ip": "8.8.8.8",
+  "score": 80,
+  "available": true,
+  "matched": true,
+  "count": 0,
+  "attacks": 0,
+  "maxrisk": 0,
+  "reputation": "Suspicious",
+  "threatfeeds_count": 4,
+  "first_seen": "None",
+  "last_seen": "None",
+  "country_code": "US",
+  "as_name": "GOOGLE",
+  "network": "8.8.8.0/24",
+  "score_breakdown": {
+    "reputation_points": 65,
+    "risk_points": 0,
+    "feed_points": 15
+  },
+  "error": null
+}
