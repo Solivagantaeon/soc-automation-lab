@@ -1,0 +1,9 @@
+{
+  "success": true,
+  "message": {
+    "valid": true,
+    "hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "algorithm": "SHA256",
+    "reason": "valid_hash"
+  }
+}
