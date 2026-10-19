@@ -4,7 +4,7 @@
   "type": "external",
   "source": "wazuh",
   "sourceRef": "$normalize_alert.message.source_alert_id",
-  "severity": $decision_router.#.message.severity,
+  "severity": "$decision_router.#.message.severity",
   "tlp": 2,
   "pap": 2,
   "tags": [
