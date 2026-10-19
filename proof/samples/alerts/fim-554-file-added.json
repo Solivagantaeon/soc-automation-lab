@@ -1,0 +1,79 @@
+{
+  "severity": 2,
+  "pretext": "WAZUH Alert",
+  "title": "File added to the system.",
+  "text": "File '/etc/systemd/timesyncd.conf.d/lab.conf' added\nMode: scheduled\n",
+  "rule_id": "554",
+  "timestamp": "2026-10-19T00:29:22.518+0200",
+  "id": "1792362562.39643",
+  "all_fields": {
+    "timestamp": "2026-10-19T00:29:22.518+0200",
+    "rule": {
+      "level": 5,
+      "description": "File added to the system.",
+      "id": "554",
+      "firedtimes": 1,
+      "mail": false,
+      "groups": [
+        "ossec",
+        "syscheck",
+        "syscheck_entry_added",
+        "syscheck_file"
+      ],
+      "pci_dss": [
+        "11.5"
+      ],
+      "gpg13": [
+        "4.11"
+      ],
+      "gdpr": [
+        "II_5.1.f"
+      ],
+      "hipaa": [
+        "164.312.c.1",
+        "164.312.c.2"
+      ],
+      "nist_800_53": [
+        "SI.7"
+      ],
+      "tsc": [
+        "PI1.4",
+        "PI1.5",
+        "CC6.1",
+        "CC6.8",
+        "CC7.2",
+        "CC7.3"
+      ]
+    },
+    "agent": {
+      "id": "006",
+      "name": "SOC-LIN-01",
+      "ip": "10.10.10.100"
+    },
+    "manager": {
+      "name": "wazuh-master"
+    },
+    "id": "1792362562.39643",
+    "full_log": "File '/etc/systemd/timesyncd.conf.d/lab.conf' added\nMode: scheduled\n",
+    "syscheck": {
+      "path": "/etc/systemd/timesyncd.conf.d/lab.conf",
+      "mode": "scheduled",
+      "size_after": "83",
+      "perm_after": "rw-r--r--",
+      "uid_after": "0",
+      "gid_after": "0",
+      "md5_after": "f601c27d8e3fe2689f2ee9d60bdb4530",
+      "sha1_after": "ac5a9cf4e58800f387fdd44db01389031fb11c47",
+      "sha256_after": "a65ddb197bfaa478e381984d6fa2a6abfddb3b7e44bbd5ad00a0d469ccf7636f",
+      "uname_after": "root",
+      "gname_after": "root",
+      "mtime_after": "2026-10-18T13:28:48",
+      "inode_after": 542285,
+      "event": "added"
+    },
+    "decoder": {
+      "name": "syscheck_new_entry"
+    },
+    "location": "syscheck"
+  }
+}

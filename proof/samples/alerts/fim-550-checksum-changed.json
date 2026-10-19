@@ -1,0 +1,98 @@
+{
+  "severity": 2,
+  "pretext": "WAZUH Alert",
+  "title": "Integrity checksum changed.",
+  "text": "File '/etc/localtime' modified\nMode: scheduled\nChanged attributes: size,inode,mtime\nSize changed from '27' to '33'\nOld modification time was: '1790427223', now it is '1792322929'\nOld inode was: '1315', now it is '1832'\n",
+  "rule_id": "550",
+  "timestamp": "2026-10-19T00:29:22.529+0200",
+  "id": "1792362562.40348",
+  "all_fields": {
+    "timestamp": "2026-10-19T00:29:22.529+0200",
+    "rule": {
+      "level": 7,
+      "description": "Integrity checksum changed.",
+      "id": "550",
+      "mitre": {
+        "id": [
+          "T1565.001"
+        ],
+        "tactic": [
+          "Impact"
+        ],
+        "technique": [
+          "Stored Data Manipulation"
+        ]
+      },
+      "firedtimes": 2,
+      "mail": false,
+      "groups": [
+        "ossec",
+        "syscheck",
+        "syscheck_entry_modified",
+        "syscheck_file"
+      ],
+      "pci_dss": [
+        "11.5"
+      ],
+      "gpg13": [
+        "4.11"
+      ],
+      "gdpr": [
+        "II_5.1.f"
+      ],
+      "hipaa": [
+        "164.312.c.1",
+        "164.312.c.2"
+      ],
+      "nist_800_53": [
+        "SI.7"
+      ],
+      "tsc": [
+        "PI1.4",
+        "PI1.5",
+        "CC6.1",
+        "CC6.8",
+        "CC7.2",
+        "CC7.3"
+      ]
+    },
+    "agent": {
+      "id": "006",
+      "name": "SOC-LIN-01",
+      "ip": "10.10.10.100"
+    },
+    "manager": {
+      "name": "wazuh-master"
+    },
+    "id": "1792362562.40348",
+    "full_log": "File '/etc/localtime' modified\nMode: scheduled\nChanged attributes: size,inode,mtime\nSize changed from '27' to '33'\nOld modification time was: '1790427223', now it is '1792322929'\nOld inode was: '1315', now it is '1832'\n",
+    "syscheck": {
+      "path": "/etc/localtime",
+      "mode": "scheduled",
+      "size_before": "27",
+      "size_after": "33",
+      "perm_after": "rwxrwxrwx",
+      "uid_after": "0",
+      "gid_after": "0",
+      "md5_after": "d41d8cd98f00b204e9800998ecf8427e",
+      "sha1_after": "da39a3ee5e6b4b0d3255bfef95601890afd80709",
+      "sha256_after": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "uname_after": "root",
+      "gname_after": "root",
+      "mtime_before": "2026-09-26T14:53:43",
+      "mtime_after": "2026-10-18T13:28:49",
+      "inode_before": 1315,
+      "inode_after": 1832,
+      "changed_attributes": [
+        "size",
+        "inode",
+        "mtime"
+      ],
+      "event": "modified"
+    },
+    "decoder": {
+      "name": "syscheck_integrity_changed"
+    },
+    "location": "syscheck"
+  }
+}
