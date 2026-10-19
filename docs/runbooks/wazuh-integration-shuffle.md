@@ -64,12 +64,12 @@ cp /var/ossec/etc/ossec.conf /var/ossec/etc/ossec.conf.bak-$(date +%F)
 ```
 
 In `/var/ossec/etc/ossec.conf` keep **exactly one** `shuffle` block – the content of
-`detection/wazuh/integrations/shuffle-integration.xml` with the real webhook URL:
+`detection/wazuh/integrations/shuffle-integration.xml`, with `__SHUFFLE_WEBHOOK_URL__` replaced by the real URL from step 1:
 
 ```xml
 <integration>
   <name>shuffle</name>
-  <hook_url>https://shuffle.lab:3443/api/v1/hooks/webhook_<id></hook_url>
+  <hook_url>__SHUFFLE_WEBHOOK_URL__</hook_url>
   <level>3</level>
   <alert_format>json</alert_format>
 </integration>
