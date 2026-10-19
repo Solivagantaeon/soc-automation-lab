@@ -1,0 +1,44 @@
+{
+  "title": "$normalize_alert.message.hostname - $normalize_alert.message.description",
+  "description": "=== SOC AUTOMATED TRIAGE ===\n\n[ALERT DETAILS]\nHostname: $normalize_alert.message.hostname\nAgent ID: $normalize_alert.message.agent_id\nSource: wazuh\nSource Alert ID: $normalize_alert.message.source_alert_id\nRule ID: $normalize_alert.message.rule_id\nTimestamp: $normalize_alert.message.timestamp\nWazuh Level: $aggregate_score.#.message.wazuh_level\nWazuh Description: $normalize_alert.message.description\n\n[INDICATORS OF COMPROMISE - IOC]\nSource IP: $normalize_alert.message.original_alert.data.srcip\nDestination IP: $normalize_alert.message.original_alert.data.dstip\nDomain: $normalize_alert.message.domain\nFile Hash: $validate_hash.message.hash\n\n[ABUSEIPDB]\nScore: $aggregate_score.#.message.abuseipdb_score\n\n[DSHIELD]\nScore: $aggregate_score.#.message.dshield_score\n\n[TEAM CYMRU]\nScore: $aggregate_score.#.message.cymru_score\nStatus: $aggregate_score.#.message.cymru_status\n\n[VIRUSTOTAL]\nScore: $aggregate_score.#.message.vt_score\nStatus: $aggregate_score.#.message.vt_status\nAvailable: $aggregate_score.#.message.vt_available\n\n[GOOGLE DNS / DOMAIN ANALYSIS]\nDomain: $aggregate_score.#.message.google_domain\nDNS Status: $aggregate_score.#.message.google_dns_status\nAnalysis Status: $aggregate_score.#.message.google_analysis_status\nAnswer Count: $aggregate_score.#.message.google_answer_count\nDNS Available: $aggregate_score.#.message.google_dns_available\n\n[MALTIVERSE]\nDomain: $aggregate_score.#.message.maltiverse_domain\nClassification: $aggregate_score.#.message.maltiverse_classification\nScore: $aggregate_score.#.message.maltiverse_score\nStatus: $aggregate_score.#.message.maltiverse_status\nResolved IP Count: $aggregate_score.#.message.maltiverse_resolved_ip_count\nAvailable: $aggregate_score.#.message.maltiverse_available\n\n[MISP]\nStatus: $aggregate_score.#.message.misp_status\nClassification: $aggregate_score.#.message.misp_classification\nIOC Found: $aggregate_score.#.message.misp_ioc_found\nAttribute Count: $aggregate_score.#.message.misp_attribute_count\nAvailable: $aggregate_score.#.message.misp_available\nMatched: $aggregate_score.#.message.misp_matched\nTo IDS: $aggregate_score.#.message.misp_to_ids\nScoring Available: $aggregate_score.#.message.misp_scoring_available\nScore: $aggregate_score.#.message.misp_score\n\n[RISK ASSESSMENT]\nRisk Score: $aggregate_score.#.message.risk_score\nRisk Level: $aggregate_score.#.message.risk_level\nDecision: $aggregate_score.#.message.decision\nAnalysis Status: $aggregate_score.#.message.analysis_status\nWazuh Score: $aggregate_score.#.message.wazuh_score",
+  "type": "external",
+  "source": "wazuh",
+  "sourceRef": "$normalize_alert.message.source_alert_id",
+  "severity": $decision_router.#.message.severity,
+  "tlp": 2,
+  "pap": 2,
+  "tags": [
+    "auto-triage",
+    "source:wazuh"
+  ],
+  "observables": [
+    {
+      "dataType": "ip",
+      "data": "$normalize_alert.message.srcip",
+      "tlp": 2,
+      "pap": 2,
+      "ioc": true
+    },
+    {
+      "dataType": "ip",
+      "data": "$normalize_alert.message.dstip",
+      "tlp": 2,
+      "pap": 2,
+      "ioc": true
+    },
+    {
+      "dataType": "domain",
+      "data": "$normalize_alert.message.domain",
+      "tlp": 2,
+      "pap": 2,
+      "ioc": true
+    },
+    {
+      "dataType": "hash",
+      "data": "$normalize_alert.message.hash",
+      "tlp": 2,
+      "pap": 2,
+      "ioc": true
+    }
+  ]
+}
