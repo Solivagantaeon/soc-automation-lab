@@ -1,13 +1,16 @@
+
 <!--
   Wazuh manager: /var/ossec/etc/ossec.conf, inside <ossec_config>.
   Exactly one shuffle block. All alerts of level >= 3 (= everything Wazuh logs, log_alert_level 3)
   go to Shuffle; filtering, deduplication and enrichment happen in the workflow (ADR 0001).
-  Replace the webhook id with the one from the workflow's Webhook node. Do not commit the real URL.
+  Replace __SHUFFLE_WEBHOOK_URL__ with the URL from the workflow's Webhook node
+  (https://shuffle.lab:3443/api/v1/hooks/webhook_<uuid>). Do not commit the real URL.
   Requires the Shuffle certificate to be trusted by Wazuh's Python (runbook, Setup step 2).
 -->
 <integration>
   <name>shuffle</name>
-  <hook_url>https://shuffle.lab:3443/api/v1/hooks/webhook_REPLACE_ME</hook_url>
+  <hook_url>__SHUFFLE_WEBHOOK_URL__</hook_url>
   <level>3</level>
   <alert_format>json</alert_format>
 </integration>
+ 
