@@ -1,0 +1,79 @@
+{
+  "Event": {
+    "System": {
+      "Provider": {
+        "Name": "Microsoft-Windows-Sysmon"
+      },
+      "EventID": 3,
+      "Version": 5,
+      "Level": 4,
+      "TimeCreated": {
+        "SystemTime": "2026-10-18T12:11:00.000Z"
+      },
+      "Computer": "SOC-LAB-WIN01",
+      "Channel": "Microsoft-Windows-Sysmon/Operational",
+      "EventRecordID": 4242
+    },
+    "EventData": {
+      "Data": [
+        {
+          "Name": "RuleName",
+          "text": "technique_id=T1071"
+        },
+        {
+          "Name": "UtcTime",
+          "text": "2026-10-18 12:11:00.000"
+        },
+        {
+          "Name": "ProcessGuid",
+          "text": "{11111111-2222-3333-4444-555555555555}"
+        },
+        {
+          "Name": "ProcessId",
+          "text": "4321"
+        },
+        {
+          "Name": "Image",
+          "text": "C:\\Lab\\sample-client.exe"
+        },
+        {
+          "Name": "User",
+          "text": "LAB\\test-user"
+        },
+        {
+          "Name": "Protocol",
+          "text": "tcp"
+        },
+        {
+          "Name": "Initiated",
+          "text": "true"
+        },
+        {
+          "Name": "SourceIp",
+          "text": "192.0.2.25"
+        },
+        {
+          "Name": "SourcePort",
+          "text": "51515"
+        },
+        {
+          "Name": "DestinationIp",
+          "text": "198.51.100.25"
+        },
+        {
+          "Name": "DestinationPort",
+          "text": "443"
+        },
+        {
+          "Name": "DestinationHostname",
+          "text": "example.test"
+        }
+      ]
+    }
+  },
+  "_sample_metadata": {
+    "synthetic": true,
+    "anonymized": true,
+    "note": "Sysmon Event ID 3-style network connection example; values are synthetic."
+  }
+}
