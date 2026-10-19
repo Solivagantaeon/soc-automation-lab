@@ -1,0 +1,36 @@
+
+{
+  "test": "suricata_alert_wrapped_by_wazuh",
+  "result": "PASS",
+  "normalized_alert": {
+    "source": "wazuh",
+    "timestamp": "2026-10-19T01:44:35.126Z",
+    "hostname": "opnsense",
+    "agent_id": "005",
+    "source_alert_id": "1792374275.233682",
+    "rule_id": "86601",
+    "alert_type": [
+      "ids",
+      "suricata"
+    ],
+    "severity": 1,
+    "severity_source": "wazuh_level",
+    "wazuh_level": 3,
+    "description": "Suricata: Alert - ET INFO Packed Executable Download",
+    "ip": [
+      "77.111.102.201",
+      "10.10.10.171"
+    ],
+    "user": null,
+    "observables": [
+      {
+        "type": "ip",
+        "value": "77.111.102.201"
+      },
+      {
+        "type": "ip",
+        "value": "10.10.10.171"
+      }
+    ]
+  }
+}
