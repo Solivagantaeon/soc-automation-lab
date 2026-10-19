@@ -6,7 +6,7 @@
 
 ## 1. Purpose and scope
 
-This document describes the deployed components of the isolated SOC Automation Lab and how each can be started, accessed, checked, and integrated. Wazuh collects endpoint and IDS alerts; Shuffle processes selected alerts through the triage workflow; Cortex and MISP provide enrichment; TheHive is used for analyst-facing alert and case management. DFIR-IRIS was evaluated as an alternative case-management platform.
+This document describes the deployed components of the isolated SOC Automation Lab and how each can be started, accessed, checked, and integrated. Wazuh collects endpoint and IDS alerts; Shuffle processes selected alerts through the triage workflow; Cortex and MISP provide enrichment; TheHive is used for analyst-facing alert and case management.
 
 **Evidence notation:** Commands, screenshots and logged events dated 18 October 2026 represent observed operation. Product-standard endpoints and ports identify how a component is normally accessed; local network exposure is governed by the actual service and firewall configuration. A visible workflow node is not by itself proof of successful execution of that connector.
 
@@ -18,7 +18,7 @@ This document describes the deployed components of the isolated SOC Automation L
 |---|---|---|
 | Management | `10.10.99.0/24` | Proxmox and firewall administration |
 | VICTIM / Windows | `10.10.10.0/24` | Domain controller and Windows endpoints |
-| SOC / tooling | `10.10.20.0/24` | Wazuh, Shuffle, Cortex, MISP, TheHive, DFIR-IRIS |
+| SOC / tooling | `10.10.20.0/24` | Wazuh, Shuffle, Cortex, MISP, TheHive |
 | ATTACK | `10.10.30.0/24` | Kali test host |
 | VPN | `10.10.250.0/24` | Administrative access via WireGuard |
 
@@ -409,49 +409,10 @@ On **17 October 2026**, the TheHive UI displayed numerous test records with the 
 
 - ![TheHive alerts](images/thhive/06-thehive-running.png)
 - TheHive configuration notes: [`../case-management/thehive/README.md`](../case-management/thehive/README.md)
-- Decision: TheHive was selected in place of DFIR-IRIS; see [architecture decisions](architecture.md#key-design-decisions).
 
 ---
 
-## 9. DFIR-IRIS — evaluated case-management alternative
-
-### 9.1 Purpose and deployment
-
-DFIR-IRIS was included for comparison with TheHive as an incident/alert management and investigative workspace. The project selected TheHive as the primary destination in the automated triage pipeline; DFIR-IRIS is therefore documented as an **evaluated alternative**, not a downstream production integration.
-
-| Property | Configuration |
-|---|---|
-| Evaluated release | **2.4.29** |
-| Private IP | `10.10.20.246` |
-| Deployment approach | Self-hosted Docker Compose application stack |
-| Standard web endpoint | HTTPS `443/TCP` |
-| Authentication | Authenticated user sessions and scoped bearer API keys |
-| API examples | `GET /api/versions` and authenticated `GET /api/ping` |
-
-### 9.2 Startup and standalone verification
-
-For the Docker Compose evaluation deployment, from its deployment directory:
-
-```bash
-sudo docker compose ps
-sudo docker compose up -d
-```
-
-An independent check consists of loading the HTTPS sign-in page and using the API's authenticated `GET /api/ping` (expected API message: `pong`). The API version endpoint `GET /api/versions` reports supported versions. No connection to Wazuh or Shuffle is needed for these checks.
-
-### 9.3 Evaluation outcome and troubleshooting
-
-The evaluation boundary was architectural rather than a failed pipeline dependency: maintaining two parallel case-management backends would complicate assignment and correlation. TheHive remains the main alert/case destination while DFIR-IRIS is retained as a comparison option. When checking the IRIS evaluation stack, inspect web proxy, application, worker and database containers independently to isolate frontend/backend problems.
-
-### 9.4 Evidence and references
-
-- Host inventory: [lab setup](lab-setup.md)
-- Architecture decision: [architecture](architecture.md#key-design-decisions)
-- API reference: [DFIR-IRIS API](https://docs.dfir-iris.org/latest/_static/iris_api_reference_v2.0.4.html)
-
----
-
-## 10. Communication matrix
+## 9. Communication matrix
 
 The matrix deliberately separates **observed collection** from **workflow/integration routes**. Product-standard service ports are indicated where the host's container exposure was not part of the captured Wazuh port inventory. The same edges appear in [architecture.md](architecture.md).
 
