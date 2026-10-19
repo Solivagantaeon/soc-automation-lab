@@ -34,7 +34,6 @@ The `Normalize Alert` node returns a JSON object with a `message` containing the
 | `wazuh_level` | Original Wazuh rule level, when present |
 | `description` | Alert description or message |
 | `ip` | List of extracted IP observables |
-| `misp_ip` | First extracted IPv4 address accepted as globally routable; empty when no such address is found |
 | `user` | Username, when present |
 | `observables` | Typed observable objects |
 | `original_alert` | Original incoming alert retained for traceability |
@@ -59,11 +58,7 @@ The normalizer extracts domain values from the alert's domain field or, when ava
 
 It recognizes MD5, SHA1, SHA256 and SHA512 hashes from the supported Sysmon event-data hash string format. Hash algorithms are normalized to lowercase, and hash values are converted to lowercase hexadecimal.
 
-The `ip` field retains extracted IP addresses for downstream workflow steps. The `misp_ip` field is a separate single-value field intended for MISP IP lookup. It is set only when an extracted address is an IPv4 address for which Python's `ipaddress` implementation returns `is_global = True`.
-
-The `misp_ip` field does not replace public-IP validation in other workflow branches. Downstream routing should use the intended validated field and must not submit private, reserved or documentation-range addresses to external analyzers.
-
-The original alert is retained so later workflow steps can access source-specific fields when required.
+The `ip` field contains the extracted IP addresses as a list. The original alert is retained so later workflow steps can access source-specific fields when required.
 
 ### Severity mapping
 
@@ -144,11 +139,17 @@ Output fields:
 
 The `MISP 1` node sends a POST request to the MISP attribute REST search endpoint using JSON input.
 
-The intended IP lookup value is the single `misp_ip` field produced by `Normalize Alert`, rather than the original alert's source-specific `data.srcip` field or the complete `ip` list.
+The current workflow references the normalized `ip` field using the Shuffle expression:
+
+`$normalize_alert.message.ip.#`
+
+This field represents a list of extracted IP addresses. Shuffle may treat list values as collections, so the request body and branch behavior must be verified to ensure the intended IP value is passed to MISP.
+
+The IP validation node is separate from the main MISP path. The MISP branch should not be assumed to enforce public-IP validation unless that validation is explicitly connected to the path or implemented in the request preparation logic.
 
 An empty attribute list is a valid lookup result and means that no matching attributes were returned. An unsuccessful request, malformed request body or skipped branch must not be interpreted as a negative IOC match.
 
-The MISP request should only be executed when `misp_ip` contains a valid public IPv4 address. Empty values must not be sent as IOC lookups. The workflow should preserve the distinction between a skipped lookup, an unsuccessful request and a successful lookup with no matching attributes.
+Private, reserved and documentation-range addresses must not be submitted to external analyzers.
 
 ## Testing evidence
 
@@ -160,6 +161,7 @@ The workflow and validation logic have previously been checked with synthetic te
 - The public IP validator accepted `8.8.8.8` and returned `reason: "public_ipv4"`.
 - The MISP request body was updated during testing to use normalized alert data rather than the obsolete `$exec.all_fields` reference.
 - The MISP endpoint returned HTTP 200 with an empty `Attribute` list for a lookup that returned no matching attributes.
+- During testing, an invalid request body was reported as `MISP body missing or invalid JSON`. The request body was subsequently adjusted and the MISP endpoint returned a successful response.
 
 ### Suricata alert wrapped by Wazuh
 
@@ -281,13 +283,13 @@ Additional test evidence and sanitized workflow exports are stored under `sample
 - The normalization stage may retain private IP addresses as observables; downstream validation must prevent them from being submitted to external analysis services.
 - Evidence artifacts should contain only the normalized fields needed to demonstrate test results. Avoid committing full original alerts if they include sensitive host, user or infrastructure information.
 - Do not treat an empty MISP response as proof that an IOC is benign.
-- Keep MISP credentials and session cookies out of source code, workflow exports and test artifacts.
+- Keep MISP credentials, authentication headers and session cookies out of source code, workflow exports and test artifacts.
 
 ## Known limitations and next steps
 
 - The confirmed manual tests cover a Suricata alert wrapped by Wazuh, a Sysmon Event ID 7 alert delivered through Wazuh, and a synthetic web alert.
 - Raw Suricata EVE JSON, raw Sysmon events and vendor-specific raw web-server logs have not been confirmed by the manual tests described above.
-- The MISP lookup is intended for a single public IPv4 address in `misp_ip`. Alerts with multiple IP addresses currently select the first extracted address accepted as globally routable.
-- Alerts without a public IPv4 address need a verified workflow path that skips MISP IP lookup without treating the alert as an error or a negative IOC match.
+- The `ip` field is a list. The current MISP expression `$normalize_alert.message.ip.#` should be checked to ensure that the intended single IP value is passed to the request body.
+- The MISP path and the public IP validator are separate. Public-IP validation must be enforced before external analysis; the presence of a separate validator does not by itself guarantee that MISP only receives public IP addresses.
+- Alerts without observables need a verified workflow path that skips IOC enrichment without treating the alert as an error or a negative IOC match.
 - Public IP validation and downstream analyzer routing should be verified against the actual normalized observable list, especially when an alert contains both public and private IP addresses.
-- The exact MISP branch and request-body behavior should be verified for empty `misp_ip`, successful lookup with results, and successful lookup with no matching attributes.
