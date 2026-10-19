@@ -1,9 +1,10 @@
-
 # Alert normalization and observable extraction
 
 ## Purpose
 
 The Shuffle workflow normalizes incoming Wazuh alerts into a common structure used by later enrichment, scoring, deduplication and TheHive integration steps.
+
+The normalized structure preserves the original alert for traceability while extracting common fields and typed observables for downstream processing.
 
 ## Workflow
 
@@ -20,10 +21,10 @@ The `Normalize Alert` node returns a JSON object with a `message` containing the
 | Field | Description |
 |---|---|
 | `source` | Alert source; currently `wazuh` |
-| `timestamp` | Original alert timestamp, normalized to ISO 8601 UTC when available |
+| `timestamp` | Alert timestamp normalized to ISO 8601 UTC when available |
 | `hostname` | Wazuh agent hostname |
 | `agent_id` | Wazuh agent ID |
-| `source_alert_id` | Original Wazuh alert ID |
+| `source_alert_id` | Original alert ID |
 | `rule_id` | Original Wazuh rule ID |
 | `alert_type` | List of alert categories derived from the rule groups |
 | `severity` | Common severity value |
@@ -33,9 +34,23 @@ The `Normalize Alert` node returns a JSON object with a `message` containing the
 | `ip` | List of extracted IP observables |
 | `user` | Username, when present |
 | `observables` | Typed observable objects |
-| `original_alert` | Original Wazuh alert retained for traceability |
+| `original_alert` | Original incoming alert retained for traceability |
+
+The normalizer supports Wazuh alerts whose fields are provided directly and alerts whose Wazuh fields are nested inside `all_fields`.
+
+For Suricata events wrapped by Wazuh, the normalizer extracts `src_ip` and `dest_ip` from the event data. Standard Wazuh `srcip` fields are also supported.
 
 ### Observable format
+
+Observables use typed objects:
+
+- IP: `{"type": "ip", "value": "..."}`
+- Domain: `{"type": "domain", "value": "..."}`
+- Hash: `{"type": "hash", "algorithm": "...", "value": "..."}`
+
+The normalizer extracts domain values from the alert's domain field or, when available, the DNS question name. It recognizes MD5, SHA1, SHA256 and SHA512 hashes from the supported Sysmon event-data hash string format.
+
+The original alert is retained so later workflow steps can access source-specific fields when required.
 
 ### Severity mapping
 
@@ -51,15 +66,7 @@ The `Normalize Alert` node maps the original Wazuh `rule.level` to a common seve
 
 The original Wazuh level is retained in `wazuh_level`, and `severity_source` is set to `wazuh_level` to preserve traceability.
 
-This mapping is a project-defined normalization policy, not an official Wazuh severity classification.
-
-Observables use typed objects:
-
-- IP: `{"type": "ip", "value": "..."}`
-- Domain: `{"type": "domain", "value": "..."}`
-- Hash: `{"type": "hash", "algorithm": "...", "value": "..."}`
-
-The original alert is retained so later workflow steps can access source-specific fields when required.
+This mapping is a project-defined normalization policy, not an official Wazuh severity classification. If the Wazuh rule level is missing or invalid, the normalized `severity` and `wazuh_level` are `null`.
 
 ## Validation
 
@@ -119,12 +126,55 @@ An empty attribute list is a valid lookup result and means that no matching attr
 
 ## Testing evidence
 
-The workflow was manually executed with a synthetic Wazuh alert.
+### Existing validation checks
 
-- The normalization node returned a structured alert with source fields retained.
+The workflow and validation logic have previously been checked with synthetic test data.
+
 - The public IP validator rejected `198.51.100.25`, a documentation-range address.
 - The public IP validator accepted `8.8.8.8` and returned `reason: "public_ipv4"`.
 - The MISP condition was updated to use the normalized alert's original payload instead of the obsolete `$exec.all_fields` reference.
+
+### Suricata alert wrapped by Wazuh
+
+**Status: PASS — manual execution**
+
+The `Normalize Alert` node was manually executed using a Wazuh alert containing Suricata EVE event data nested inside `all_fields`.
+
+The actual output confirmed the following values:
+
+| Field | Observed result |
+|---|---|
+| `source` | `wazuh` |
+| `timestamp` | `2026-10-19T01:44:35.126Z` |
+| `hostname` | `opnsense` |
+| `agent_id` | `005` |
+| `source_alert_id` | `1792374275.233682` |
+| `rule_id` | `86601` |
+| `alert_type` | `["ids", "suricata"]` |
+| `wazuh_level` | `3` |
+| `severity` | `1` |
+| `description` | `Suricata: Alert - ET INFO Packed Executable Download` |
+
+The normalizer extracted both the source and destination IP addresses into `ip` and `observables`:
+
+- `77.111.102.201`
+- `10.10.10.171`
+
+The timestamp was converted from the original `+0200` offset to UTC. The result matched the configured severity mapping for Wazuh rule level 3.
+
+The manual execution confirms normalization of this Suricata event in a Wazuh wrapper. It does not, by itself, confirm support for raw Suricata EVE JSON, raw Sysmon events or web server logs.
+
+Evidence artifact:
+
+`soar/shuffle/samples/alerts/normalized-suricata-wazuh-output.json`
+
+This artifact should contain a sanitized normalized result without credentials or unnecessary original infrastructure details.
+
+### CI checks
+
+The GitHub Actions run `Create test_normalized_alert_schema.py #16` on `main` completed successfully, including the secret scan and the sanitization, syntax and unit-test job.
+
+This confirms that the checks passed for that run and commit. It does not establish that every subsequent feature-branch change has passed CI.
 
 Additional test evidence and sanitized workflow exports are stored under `samples/results/normalized/` and `soar/shuffle/workflows/` when available.
 
@@ -134,3 +184,11 @@ Additional test evidence and sanitized workflow exports are stored under `sample
 - Replace real external IP addresses with RFC 5737 documentation ranges in committed examples.
 - Never commit API keys, authentication headers, cookies or other secrets.
 - Do not send private or reserved IP addresses to external analyzers.
+- The normalization stage may retain private IP addresses as observables; downstream validation must prevent them from being submitted to external analysis services.
+
+## Known limitations and next steps
+
+- The confirmed manual test covers a Suricata alert wrapped by Wazuh.
+- Raw Sysmon and web server log normalization still require separate verification before their support can be claimed.
+- Alerts without observables need a separately verified workflow path if they are expected to bypass IOC enrichment.
+- Public IP validation and downstream analyzer routing should be verified against the actual normalized observable
