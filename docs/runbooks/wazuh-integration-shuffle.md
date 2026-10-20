@@ -154,7 +154,7 @@ The same injection method replays a Suricata event (`eve.json` line, location `/
 
 ### Samples
 
-`samples/alerts/*.json` are built from `alerts.json` with the integration's own `generate_msg()` from `shuffle.py`, i.e. the same envelope Shuffle receives (`severity`, `pretext`, `title`, `rule_id`, `timestamp`, `id`, `all_fields`). Not anonymised.
+`samples/alerts/*.json` are built from `alerts.json` with the integration's own `generate_msg()` from `shuffle.py`, i.e. the same envelope Shuffle receives (`severity`, `pretext`, `title`, `rule_id`, `timestamp`, `id`, `all_fields`). Real lab alerts. They contain only lab hostnames, private addresses and the built-in Administrator account; the external IP in the Suricata sample was replaced with 203.0.113.10 (RFC 5737).
 FIM samples (550, 554) come from alerts at 00:29, before the TLS fix – same format, but those particular alerts were not delivered to Shuffle.
 
 ---
