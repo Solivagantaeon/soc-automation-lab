@@ -1,0 +1,199 @@
+{
+  "test_case": "mixed_malicious_and_warninglist_ip_lookups",
+  "source_alert_id": "misp-issue10-20261020-1425-a8e2",
+  "input_observables": {
+    "ip": [
+      "198.51.100.10",
+      "203.0.113.53"
+    ],
+    "domain": "google.com",
+    "hashes": [
+      {
+        "algorithm": "md5",
+        "value": "0face841f7b2953e7c29c064d6886523"
+      },
+      {
+        "algorithm": "sha256",
+        "value": "bdf252bed33416f0b28efdf3ce750c54db59709bf25e7d41739cf62e760c7fe8"
+      }
+    ]
+  },
+  "misp_results": [
+    {
+      "queried_ioc": {
+        "type": "ip",
+        "value": "198.51.100.10"
+      },
+      "http_status": 200,
+      "response_attribute_count": 3,
+      "normalized_result": {
+        "source": "misp",
+        "analysis_status": "complete",
+        "ioc_found": true,
+        "classification": "matched",
+        "attribute_count": 3,
+        "attributes": [
+          {
+            "type": "ip-dst",
+            "value": "198.51.100.10",
+            "category": "Network activity",
+            "to_ids": true,
+            "event_id": "1648"
+          },
+          {
+            "type": "ip-src",
+            "value": "198.51.100.10",
+            "category": "Network activity",
+            "to_ids": false,
+            "event_id": "1655"
+          },
+          {
+            "type": "ip-dst",
+            "value": "198.51.100.10",
+            "category": "Network activity",
+            "to_ids": true,
+            "event_id": "1685"
+          }
+        ],
+        "event_ids": [
+          "1648",
+          "1655",
+          "1685"
+        ],
+        "error": null
+      },
+      "event_context_from_raw_response": [
+        {
+          "event_id": "1648",
+          "event_info": "Feodo IP Blocklist feed",
+          "attribute_to_ids": true,
+          "attribute_comment": ""
+        },
+        {
+          "event_id": "1655",
+          "event_info": "TEST - lab enrichment (Shuffle)",
+          "attribute_to_ids": false,
+          "attribute_comment": ""
+        },
+        {
+          "event_id": "1685",
+          "event_info": "SOC-LAB test IOCs - malicious",
+          "attribute_to_ids": true,
+          "attribute_comment": "C2 IP - active botnet command & control server"
+        }
+      ],
+      "sightings": {
+        "first_seen": null,
+        "last_seen": null
+      }
+    },
+    {
+      "queried_ioc": {
+        "type": "ip",
+        "value": "203.0.113.53"
+      },
+      "http_status": 200,
+      "response_attribute_count": 1,
+      "normalized_result": {
+        "source": "misp",
+        "analysis_status": "complete",
+        "ioc_found": true,
+        "classification": "matched",
+        "attribute_count": 1,
+        "attributes": [
+          {
+            "type": "ip-dst",
+            "value": "203.0.113.53",
+            "category": "Network activity",
+            "to_ids": false,
+            "event_id": "1351"
+          }
+        ],
+        "event_ids": [
+          "1351"
+        ],
+        "error": null
+      },
+      "event_context_from_raw_response": [
+        {
+          "event_id": "1351",
+          "event_info": "Kunai Analysis Report - Malware Sample Abusing Open Recursive DNS for Exfiltration",
+          "attribute_to_ids": false,
+          "attribute_comment": "[Auto] IDS disabled by warninglist checker. Matched: List of known IPv4 public DNS resolvers"
+        }
+      ],
+      "sightings": {
+        "first_seen": null,
+        "last_seen": null
+      }
+    }
+  ],
+  "thehive_result": {
+    "http_status": 201,
+    "misp_status": "complete",
+    "misp_classification": "matched",
+    "misp_ioc_found": true,
+    "misp_attribute_count": 3,
+    "misp_to_ids": true,
+    "misp_scoring_available": true,
+    "misp_score": 100,
+    "risk_score": 45,
+    "risk_level": "medium",
+    "decision": "analyst_review",
+    "analysis_status": "partial"
+  },
+  "coverage_notes": [
+    "Normalize Alert successfully extracted two IP addresses, one domain, one MD5, and one SHA-256 hash from the supplied Wazuh alert.",
+    "The recorded MISP execution contains successful lookups for the two IP addresses only.",
+    "No MISP result was captured for google.com or either hash, so MISP domain/hash lookup coverage is not yet demonstrated.",
+    "The 198.51.100.10 lookup returned three attributes across three events, with both to_ids true and false records.",
+    "The 203.0.113.53 lookup returned one attribute with to_ids false and a warninglist comment for known public DNS resolvers.",
+    "The MISP normalizer output does not include an explicit hit/no_hit/unavailable status or event tags.",
+    "The returned attributes had null first_seen and last_seen values; event dates are not sightings.",
+    "The first TheHive alert creation succeeded with HTTP 201. The repeated creation returned HTTP 400 because the alert already existed; this is duplicate-alert behavior, not a MISP error."
+  ],
+  "normalized_alert_observables": {
+    "source": "wazuh",
+    "srcip": "198.51.100.10",
+    "dstip": "203.0.113.53",
+    "ip": [
+      "198.51.100.10",
+      "203.0.113.53"
+    ],
+    "domain": "google.com",
+    "hash": "0face841f7b2953e7c29c064d6886523",
+    "hashes": [
+      "0face841f7b2953e7c29c064d6886523",
+      "bdf252bed33416f0b28efdf3ce750c54db59709bf25e7d41739cf62e760c7fe8"
+    ],
+    "has_ip": true,
+    "has_domain": true,
+    "has_hash": true,
+    "has_any_ioc": true,
+    "observables": [
+      {
+        "type": "ip",
+        "value": "198.51.100.10"
+      },
+      {
+        "type": "ip",
+        "value": "203.0.113.53"
+      },
+      {
+        "type": "domain",
+        "value": "google.com"
+      },
+      {
+        "type": "hash",
+        "value": "0face841f7b2953e7c29c064d6886523",
+        "algorithm": "md5"
+      },
+      {
+        "type": "hash",
+        "value": "bdf252bed33416f0b28efdf3ce750c54db59709bf25e7d41739cf62e760c7fe8",
+        "algorithm": "sha256"
+      }
+    ],
+    "misp_ip": "198.51.100.10"
+  }
+}

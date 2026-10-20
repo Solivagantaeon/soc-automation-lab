@@ -1,0 +1,741 @@
+{
+  "test_case": "all_observable_types_misp_restsearch_issue10",
+  "source_alert_id": "misp-issue10-20261020-1425-a8e2",
+  "input_observables": [
+    {
+      "type": "ip",
+      "value": "198.51.100.10"
+    },
+    {
+      "type": "ip",
+      "value": "203.0.113.53"
+    },
+    {
+      "type": "domain",
+      "value": "google.com"
+    },
+    {
+      "type": "hash",
+      "algorithm": "md5",
+      "value": "0face841f7b2953e7c29c064d6886523"
+    },
+    {
+      "type": "hash",
+      "algorithm": "sha256",
+      "value": "bdf252bed33416f0b28efdf3ce750c54db59709bf25e7d41739cf62e760c7fe8"
+    }
+  ],
+  "per_ioc_results": [
+    {
+      "queried_ioc": {
+        "type": "ip",
+        "value": "198.51.100.10"
+      },
+      "misp_http_status": 200,
+      "raw_attribute_count": 3,
+      "raw_matches": [
+        {
+          "type": "ip-dst",
+          "value": "198.51.100.10",
+          "category": "Network activity",
+          "to_ids": true,
+          "event_id": "1648",
+          "attribute_comment": null,
+          "event_info": "Feodo IP Blocklist feed",
+          "tags": []
+        },
+        {
+          "type": "ip-src",
+          "value": "198.51.100.10",
+          "category": "Network activity",
+          "to_ids": false,
+          "event_id": "1655",
+          "attribute_comment": null,
+          "event_info": "TEST – lab enrichment (Shuffle)",
+          "tags": []
+        },
+        {
+          "type": "ip-dst",
+          "value": "198.51.100.10",
+          "category": "Network activity",
+          "to_ids": true,
+          "event_id": "1685",
+          "attribute_comment": "C2 IP - active botnet command & control server",
+          "event_info": "SOC-LAB test IOCs – malicious",
+          "tags": [
+            "soc-lab:malicious",
+            "soc-lab:thehive"
+          ]
+        }
+      ],
+      "normalized_result_observed": {
+        "source": "misp",
+        "status": "hit",
+        "analysis_status": "complete",
+        "queried_ioc": {
+          "type": "ip",
+          "value": "198.51.100.10"
+        },
+        "ioc_found": true,
+        "classification": "matched",
+        "attribute_count": 3,
+        "event_count": 3,
+        "attributes": [
+          {
+            "type": "ip-dst",
+            "value": "198.51.100.10",
+            "category": "Network activity",
+            "to_ids": true,
+            "event_id": "1648",
+            "comment": "",
+            "tags": [],
+            "event_info": "Feodo IP Blocklist feed",
+            "event_date": "2026-10-15",
+            "first_seen": null,
+            "last_seen": null,
+            "warninglist_hit": false,
+            "known_benign_match": false,
+            "malicious_tag_match": false
+          },
+          {
+            "type": "ip-src",
+            "value": "198.51.100.10",
+            "category": "Network activity",
+            "to_ids": false,
+            "event_id": "1655",
+            "comment": "",
+            "tags": [],
+            "event_info": "TEST – lab enrichment (Shuffle)",
+            "event_date": "2026-10-16",
+            "first_seen": null,
+            "last_seen": null,
+            "warninglist_hit": false,
+            "known_benign_match": false,
+            "malicious_tag_match": false
+          },
+          {
+            "type": "ip-dst",
+            "value": "198.51.100.10",
+            "category": "Network activity",
+            "to_ids": true,
+            "event_id": "1685",
+            "comment": "C2 IP - active botnet command & control server",
+            "tags": [
+              "soc-lab:malicious",
+              "soc-lab:thehive"
+            ],
+            "event_info": "SOC-LAB test IOCs – malicious",
+            "event_date": "2026-10-18",
+            "first_seen": null,
+            "last_seen": null,
+            "warninglist_hit": false,
+            "known_benign_match": false,
+            "malicious_tag_match": true
+          }
+        ],
+        "event_ids": [
+          "1648",
+          "1655",
+          "1685"
+        ],
+        "tags": [
+          "soc-lab:malicious",
+          "soc-lab:thehive"
+        ],
+        "warninglist_hit": false,
+        "known_benign_match": false,
+        "malicious_tag_match": true,
+        "to_ids_match": true,
+        "error": null
+      },
+      "raw_misp_status": "hit",
+      "aggregate_result_observed": {
+        "misp_status": "complete",
+        "misp_available": true,
+        "misp_matched": true,
+        "misp_to_ids": true,
+        "misp_scoring_available": true,
+        "misp_score": 100,
+        "risk_score": 45,
+        "risk_level": "medium",
+        "decision": "analyst_review",
+        "analysis_status": "partial",
+        "abuseipdb_score": 16,
+        "vt_score": 58,
+        "vt_available": true,
+        "maltiverse_status": "complete",
+        "maltiverse_available": true
+      }
+    },
+    {
+      "queried_ioc": {
+        "type": "ip",
+        "value": "203.0.113.53"
+      },
+      "misp_http_status": 200,
+      "raw_attribute_count": 1,
+      "raw_matches": [
+        {
+          "type": "ip-dst",
+          "value": "203.0.113.53",
+          "category": "Network activity",
+          "to_ids": false,
+          "event_id": "1351",
+          "attribute_comment": "[Auto] IDS disabled by warninglist checker. Matched: List of known IPv4 public DNS resolvers",
+          "event_info": "Kunai Analysis Report - Malware Sample Abusing Open Recursive DNS for Exfiltration",
+          "tags": [
+            "type:OSINT",
+            "osint:lifetime=\"perpetual\"",
+            "osint:certainty=\"50\"",
+            "tlp:white",
+            "tlp:clear",
+            "misp-galaxy:producer=\"CIRCL\"",
+            "misp-galaxy:mitre-attack-pattern=\"Exfiltration Over Other Network Medium - T1438\""
+          ]
+        }
+      ],
+      "normalized_result_observed": {
+        "source": "misp",
+        "status": "hit",
+        "analysis_status": "complete",
+        "queried_ioc": {
+          "type": "ip",
+          "value": "203.0.113.53"
+        },
+        "ioc_found": true,
+        "classification": "matched",
+        "attribute_count": 1,
+        "event_count": 1,
+        "attributes": [
+          {
+            "type": "ip-dst",
+            "value": "203.0.113.53",
+            "category": "Network activity",
+            "to_ids": false,
+            "event_id": "1351",
+            "comment": "[Auto] IDS disabled by warninglist checker. Matched: List of known IPv4 public DNS resolvers",
+            "tags": [
+              "type:OSINT",
+              "osint:lifetime=\"perpetual\"",
+              "osint:certainty=\"50\"",
+              "tlp:white",
+              "tlp:clear",
+              "misp-galaxy:producer=\"CIRCL\"",
+              "misp-galaxy:mitre-attack-pattern=\"Exfiltration Over Other Network Medium - T1438\""
+            ],
+            "event_info": "Kunai Analysis Report - Malware Sample Abusing Open Recursive DNS for Exfiltration",
+            "event_date": "2025-12-15",
+            "first_seen": null,
+            "last_seen": null,
+            "warninglist_hit": true,
+            "known_benign_match": false,
+            "malicious_tag_match": false
+          }
+        ],
+        "event_ids": [
+          "1351"
+        ],
+        "tags": [
+          "misp-galaxy:mitre-attack-pattern=\"Exfiltration Over Other Network Medium - T1438\"",
+          "misp-galaxy:producer=\"CIRCL\"",
+          "osint:certainty=\"50\"",
+          "osint:lifetime=\"perpetual\"",
+          "tlp:clear",
+          "tlp:white",
+          "type:OSINT"
+        ],
+        "warninglist_hit": true,
+        "known_benign_match": false,
+        "malicious_tag_match": false,
+        "to_ids_match": false,
+        "error": null
+      },
+      "raw_misp_status": "hit",
+      "aggregate_result_observed": {
+        "misp_status": "complete",
+        "misp_available": true,
+        "misp_matched": true,
+        "misp_to_ids": false,
+        "misp_scoring_available": false,
+        "misp_score": null,
+        "risk_score": 39,
+        "risk_level": "medium",
+        "decision": "analyst_review",
+        "analysis_status": "partial",
+        "abuseipdb_score": 16,
+        "vt_score": 58,
+        "vt_available": true,
+        "maltiverse_status": "complete",
+        "maltiverse_available": true
+      }
+    },
+    {
+      "queried_ioc": {
+        "type": "domain",
+        "value": "google.com"
+      },
+      "misp_http_status": 200,
+      "raw_attribute_count": 4,
+      "raw_matches": [
+        {
+          "type": "domain",
+          "value": "google.com",
+          "category": "Network activity",
+          "to_ids": false,
+          "event_id": "167",
+          "attribute_comment": null,
+          "event_info": "OSINT Expansion on Systematic cyber attacks against Israeli and Palestinian targets going on for a year by Norman",
+          "tags": [
+            "tlp:green",
+            "admiralty-scale:information-credibility=\"6\"",
+            "type:OSINT"
+          ]
+        },
+        {
+          "type": "hostname",
+          "value": "google.com",
+          "category": "Network activity",
+          "to_ids": false,
+          "event_id": "228",
+          "attribute_comment": "Connectivity check",
+          "event_info": "OSINT The Dyre Wolf report from IBM",
+          "tags": [
+            "type:OSINT",
+            "tlp:white"
+          ]
+        },
+        {
+          "type": "domain",
+          "value": "google.com",
+          "category": "Network activity",
+          "to_ids": false,
+          "event_id": "868",
+          "attribute_comment": "Win.Dropper.Neutrinopos-6500704-1",
+          "event_info": "OSINT - Talos/Cisco  Threat Roundup for April 6 - 13",
+          "tags": [
+            "tlp:white"
+          ]
+        },
+        {
+          "type": "domain",
+          "value": "google.com",
+          "category": "Network activity",
+          "to_ids": false,
+          "event_id": "1686",
+          "attribute_comment": "Google - known benign",
+          "event_info": "SOC-LAB test IOCs – benign",
+          "tags": [
+            "soc-lab:benign"
+          ]
+        }
+      ],
+      "normalized_result_observed": {
+        "source": "misp",
+        "status": "hit",
+        "analysis_status": "complete",
+        "queried_ioc": {
+          "type": "domain",
+          "value": "google.com"
+        },
+        "ioc_found": true,
+        "classification": "matched",
+        "attribute_count": 4,
+        "event_count": 4,
+        "attributes": [
+          {
+            "type": "domain",
+            "value": "google.com",
+            "category": "Network activity",
+            "to_ids": false,
+            "event_id": "167",
+            "comment": "",
+            "tags": [
+              "tlp:green",
+              "admiralty-scale:information-credibility=\"6\"",
+              "type:OSINT"
+            ],
+            "event_info": "OSINT Expansion on Systematic cyber attacks against Israeli and Palestinian targets going on for a year by Norman",
+            "event_date": "2015-11-05",
+            "first_seen": null,
+            "last_seen": null,
+            "warninglist_hit": false,
+            "known_benign_match": false,
+            "malicious_tag_match": false
+          },
+          {
+            "type": "hostname",
+            "value": "google.com",
+            "category": "Network activity",
+            "to_ids": false,
+            "event_id": "228",
+            "comment": "Connectivity check",
+            "tags": [
+              "type:OSINT",
+              "tlp:white"
+            ],
+            "event_info": "OSINT The Dyre Wolf report from IBM",
+            "event_date": "2015-04-03",
+            "first_seen": null,
+            "last_seen": null,
+            "warninglist_hit": false,
+            "known_benign_match": false,
+            "malicious_tag_match": false
+          },
+          {
+            "type": "domain",
+            "value": "google.com",
+            "category": "Network activity",
+            "to_ids": false,
+            "event_id": "868",
+            "comment": "Win.Dropper.Neutrinopos-6500704-1",
+            "tags": [
+              "tlp:white"
+            ],
+            "event_info": "OSINT - Talos/Cisco  Threat Roundup for April 6 - 13",
+            "event_date": "2018-04-17",
+            "first_seen": null,
+            "last_seen": null,
+            "warninglist_hit": false,
+            "known_benign_match": false,
+            "malicious_tag_match": false
+          },
+          {
+            "type": "domain",
+            "value": "google.com",
+            "category": "Network activity",
+            "to_ids": false,
+            "event_id": "1686",
+            "comment": "Google - known benign",
+            "tags": [
+              "soc-lab:benign"
+            ],
+            "event_info": "SOC-LAB test IOCs – benign",
+            "event_date": "2026-10-18",
+            "first_seen": null,
+            "last_seen": null,
+            "warninglist_hit": false,
+            "known_benign_match": true,
+            "malicious_tag_match": false
+          }
+        ],
+        "event_ids": [
+          "167",
+          "1686",
+          "228",
+          "868"
+        ],
+        "tags": [
+          "admiralty-scale:information-credibility=\"6\"",
+          "soc-lab:benign",
+          "tlp:green",
+          "tlp:white",
+          "type:OSINT"
+        ],
+        "warninglist_hit": false,
+        "known_benign_match": true,
+        "malicious_tag_match": false,
+        "to_ids_match": false,
+        "error": null
+      },
+      "raw_misp_status": "hit",
+      "aggregate_result_observed": {
+        "misp_status": "complete",
+        "misp_available": true,
+        "misp_matched": true,
+        "misp_to_ids": false,
+        "misp_scoring_available": false,
+        "misp_score": null,
+        "risk_score": 39,
+        "risk_level": "medium",
+        "decision": "analyst_review",
+        "analysis_status": "partial",
+        "abuseipdb_score": 16,
+        "vt_score": 58,
+        "vt_available": true,
+        "maltiverse_status": "complete",
+        "maltiverse_available": true
+      }
+    },
+    {
+      "queried_ioc": {
+        "type": "hash",
+        "value": "0face841f7b2953e7c29c064d6886523"
+      },
+      "misp_http_status": 200,
+      "raw_attribute_count": 4,
+      "raw_matches": [
+        {
+          "type": "md5",
+          "value": "0face841f7b2953e7c29c064d6886523",
+          "category": "Payload delivery",
+          "to_ids": true,
+          "event_id": "794",
+          "attribute_comment": null,
+          "event_info": "OSINT - Attackers Deploy New ICS Attack Framework â€œTRITONâ€ and Cause Operational Disruption to Critical Infrastructure",
+          "tags": [
+            "tlp:white",
+            "circl:topic=\"industry\"",
+            "veris:asset:variety=\"S - SCADA\""
+          ]
+        },
+        {
+          "type": "malware-sample",
+          "value": "library.zip|0face841f7b2953e7c29c064d6886523",
+          "category": "Payload delivery",
+          "to_ids": true,
+          "event_id": "812",
+          "attribute_comment": null,
+          "event_info": "OSINT -  Repository containting orignal and decompiled files of TRISIS/TRITON/HATMAN malware",
+          "tags": [
+            "misp-galaxy:tool=\"TRISIS\"",
+            "tlp:white",
+            "veris:asset:variety=\"S - SCADA\"",
+            "circl:topic=\"industry\"",
+            "admiralty-scale:information-credibility=\"2\""
+          ]
+        },
+        {
+          "type": "md5",
+          "value": "0face841f7b2953e7c29c064d6886523",
+          "category": "Payload delivery",
+          "to_ids": true,
+          "event_id": "812",
+          "attribute_comment": null,
+          "event_info": "OSINT -  Repository containting orignal and decompiled files of TRISIS/TRITON/HATMAN malware",
+          "tags": [
+            "misp-galaxy:tool=\"TRISIS\"",
+            "tlp:white",
+            "veris:asset:variety=\"S - SCADA\"",
+            "circl:topic=\"industry\"",
+            "admiralty-scale:information-credibility=\"2\""
+          ]
+        },
+        {
+          "type": "md5",
+          "value": "0face841f7b2953e7c29c064d6886523",
+          "category": "Payload delivery",
+          "to_ids": true,
+          "event_id": "1685",
+          "attribute_comment": "TRITON/TRISIS ICS malware payload",
+          "event_info": "SOC-LAB test IOCs – malicious",
+          "tags": [
+            "soc-lab:malicious",
+            "soc-lab:thehive"
+          ]
+        }
+      ],
+      "normalized_result_observed": {
+        "source": "misp",
+        "status": "hit",
+        "analysis_status": "complete",
+        "queried_ioc": {
+          "type": "hash",
+          "value": "0face841f7b2953e7c29c064d6886523"
+        },
+        "ioc_found": true,
+        "classification": "matched",
+        "attribute_count": 4,
+        "event_count": 3,
+        "attributes": [
+          {
+            "type": "md5",
+            "value": "0face841f7b2953e7c29c064d6886523",
+            "category": "Payload delivery",
+            "to_ids": true,
+            "event_id": "794",
+            "comment": "",
+            "tags": [
+              "tlp:white",
+              "circl:topic=\"industry\"",
+              "veris:asset:variety=\"S - SCADA\""
+            ],
+            "event_info": "OSINT - Attackers Deploy New ICS Attack Framework â€œTRITONâ€ and Cause Operational Disruption to Critical Infrastructure",
+            "event_date": "2017-12-14",
+            "first_seen": null,
+            "last_seen": null,
+            "warninglist_hit": false,
+            "known_benign_match": false,
+            "malicious_tag_match": false
+          },
+          {
+            "type": "malware-sample",
+            "value": "library.zip|0face841f7b2953e7c29c064d6886523",
+            "category": "Payload delivery",
+            "to_ids": true,
+            "event_id": "812",
+            "comment": "",
+            "tags": [
+              "misp-galaxy:tool=\"TRISIS\"",
+              "tlp:white",
+              "veris:asset:variety=\"S - SCADA\"",
+              "circl:topic=\"industry\"",
+              "admiralty-scale:information-credibility=\"2\""
+            ],
+            "event_info": "OSINT -  Repository containting orignal and decompiled files of TRISIS/TRITON/HATMAN malware",
+            "event_date": "2017-12-24",
+            "first_seen": null,
+            "last_seen": null,
+            "warninglist_hit": false,
+            "known_benign_match": false,
+            "malicious_tag_match": false
+          },
+          {
+            "type": "md5",
+            "value": "0face841f7b2953e7c29c064d6886523",
+            "category": "Payload delivery",
+            "to_ids": true,
+            "event_id": "812",
+            "comment": "",
+            "tags": [
+              "misp-galaxy:tool=\"TRISIS\"",
+              "tlp:white",
+              "veris:asset:variety=\"S - SCADA\"",
+              "circl:topic=\"industry\"",
+              "admiralty-scale:information-credibility=\"2\""
+            ],
+            "event_info": "OSINT -  Repository containting orignal and decompiled files of TRISIS/TRITON/HATMAN malware",
+            "event_date": "2017-12-24",
+            "first_seen": null,
+            "last_seen": null,
+            "warninglist_hit": false,
+            "known_benign_match": false,
+            "malicious_tag_match": false
+          },
+          {
+            "type": "md5",
+            "value": "0face841f7b2953e7c29c064d6886523",
+            "category": "Payload delivery",
+            "to_ids": true,
+            "event_id": "1685",
+            "comment": "TRITON/TRISIS ICS malware payload",
+            "tags": [
+              "soc-lab:malicious",
+              "soc-lab:thehive"
+            ],
+            "event_info": "SOC-LAB test IOCs – malicious",
+            "event_date": "2026-10-18",
+            "first_seen": null,
+            "last_seen": null,
+            "warninglist_hit": false,
+            "known_benign_match": false,
+            "malicious_tag_match": true
+          }
+        ],
+        "event_ids": [
+          "1685",
+          "794",
+          "812"
+        ],
+        "tags": [
+          "admiralty-scale:information-credibility=\"2\"",
+          "circl:topic=\"industry\"",
+          "misp-galaxy:tool=\"TRISIS\"",
+          "soc-lab:malicious",
+          "soc-lab:thehive",
+          "tlp:white",
+          "veris:asset:variety=\"S - SCADA\""
+        ],
+        "warninglist_hit": false,
+        "known_benign_match": false,
+        "malicious_tag_match": true,
+        "to_ids_match": true,
+        "error": null
+      },
+      "raw_misp_status": "hit",
+      "aggregate_result_observed": {
+        "misp_status": "complete",
+        "misp_available": true,
+        "misp_matched": true,
+        "misp_to_ids": true,
+        "misp_scoring_available": true,
+        "misp_score": 100,
+        "risk_score": 45,
+        "risk_level": "medium",
+        "decision": "analyst_review",
+        "analysis_status": "partial",
+        "abuseipdb_score": 16,
+        "vt_score": 58,
+        "vt_available": true,
+        "maltiverse_status": "complete",
+        "maltiverse_available": true
+      }
+    },
+    {
+      "queried_ioc": {
+        "type": "hash",
+        "value": "bdf252bed33416f0b28efdf3ce750c54db59709bf25e7d41739cf62e760c7fe8"
+      },
+      "misp_http_status": 200,
+      "raw_attribute_count": 0,
+      "raw_matches": [],
+      "normalized_result_observed": {
+        "source": "misp",
+        "status": "no_hit",
+        "analysis_status": "complete",
+        "queried_ioc": {
+          "type": "hash",
+          "value": "bdf252bed33416f0b28efdf3ce750c54db59709bf25e7d41739cf62e760c7fe8"
+        },
+        "ioc_found": false,
+        "classification": "not_found",
+        "attribute_count": 0,
+        "event_count": 0,
+        "attributes": [],
+        "event_ids": [],
+        "tags": [],
+        "warninglist_hit": false,
+        "known_benign_match": false,
+        "malicious_tag_match": false,
+        "to_ids_match": false,
+        "error": null
+      },
+      "raw_misp_status": "no_hit",
+      "aggregate_result_observed": {
+        "misp_status": "complete",
+        "misp_available": true,
+        "misp_matched": false,
+        "misp_to_ids": false,
+        "misp_scoring_available": false,
+        "misp_score": null,
+        "risk_score": 39,
+        "risk_level": "medium",
+        "decision": "analyst_review",
+        "analysis_status": "partial",
+        "abuseipdb_score": 16,
+        "vt_score": 58,
+        "vt_available": true,
+        "maltiverse_status": "complete",
+        "maltiverse_available": true
+      }
+    }
+  ],
+  "test_summary": {
+    "aggregate_execution_count": 5,
+    "aggregate_execution_scope": "one execution per observable",
+    "misp_statuses": [
+      "hit",
+      "hit",
+      "hit",
+      "hit",
+      "no_hit"
+    ],
+    "raw_api_outcomes": {
+      "hit": 4,
+      "no_hit": 1,
+      "http_200_responses": 5
+    },
+    "aggregate_misp_available_all_runs": true,
+    "non_misp_enrichment_values_preserved_all_runs": true
+  },
+  "interpretation_notes": [
+    "This sanitized sample summarizes five successful per-observable MISP lookups and their Aggregate Score outputs.",
+    "Public IP values are replaced with RFC 5737 documentation addresses; the replacement values are not the queried lab IOCs.",
+    "The request was not filtered by to_ids; matching records with both true and false values were returned.",
+    "A hit means MISP returned an attribute and is not by itself a malicious verdict.",
+    "The warninglist match, soc-lab:benign and soc-lab:malicious tags are retained as separate evidence fields.",
+    "The workflow currently emits five Aggregate Score executions, one per observable; these are not a single alert-wide aggregate.",
+    "All five outputs report MISP available and preserve AbuseIPDB, VirusTotal and Maltiverse values.",
+    "MISP first_seen and last_seen values were null; event dates are context, not sightings.",
+    "Request headers, cookies, internal URLs, usernames and API metadata are excluded."
+  ]
+}

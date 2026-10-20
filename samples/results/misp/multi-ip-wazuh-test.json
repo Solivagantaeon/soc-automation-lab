@@ -1,0 +1,180 @@
+{
+  "test_case": "multi_ip_wazuh_alert",
+  "source_alert_id": "soc-test-20261020-035",
+  "input_observables": {
+    "ip": [
+      "198.51.100.8",
+      "203.0.113.1"
+    ],
+    "domain": "example.com",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "misp_results": [
+    {
+      "queried_ioc": {
+        "type": "ip",
+        "value": "198.51.100.8"
+      },
+      "http_status": 200,
+      "response_attribute_count": 4,
+      "normalized_result": {
+        "source": "misp",
+        "analysis_status": "complete",
+        "ioc_found": true,
+        "classification": "matched",
+        "attribute_count": 4,
+        "attributes": [
+          {
+            "type": "ip-dst",
+            "value": "198.51.100.8",
+            "category": "Network activity",
+            "to_ids": false,
+            "event_id": "1331"
+          },
+          {
+            "type": "ip-dst",
+            "value": "198.51.100.8",
+            "category": "Network activity",
+            "to_ids": false,
+            "event_id": "1351"
+          },
+          {
+            "type": "ip-dst",
+            "value": "198.51.100.8",
+            "category": "Network activity",
+            "to_ids": true,
+            "event_id": "1411"
+          },
+          {
+            "type": "ip-dst",
+            "value": "198.51.100.8",
+            "category": "Network activity",
+            "to_ids": false,
+            "event_id": "1686"
+          }
+        ],
+        "event_ids": [
+          "1331",
+          "1351",
+          "1411",
+          "1686"
+        ],
+        "error": null
+      },
+      "event_context_from_raw_response": [
+        {
+          "event_id": "1331",
+          "event_info": "Malicious File Creates Network Socket and Contacts fdh32fsdfhs.shop - Kunai Analysis Report sample",
+          "event_date": "2025-06-20",
+          "attribute_to_ids": false,
+          "attribute_comment": ""
+        },
+        {
+          "event_id": "1351",
+          "event_info": "Kunai Analysis Report - Malware Sample Abusing Open Recursive DNS for Exfiltration",
+          "event_date": "2025-12-15",
+          "event_source": "CIRCL",
+          "attribute_to_ids": false,
+          "attribute_comment": "[Auto] IDS disabled by warninglist checker. Matched: List of known IPv4 public DNS resolvers"
+        },
+        {
+          "event_id": "1411",
+          "event_info": "Fake 7-Zip downloads are turning home PCs into proxy nodes",
+          "event_date": "2026-02-12",
+          "event_source": "CIRCL",
+          "attribute_to_ids": true,
+          "attribute_comment": ""
+        },
+        {
+          "event_id": "1686",
+          "event_info": "SOC-LAB test IOCs – benign",
+          "event_date": "2026-10-18",
+          "event_source": "SOC-Lab",
+          "attribute_to_ids": false,
+          "attribute_comment": "Google DNS - known benign"
+        }
+      ],
+      "sightings": {
+        "first_seen": null,
+        "last_seen": null
+      }
+    },
+    {
+      "queried_ioc": {
+        "type": "ip",
+        "value": "203.0.113.1"
+      },
+      "http_status": 200,
+      "response_attribute_count": 2,
+      "normalized_result": {
+        "source": "misp",
+        "analysis_status": "complete",
+        "ioc_found": true,
+        "classification": "matched",
+        "attribute_count": 2,
+        "attributes": [
+          {
+            "type": "ip-dst",
+            "value": "203.0.113.1",
+            "category": "Network activity",
+            "to_ids": false,
+            "event_id": "446"
+          },
+          {
+            "type": "ip-dst",
+            "value": "203.0.113.1",
+            "category": "Network activity",
+            "to_ids": false,
+            "event_id": "1351"
+          }
+        ],
+        "event_ids": [
+          "1351",
+          "446"
+        ],
+        "error": null
+      },
+      "event_context_from_raw_response": [
+        {
+          "event_id": "446",
+          "event_info": "Blueliv Vawtrak v2",
+          "event_date": "2016-11-10",
+          "attribute_to_ids": false,
+          "attribute_comment": "False Positive?"
+        },
+        {
+          "event_id": "1351",
+          "event_info": "Kunai Analysis Report - Malware Sample Abusing Open Recursive DNS for Exfiltration",
+          "event_date": "2025-12-15",
+          "event_source": "CIRCL",
+          "attribute_to_ids": false,
+          "attribute_comment": "[Auto] IDS disabled by warninglist checker. Matched: List of known IPv4 public DNS resolvers"
+        }
+      ],
+      "sightings": {
+        "first_seen": null,
+        "last_seen": null
+      }
+    }
+  ],
+  "thehive_result": {
+    "http_status": 201,
+    "misp_status": "complete",
+    "misp_classification": "matched",
+    "misp_ioc_found": true,
+    "misp_attribute_count": 4,
+    "misp_to_ids": true,
+    "misp_scoring_available": true,
+    "misp_score": 100,
+    "risk_score": 40,
+    "risk_level": "medium",
+    "decision": "analyst_review"
+  },
+  "coverage_notes": [
+    "The recorded MISP requests cover the two IP observables only.",
+    "No MISP request result was captured for example.com or the SHA-256 observable.",
+    "The API response did not include the event-level soc-lab:benign tag, although the tag is visible on the event in the MISP UI.",
+    "The recorded attributes had null first_seen and last_seen values; event dates are not sightings.",
+    "This artifact does not demonstrate a no-hit or unavailable execution."
+  ]
+}
