@@ -1,22 +1,23 @@
-# NNNN. Tytuł decyzji
+# NNNN. Decision title
 
-- **Status:** proponowana | przyjęta | zastąpiona przez NNNN
-- **Data:** RRRR-MM-DD
-- **Autorzy:** @login
+- **Status:** Proposed | Accepted | Superseded by NNNN
+- **Date:** YYYY-MM-DD
+- **Authors:** @login
+- **Issue:** #NN
 
-## Kontekst
+## Context
 
-Jaki problem rozwiązujemy, jakie mamy ograniczenia.
+What problem are we solving? What constraints and facts (versions, errors, measurements) matter?
 
-## Rozważane opcje
+## Options considered
 
-1. Opcja A — plusy / minusy
-2. Opcja B — plusy / minusy
+1. **Option A** – pros / cons
+2. **Option B** – pros / cons
 
-## Decyzja
+## Decision
 
-Co wybraliśmy i dlaczego.
+What we chose and why. Point to the config files or runbook that implement it.
 
-## Konsekwencje
+## Consequences
 
-Co to zmienia, co trzeba zrobić, jakie ryzyka przyjmujemy.
+What this changes, what has to be done next, which risks we accept (and how we will notice if they happen).
