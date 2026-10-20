@@ -320,11 +320,3 @@ Evidence artifact:
 - Do not treat an empty MISP response as proof that an IOC is benign.
 - Keep MISP credentials, authentication headers and session cookies out of source code, workflow exports and test artifacts.
 
-## Known limitations and next steps
-
-- The manual tests cover a Suricata alert wrapped by Wazuh, a Sysmon Event ID 7 alert delivered through Wazuh, a synthetic web alert, and an Issue #10 alert with MISP requests for two IPs, one domain, an MD5 and a SHA-256.
-- Raw Suricata EVE JSON, raw Sysmon events and vendor-specific raw web-server logs have not been confirmed by the manual tests described above.
-- The latest test confirms all five IOC searches and their propagation to Aggregate Score: four `hit` results and one `no_hit`. Warninglist, benign and malicious tag evidence is preserved per observable.
-- The MISP path and the public IP validator are separate. Public-IP validation must be enforced before external analysis; the presence of a separate validator does not by itself guarantee that MISP only receives public IP addresses.
-- Alerts without observables need a verified workflow path that skips IOC enrichment without treating the alert as an error or a negative IOC match.
-- Public IP validation and downstream analyzer routing should be verified against the actual normalized observable list, especially when an alert contains both public and private IP addresses.
