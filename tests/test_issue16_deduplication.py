@@ -114,11 +114,24 @@ class Issue16DeduplicationTests(unittest.TestCase):
             fingerprint.split("|"),
         )
 
-    def test_patch_uses_the_cached_id_in_the_url(self):
+    def test_thehive_update_alert_app_uses_the_cached_alert_id(self):
+        update = self.actions["Update alert"]
+        self.assertEqual("TheHive", update["app_name"])
+        self.assertEqual("patch_update_alert", update["name"])
         self.assertEqual(
-            "https://thehive.example.invalid/api/v1/alert/"
             "$get_thehive_alert_id.value",
-            self.action_parameter("PATCH_TheHive_Duplicate", "url"),
+            self.action_parameter("Update alert", "AlertId"),
+        )
+        self.assertNotIn("PATCH_TheHive_Duplicate", self.actions)
+
+        edges = {
+            (item["source_id"], item["destination_id"])
+            for item in self.workflow["branches"]
+        }
+        ids = {label: action["id"] for label, action in self.actions.items()}
+        self.assertIn(
+            (ids["Get_TheHive_Alert_ID"], ids["Update alert"]),
+            edges,
         )
 
     def test_id_cache_write_is_connected_after_create_and_valid_extraction(self):
