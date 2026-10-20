@@ -105,8 +105,8 @@ Wait for any alert from a Windows agent (e.g. 92910 on SOC-WIN10-01) or generate
 
 Result 2026-10-19: rule **92910** (level 12, SOC-WIN10-01) at 01:37:45 → execution 01:37:47, FINISHED.
 Evidence: `docs/images/07-shuffle-execution.png`,
-![shuffle alert](../images/Shuffle/07-shuffle-execution.png)
-![shuffle-alert](../images/Shuffle/07c-shuffle-execution-web-31106.png)
+![shuffle alert](../images/shuffle/07-shuffle-execution.png)
+![shuffle-alert](../images/shuffle/07c-shuffle-execution-web-31106.png)
 
 ### T2 – Real IDS alert (Suricata → Wazuh 86601)
 
