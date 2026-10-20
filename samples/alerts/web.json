@@ -1,0 +1,29 @@
+{
+  "timestamp": "2026-10-18T12:12:00.000Z",
+  "source": "web_server",
+  "event_type": "http_access",
+  "host": "SOC-LAB-WEB01",
+  "client": {
+    "ip": "192.0.2.40",
+    "port": 49822
+  },
+  "http": {
+    "method": "GET",
+    "scheme": "https",
+    "host": "web.example.test",
+    "path": "/login",
+    "status_code": 401,
+    "user_agent": "SyntheticSOC-TestClient/1.0"
+  },
+  "rule": {
+    "id": "WEB-LAB-001",
+    "description": "LAB TEST: Repeated authentication failure pattern",
+    "severity": "medium"
+  },
+  "message": "Synthetic web access alert for normalization testing.",
+  "_sample_metadata": {
+    "synthetic": true,
+    "anonymized": true,
+    "note": "Illustrative web alert; not a vendor-specific raw log format."
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "source": "web_server",
+  "timestamp": "2026-10-18T12:12:00.000Z",
+  "hostname": "SOC-LAB-WEB01",
+  "agent_id": null,
+  "source_alert_id": null,
+  "rule_id": "WEB-LAB-001",
+  "alert_type": [
+    "http_access"
+  ],
+  "severity": 3,
+  "severity_source": "web_rule_severity",
+  "wazuh_level": null,
+  "description": "LAB TEST: Repeated authentication failure pattern",
+  "ip": [
+    "192.0.2.40"
+  ],
+  "misp_ip": "",
+  "user": null,
+  "observables": [
+    {
+      "type": "ip",
+      "value": "192.0.2.40"
+    },
+    {
+      "type": "domain",
+      "value": "web.example.test"
+    }
+  ]
+}

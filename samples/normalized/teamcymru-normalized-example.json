@@ -1,0 +1,11 @@
+{
+  "success": true,
+  "message": {
+    "hash": "44d88612fea8a8f36de82e1278abb02f",
+    "last_seen": "2026-10-12 20:02:47",
+    "detection_pct": 93,
+    "cymru_status": "found_record",
+    "cymru_score": 93,
+    "analysis_status": "complete"
+  }
+}

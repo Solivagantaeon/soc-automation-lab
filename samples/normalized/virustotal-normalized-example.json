@@ -1,0 +1,18 @@
+{
+  "success": true,
+  "message": {
+    "source": "VirusTotal",
+    "analysis_status": "complete",
+    "vt_score": 97,
+    "malicious": 66,
+    "suspicious": 0,
+    "undetected": 2,
+    "harmless": 0,
+    "total_engines": 68,
+    "sha256": "275a021bbfb6489e54d471899f7db9d1663fc695ec2fe2a2c4538aabf651fd0f",
+    "md5": "44d88612fea8a8f36de82e1278abb02f",
+    "meaningful_name": "eicar.com-11649",
+    "reputation": 3801,
+    "error": null
+  }
+}

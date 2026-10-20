@@ -1,0 +1,28 @@
+{
+  "timestamp": "2026-10-18T12:10:00.000Z",
+  "flow_id": 123456789012345,
+  "in_iface": "eth0",
+  "event_type": "alert",
+  "src_ip": "192.0.2.10",
+  "src_port": 51514,
+  "dest_ip": "198.51.100.20",
+  "dest_port": 443,
+  "proto": "TCP",
+  "app_proto": "tls",
+  "alert": {
+    "action": "allowed",
+    "gid": 1,
+    "signature_id": 9000001,
+    "rev": 1,
+    "signature": "LAB TEST: Suspicious outbound TLS connection",
+    "category": "Potentially Bad Traffic",
+    "severity": 2
+  },
+  "direction": "to_server",
+  "metadata": {
+    "source": ["synthetic-lab"],
+    "note": [
+      "Anonymized synthetic example; documentation IP ranges only"
+    ]
+  }
+}

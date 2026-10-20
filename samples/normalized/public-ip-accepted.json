@@ -1,0 +1,8 @@
+{
+  "success": true,
+  "message": {
+    "valid": true,
+    "ip": "8.8.8.8",
+    "reason": "public_ipv4"
+  }
+}

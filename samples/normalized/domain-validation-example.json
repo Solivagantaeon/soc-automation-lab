@@ -1,0 +1,8 @@
+{
+  "success": true,
+  "message": {
+    "valid": true,
+    "domain": "example.com",
+    "reason": "valid_domain"
+  }
+}
