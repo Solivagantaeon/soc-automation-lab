@@ -1,6 +1,6 @@
 # ADR 0001 – Wazuh → Shuffle integration: transport, TLS and alert filter
 
-- **Status:** Accepted (one point pending instructor confirmation, see *IDS path*)
+- **Status:** Accepted
 - **Date:** 2026-10-19
 - **Issue:** #7 – [Z2] Wazuh and IDS → Shuffle: webhook
 
