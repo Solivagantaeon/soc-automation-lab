@@ -116,7 +116,6 @@ The Datastore mapping connects the source-event key to the corresponding TheHive
 ### Scope and limitations
 
 This mechanism provides source-event deduplication groundwork. It does not by itself implement full cross-source correlation into a single incident.
-
 Correlation keys, time windows, first-seen/last-seen timestamps, counters and handling of large volumes of repeated events are covered by [issue #16 — Deduplication and correlation](https://github.com/Solivagantaeon/soc-automation-lab/issues/16).
 
 
