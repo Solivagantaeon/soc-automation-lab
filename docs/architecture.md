@@ -1,6 +1,57 @@
 # Architecture
 
-## Data flow
+> Documentation baseline: 18 October 2026. The diagram and [communication matrix](components.md#9-communication-matrix) use the same component names and transport assumptions. Solid lines indicate observed ingestion or implemented/tested paths; dashed lines represent architecture/integration paths whose individual results are validated separately.
+
+## Network segmentation
+
+| Segment | Subnet | Role |
+|---|---|---|
+| Management | `10.10.99.0/24` | Proxmox and OPNsense administration |
+| VICTIM | `10.10.10.0/24` | AD domain and Windows endpoints |
+| SOC | `10.10.20.0/24` | SIEM, SOAR, enrichment, case management |
+| ATTACK | `10.10.30.0/24` | Kali attack simulation |
+| VPN | `10.10.250.0/24` | WireGuard access for administrators |
+
+Refer to [lab setup](lab-setup.md) for segmentation and policies. The lab is isolated from the home network.
+
+## Component communication diagram
+
+```mermaid
+flowchart LR
+    subgraph VICTIM["VICTIM network"]
+        SYS["Sysmon: Windows hosts"]
+        WINA["Wazuh agents: Windows"]
+        LINA["Wazuh agent: SOC-LIN-01"]
+        SYS -->|"local EventChannel"| WINA
+    end
+    subgraph FW["OPNsense"]
+        SUR["Suricata IDS"]
+        FWA["Wazuh agent: opnsense"]
+        SUR -->|"local IDS logs"| FWA
+    end
+    subgraph SOC["SOC network"]
+        WAZ["Wazuh: 10.10.20.243"]
+        SH["Shuffle: 10.10.20.245"]
+        CTX["Cortex: 10.10.20.247"]
+        MISP["MISP: 10.10.20.50"]
+        TH["TheHive: 10.10.20.247"]
+        A["Authorized SOC analyst"]
+    end
+    WINA -->|"1514/TCP: agent key"| WAZ
+    WINA -.->|"1515/TCP: enrollment"| WAZ
+    LINA -->|"1514/TCP: agent key"| WAZ
+    FWA -->|"1514/TCP: agent key"| WAZ
+    WAZ -->|"HTTPS 3443: webhook"| SH
+    SH -.->|"9001/TCP: API key"| CTX
+    SH -.->|"443/TCP: API key"| MISP
+    SH -->|"9000/TCP default or proxy: API key"| TH
+    TH -.->|"9001/TCP internal: API key"| CTX
+    A -->|"443/TCP: Wazuh Dashboard session"| WAZ
+```
+
+**Matrix scope:** endpoints may also use `1515/TCP` during registration; Wazuh Dashboard is exposed via `443/TCP`, Manager REST API via `55000/TCP`. The default Cortex/TheHive service ports are private service conventions, not substitutes for inspecting Docker's actual published ports.
+
+## Triage workflow
 
 ```mermaid
 sequenceDiagram
@@ -11,52 +62,31 @@ sequenceDiagram
     participant M as MISP
     participant T as TheHive
     participant A as Analyst
-
-    W->>S: Alert JSON via webhook (<integration>, filtered by rule_id)
-    S->>S: normalize — map fields, extract IOCs (IPs, hashes, domains)
-    S->>C: cortex_run — start analyzers per IOC
-    C-->>S: cortex_report — analyzer verdicts
-    S->>M: misp_lookup — known indicators / events
-    M-->>S: matches
-    S->>S: decide — score, deduplicate, choose verdict
-    alt benign / false positive
-        S->>T: alert closed with justification
-    else uncertain
-        S->>T: alert → case for analyst
-        T->>A: notification
-    else confirmed malicious
-        S->>T: high-priority case
-        S-->>W: optional Active Response (time-limited)
+    W->>S: Selected alert JSON to private webhook
+    S->>S: Normalize fields, extract observables and deduplicate
+    opt Enabled analyzer route
+        S->>C: Submit authorized analyzer job
+        C-->>S: Report / verdict
     end
+    opt MISP lookup route
+        S->>M: Search for matching observables
+        M-->>S: Matches or no-match result
+    end
+    S->>S: Score, group and select triage outcome
+    S->>T: Create analyst-facing alert/case record
+    T-->>A: Alert available for review
 ```
 
-## Shuffle workflow (target)
-
-`Webhook → normalize → cortex_run → cortex_report → misp_lookup → decide → thehive_alert`
-
-Built iteratively:
-
-1. **Thin slice** — one alert end-to-end with a simple `if` instead of scoring.
-2. **Scoring** — weighted score from rule level, enrichment verdicts and MISP hits.
-3. **Deduplication & grouping** — same rule + same source/destination within a time window.
-4. **Error handling** — timeouts and fallbacks when an analyzer or MISP is unavailable (alert still reaches TheHive, marked "not enriched").
-5. **Response** — optional Wazuh Active Response, only for high-confidence verdicts and always with a timeout.
+Workflow overview screenshot: [Shuffle editor](images/shuffle/06-shuffle-running.png). TheHive output screenshot: [test alerts](images/thehive/06-thehive-running.png). Successful operation of specific enrichment providers requires validation of their corresponding workflow executions.
 
 ## Key design decisions
 
-See [`decisions/`](decisions/). Highlights:
+1. **Alert routing:** all Wazuh alerts (level ≥ 3) are sent to Shuffle; filtering, deduplication and enrichment happen in the workflow (ADR 0001).
+2. **Human-in-the-loop:** enrich, group and prioritize automatically; a human decides on response and escalation.
+3. **Case management:** use TheHive as the integration target; DFIR-IRIS was evaluated as an alternative and is no longer deployed.
+4. **Security:** do not store tokens, webhook URLs, API keys, private credentials or public IPs in the repository.
+5. **Clock alignment:** OPNsense NTP, DC and domain-member synchronization, and Linux time synchronization provide correlated event timestamps (see [Issue #5](https://github.com/Solivagantaeon/soc-automation-lab/issues/5)).
 
-- Wazuh integration filtered by `rule_id`, not by `level` (Suricata alerts arrive at level 3). — ADR 0001
-- TheHive as the case-management system, DFIR-IRIS evaluated as an alternative. — ADR 0002
+## Component reference
 
-## Network segmentation
-
-| Segment | Purpose |
-|---|---|
-| Management | Hypervisor and firewall administration |
-| VICTIM | Active Directory domain and Windows endpoints (attack targets) |
-| SOC | SIEM, SOAR, enrichment and case-management tools |
-| ATTACK | Kali Linux; allowed to reach VICTIM only |
-| VPN | WireGuard access for team members (SOC dashboards only) |
-
-No lab segment can reach the home network. Details: [`lab-setup.md`](lab-setup.md).
+Complete deployment, independent health checks, troubleshooting, and ports are documented in [`components.md`](components.md).

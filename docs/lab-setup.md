@@ -24,7 +24,6 @@ Single-host lab on **Proxmox VE 9.2**. Firewall/router: **OPNsense** with VLAN-a
 | Wazuh | 10.10.20.243 | Wazuh 4.14 (manager, indexer, dashboard) |
 | MISP | 10.10.20.50 | MISP (misp-docker) on Ubuntu 24.04 |
 | Shuffle | 10.10.20.245 | Shuffle SOAR |
-| DFIR-IRIS | 10.10.20.246 | DFIR-IRIS 2.4.29 (evaluation) |
 | TheHive + Cortex | 10.10.20.247 | TheHive 5.8.0, Cortex 4.1.0 (StrangeBee docker, `testing` profile) |
 | Splunk | 10.10.20.252 | Splunk (comparison) |
 
