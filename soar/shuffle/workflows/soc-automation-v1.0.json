@@ -1578,7 +1578,7 @@
           "id": "",
           "name": "value",
           "example": "1.1.1.1",
-          "value": "$exec.all_fields.agent.id|$exec.all_fields.rule.id|$exec.all_fields.data.srcip|$exec.all_fields.data.win.eventdata.hashes|$exec.all_fields.data.win.eventdata.queryName",
+          "value": "$exec.all_fields.agent.id|$exec.all_fields.rule.id|$exec.all_fields.data.srcip|$exec.all_fields.data.dstip|$exec.all_fields.data.domain|$exec.all_fields.data.win.eventdata.hashes",
           "multiline": false,
           "multiselect": false,
           "options": null,
@@ -3252,7 +3252,7 @@
           "id": "",
           "name": "url",
           "example": "https://example.com",
-          "value": "https://10.10.20.247/thehive/api/v1/alert/$get_thehive_alert_id.value",
+          "value": "https://thehive.example.invalid/api/v1/alert/$get_thehive_alert_id.value",
           "multiline": false,
           "multiselect": false,
           "options": null,
@@ -5204,6 +5204,201 @@
       "circleId": "fae43d01-69af-4ac7-a2d9-33ca844d3845",
       "authentication": [],
       "selectedAuthentication": {}
+    },
+    {
+      "app_name": "Shuffle Tools",
+      "app_version": "1.2.0",
+      "description": "Extracts one TheHive alert ID from a successful Create Alert response.",
+      "app_id": "bc8596d7-41a9-451b-a6db-c68874117069",
+      "errors": [],
+      "id": "b426beb8-4d20-483f-8067-904bf96d1ea1",
+      "is_valid": true,
+      "sharing": true,
+      "label": "Extract_TheHive_Alert_ID",
+      "public": true,
+      "generated": false,
+      "large_image": "data:image/svg+xml;utf-8,%3Csvg%20width=%2224%22%20height=%2224%22%20viewBox=%220%200%2048%2048%22%20version=%221.1%22%20xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cpath%20d=%22M17.3335%2028.1667L22.3335%2023.1667L17.3335%2018.1667%20M24%2029.8333H30.6667%22%20fill=%22none%22%20stroke=%22white%22%20stroke-width=%221.5%22%20stroke-linecap=%22round%22%20stroke-linejoin=%22round%22/%3E%3C/svg%3E",
+      "environment": "Shuffle",
+      "name": "execute_python",
+      "parameters": [
+        {
+          "description": "The code to run. Can be a file ID from within Shuffle.",
+          "id": "",
+          "name": "code",
+          "example": "print(\"hello world\")",
+          "value": "import ast\nimport base64\nimport json\n\nencoded = \"{{ '$incident' | base64_encode }}\"\n\ndef parse_value(value):\n    if isinstance(value, (dict, list)):\n        return value\n    if not isinstance(value, str):\n        return value\n\n    text = value.strip()\n    if not text:\n        return None\n\n    try:\n        return json.loads(text)\n    except (json.JSONDecodeError, TypeError):\n        try:\n            return ast.literal_eval(text)\n        except (ValueError, SyntaxError, TypeError):\n            return value\n\ntry:\n    raw = base64.b64decode(encoded, validate=True).decode(\"utf-8\").strip()\n    response = parse_value(raw)\nexcept Exception:\n    response = None\n\nsuccessful_ids = set()\n\ndef collect_successful_ids(value):\n    value = parse_value(value)\n\n    if isinstance(value, list):\n        for item in value:\n            collect_successful_ids(item)\n        return\n\n    if not isinstance(value, dict):\n        return\n\n    body = parse_value(value.get(\"body\"))\n    if str(value.get(\"status\", \"\")).strip() == \"201\" and isinstance(body, dict):\n        alert_id = body.get(\"_id\")\n        if isinstance(alert_id, str) and alert_id.strip():\n            successful_ids.add(alert_id.strip())\n\n    for item in value.values():\n        if isinstance(item, (dict, list, str)):\n            collect_successful_ids(item)\n\ncollect_successful_ids(response)\n\nif len(successful_ids) == 1:\n    result = {\n        \"valid\": True,\n        \"alert_id\": next(iter(successful_ids)),\n        \"reason\": \"ok\"\n    }\nelif not successful_ids:\n    result = {\n        \"valid\": False,\n        \"alert_id\": None,\n        \"reason\": \"no_successful_alert_id\"\n    }\nelse:\n    result = {\n        \"valid\": False,\n        \"alert_id\": None,\n        \"reason\": \"multiple_successful_alert_ids\"\n    }\n\nprint(json.dumps(result))",
+          "multiline": true,
+          "multiselect": false,
+          "options": null,
+          "action_field": "",
+          "variant": "",
+          "required": true,
+          "configuration": false,
+          "tags": null,
+          "schema": {
+            "type": "string"
+          },
+          "skip_multicheck": false,
+          "custom_value": false,
+          "value_replace": null,
+          "unique_toggled": false,
+          "error": "",
+          "hidden": false
+        }
+      ],
+      "execution_variable": {
+        "description": "",
+        "id": "",
+        "name": "",
+        "value": ""
+      },
+      "position": {
+        "x": 1080.0,
+        "y": -1242.0
+      },
+      "authentication_id": "",
+      "category": "Other",
+      "reference_url": "",
+      "sub_action": false,
+      "run_magic_output": false,
+      "run_magic_input": false,
+      "execution_delay": 0,
+      "category_label": null,
+      "suggestion": false,
+      "parent_controlled": false,
+      "source_workflow": "",
+      "source_execution": "",
+      "fillGradient": [
+        "rgba(242, 101, 59, 1)",
+        "rgba(242, 101, 59, 1)"
+      ],
+      "fillstyle": "linear-gradient",
+      "_id": "b426beb8-4d20-483f-8067-904bf96d1ea1",
+      "type": "ACTION",
+      "example": "",
+      "flowOrientation": "vertical"
+    },
+    {
+      "app_name": "Shuffle Tools",
+      "app_version": "1.2.0",
+      "description": "Stores the successful TheHive alert ID using the event fingerprint.",
+      "app_id": "bc8596d7-41a9-451b-a6db-c68874117069",
+      "errors": [],
+      "id": "ec13806f-adab-4299-98ec-634977ed342a",
+      "is_valid": true,
+      "sharing": true,
+      "label": "Save_TheHive_Alert_ID",
+      "public": true,
+      "generated": false,
+      "large_image": "data:image/svg+xml;utf-8,%3Csvg%20width=%2224%22%20height=%2224%22%20viewBox=%220%200%2048%2048%22%20version=%221.1%22%20xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cpath%20d=%22M24%2020.6667C28.1421%2020.6667%2031.5%2019.5475%2031.5%2018.1667C31.5%2016.786%2028.1421%2015.6667%2024%2015.6667C19.8579%2015.6667%2016.5%2016.786%2016.5%2018.1667C16.5%2019.5475%2019.8579%2020.6667%2024%2020.6667Z%20M31.5%2024C31.5%2025.3833%2028.1667%2026.5%2024%2026.5C19.8333%2026.5%2016.5%2025.3833%2016.5%2024%20M16.5%2018.1667V29.8334C16.5%2031.2167%2019.8333%2032.3334%2024%2032.3334C28.1667%2032.3334%2031.5%2031.2167%2031.5%2029.8334V18.1667%20M32%2035C34.2091%2035%2036%2033.2091%2036%2031C36%2028.7909%2034.2091%2027%2032%2027C29.7909%2027%2028%2028.7909%2028%2031C28%2033.2091%2029.7909%2035%2032%2035Z%20M32%2029V33%20M30%2031H34%22%20fill=%22none%22%20stroke=%22white%22%20stroke-width=%221.5%22%20stroke-linecap=%22round%22%20stroke-linejoin=%22round%22/%3E%3C/svg%3E",
+      "environment": "Shuffle",
+      "name": "set_cache_value",
+      "parameters": [
+        {
+          "description": "The key to set the value for",
+          "id": "",
+          "name": "key",
+          "example": "timestamp",
+          "value": "$get_hash_sum.sha256",
+          "multiline": false,
+          "multiselect": false,
+          "options": null,
+          "action_field": "",
+          "variant": "",
+          "required": true,
+          "configuration": false,
+          "tags": null,
+          "schema": {
+            "type": "string"
+          },
+          "skip_multicheck": false,
+          "custom_value": false,
+          "value_replace": null,
+          "unique_toggled": false,
+          "error": "",
+          "hidden": false
+        },
+        {
+          "description": "The value to set",
+          "id": "",
+          "name": "value",
+          "example": "1621959545",
+          "value": "$extract_thehive_alert_id.message.alert_id",
+          "multiline": true,
+          "multiselect": false,
+          "options": null,
+          "action_field": "",
+          "variant": "",
+          "required": true,
+          "configuration": false,
+          "tags": null,
+          "schema": {
+            "type": "string"
+          },
+          "skip_multicheck": false,
+          "custom_value": false,
+          "value_replace": null,
+          "unique_toggled": false,
+          "error": "",
+          "hidden": false
+        },
+        {
+          "description": "The category to get the value from. Not required.",
+          "id": "",
+          "name": "category",
+          "example": "tickets",
+          "value": "soc_thehive_ids_test",
+          "multiline": false,
+          "multiselect": false,
+          "options": null,
+          "action_field": "",
+          "variant": "",
+          "required": false,
+          "configuration": false,
+          "tags": null,
+          "schema": {
+            "type": "string"
+          },
+          "skip_multicheck": false,
+          "custom_value": false,
+          "value_replace": null,
+          "unique_toggled": false,
+          "error": "",
+          "hidden": false
+        }
+      ],
+      "execution_variable": {
+        "description": "",
+        "id": "",
+        "name": "",
+        "value": ""
+      },
+      "position": {
+        "x": 1290.0,
+        "y": -1242.0
+      },
+      "authentication_id": "",
+      "category": "Other",
+      "reference_url": "",
+      "sub_action": false,
+      "run_magic_output": false,
+      "run_magic_input": false,
+      "execution_delay": 0,
+      "category_label": null,
+      "suggestion": false,
+      "parent_controlled": false,
+      "source_workflow": "",
+      "source_execution": "",
+      "fillGradient": [
+        "rgba(43, 189, 160, 1)",
+        "rgba(43, 189, 160, 1)"
+      ],
+      "fillstyle": "linear-gradient",
+      "_id": "ec13806f-adab-4299-98ec-634977ed342a",
+      "type": "ACTION",
+      "example": "",
+      "flowOrientation": "horizontal",
+      "circleId": "2a3d0164-119b-46e8-b602-20a543848524"
     }
   ],
   "branches": [
@@ -6437,6 +6632,103 @@
       "label": "",
       "has_errors": false,
       "conditions": [],
+      "decorator": false,
+      "parent_controlled": false,
+      "source_parent": ""
+    },
+    {
+      "destination_id": "b426beb8-4d20-483f-8067-904bf96d1ea1",
+      "id": "8738bb1e-4393-4ca0-b670-04ab3d7ff26a",
+      "source_id": "0ab4079c-da36-4da9-b88d-3b272a69d658",
+      "label": "",
+      "has_errors": false,
+      "conditions": [],
+      "decorator": false,
+      "parent_controlled": false,
+      "source_parent": ""
+    },
+    {
+      "destination_id": "ec13806f-adab-4299-98ec-634977ed342a",
+      "id": "34ce5f2c-8b9b-43fc-ac92-c4ab45067dd0",
+      "source_id": "b426beb8-4d20-483f-8067-904bf96d1ea1",
+      "label": "",
+      "has_errors": false,
+      "conditions": [
+        {
+          "source": {
+            "description": "",
+            "id": "8954bc28-6a46-4167-b565-906d5cbb9a35",
+            "name": "source",
+            "example": "",
+            "value": "$extract_thehive_alert_id.message.valid",
+            "multiline": false,
+            "multiselect": false,
+            "options": null,
+            "action_field": "",
+            "variant": "STATIC_VALUE",
+            "required": false,
+            "configuration": false,
+            "tags": null,
+            "schema": {
+              "type": ""
+            },
+            "skip_multicheck": false,
+            "custom_value": false,
+            "value_replace": null,
+            "unique_toggled": false,
+            "error": "",
+            "hidden": false
+          },
+          "condition": {
+            "description": "",
+            "id": "8954bc28-6a46-4167-b565-906d5cbb9a35",
+            "name": "condition",
+            "example": "",
+            "value": "equals",
+            "multiline": false,
+            "multiselect": false,
+            "options": null,
+            "action_field": "",
+            "variant": "",
+            "required": false,
+            "configuration": false,
+            "tags": null,
+            "schema": {
+              "type": ""
+            },
+            "skip_multicheck": false,
+            "custom_value": false,
+            "value_replace": null,
+            "unique_toggled": false,
+            "error": "",
+            "hidden": false
+          },
+          "destination": {
+            "description": "",
+            "id": "8954bc28-6a46-4167-b565-906d5cbb9a35",
+            "name": "destination",
+            "example": "",
+            "value": "true",
+            "multiline": false,
+            "multiselect": false,
+            "options": null,
+            "action_field": "",
+            "variant": "STATIC_VALUE",
+            "required": false,
+            "configuration": false,
+            "tags": null,
+            "schema": {
+              "type": ""
+            },
+            "skip_multicheck": false,
+            "custom_value": false,
+            "value_replace": null,
+            "unique_toggled": false,
+            "error": "",
+            "hidden": false
+          }
+        }
+      ],
       "decorator": false,
       "parent_controlled": false,
       "source_parent": ""
