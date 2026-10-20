@@ -186,14 +186,14 @@ The actual output confirmed the following values:
 
 The normalizer extracted both the source and destination IP addresses into `ip` and `observables`:
 
-- `77.111.102.201`
+- `203.0.113.20`
 - `10.10.10.171`
 
 The timestamp was converted from the original `+0200` offset to UTC. The result matched the configured severity mapping for Wazuh rule level 3.
 
 Evidence artifact:
 
-`soar/shuffle/samples/alerts/normalized-suricata-wazuh-output.json`
+`samples/normalized/normalized-suricata-wazuh-output.json`
 
 This test confirms normalization of this Suricata event in a Wazuh wrapper. It does not confirm support for raw Suricata EVE JSON.
 
@@ -230,7 +230,7 @@ The test also confirmed that the Wazuh input was successfully parsed and retaine
 
 Evidence artifact:
 
-`soar/shuffle/samples/alerts/normalized-sysmon-wazuh-output.json`
+`samples/normalized/normalized-sysmon-wazuh-output.json` (not committed yet)
 
 This test confirms normalization of a Sysmon Event ID 7 alert delivered through Wazuh. It does not confirm support for raw Sysmon events sent directly to Shuffle.
 
@@ -264,15 +264,14 @@ The sample does not establish support for raw web-server logs from a specific ve
 
 Evidence artifact:
 
-`soar/shuffle/samples/alerts/normalized-web-output.json`
+`samples/normalized/normalized-web-output.json`
 
-### CI checks
+### Other evidence
 
-The GitHub Actions run `Create test_normalized_alert_schema.py #16` on `main` completed successfully, including the secret scan and the sanitization, syntax and unit-test job.
-
-This confirms that the checks passed for that run and commit. It does not establish that every subsequent feature-branch change has passed CI.
-
-Additional test evidence and sanitized workflow exports are stored under `samples/results/normalized/` and `soar/shuffle/workflows/` when available.
+- Normalized enrichment results (AbuseIPDB, DShield, Google DNS, Maltiverse, MISP, Team Cymru, VirusTotal) and validation outputs: `samples/normalized/`
+- Raw input alerts used in the manual tests: `samples/alerts/`
+- Sanitized workflow export: `soar/shuffle/workflows/soc-automation-v1.0.json`
+- Schema: `soar/shuffle/schema/normalized-alert.schema.json`, checked in CI by `tests/test_normalized_alert_schema.py`
 
 ## Security and privacy
 

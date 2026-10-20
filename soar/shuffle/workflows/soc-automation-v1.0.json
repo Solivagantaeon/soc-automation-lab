@@ -5675,7 +5675,7 @@
     {
       "destination_id": "9e699c71-7fa7-44fc-ab1c-43b2dd12826d",
       "id": "3fd316bd-cb47-4ce9-a441-d5ecefb20d19",
-      "source_id": "9c7f89d1-cec6-544e-a36f-4c485b42b7f2",
+      "source_id": "00000000-0000-0000-0000-000000000000",
       "label": "",
       "has_errors": false,
       "conditions": [],
@@ -5686,7 +5686,7 @@
     {
       "destination_id": "9e699c71-7fa7-44fc-ab1c-43b2dd12826d",
       "id": "3630c0d1-db5a-4781-85b6-1509f1e9f1f2",
-      "source_id": "9c7f89d1-cec6-544e-a36f-4c485b42b7f2",
+      "source_id": "00000000-0000-0000-0000-000000000000",
       "label": "",
       "has_errors": false,
       "conditions": [],
@@ -6451,7 +6451,7 @@
       "status": "stopped",
       "app_version": "1.0.0",
       "errors": [],
-      "id": "9c7f89d1-cec6-544e-a36f-4c485b42b7f2",
+      "id": "00000000-0000-0000-0000-000000000000",
       "is_valid": true,
       "isStartNode": false,
       "label": "Webhook_1",
@@ -6491,7 +6491,7 @@
           "id": "",
           "name": "tmp",
           "example": "",
-          "value": "webhook_9c7f89d1-cec6-544e-a36f-4c485b42b7f2",
+          "value": "webhook_00000000-0000-0000-0000-000000000000",
           "multiline": false,
           "multiselect": false,
           "options": null,
@@ -6668,7 +6668,7 @@
       },
       "parent_controlled": false,
       "replacement_for_trigger": "",
-      "_id": "9c7f89d1-cec6-544e-a36f-4c485b42b7f2",
+      "_id": "00000000-0000-0000-0000-000000000000",
       "type": "TRIGGER",
       "flowOrientation": "horizontal"
     }

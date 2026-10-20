@@ -18,14 +18,14 @@
     "wazuh_level": 3,
     "description": "Suricata: Alert - ET INFO Packed Executable Download",
     "ip": [
-      "77.111.102.201",
+      "203.0.113.20",
       "10.10.10.171"
     ],
     "user": null,
     "observables": [
       {
         "type": "ip",
-        "value": "77.111.102.201"
+        "value": "203.0.113.20"
       },
       {
         "type": "ip",
