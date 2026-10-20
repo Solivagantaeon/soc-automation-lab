@@ -84,6 +84,5 @@ Na Windowsie zamiast `python3` wpisz `python`. Potem i tak przejrzyj diff wzroki
 - [ ] review od co najmniej jednej osoby.
 
 ## 6. Język
-
-- `README.md`, `docs/architecture.md`, `docs/lab-setup.md` — **po angielsku** (to część portfolio).
-- Reszta dokumentacji roboczej, Issues i PR-y — po polsku jest OK.
+- Całe repo prowadzimy **po angielsku**: dokumentacja, komentarze w kodzie i konfiguracji, commity, nazwy gałęzi, Issues i Pull Requesty.
+Po polsku rozmawiamy tylko na kanale zespołu.
