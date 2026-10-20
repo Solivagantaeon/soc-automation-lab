@@ -22,7 +22,7 @@ This document describes the deployed components of the isolated SOC Automation L
 | ATTACK | `10.10.30.0/24` | Kali test host |
 | VPN | `10.10.250.0/24` | Administrative access via WireGuard |
 
-Detailed network isolation and the build order are described in [lab setup](lab-setup.md). The [architecture diagram](architecture.md) and [communication matrix](#10-communication-matrix) follow the same component names and pathways.
+Detailed network isolation and the build order are described in [lab setup](lab-setup.md). The [architecture diagram](architecture.md) and [communication matrix](#9-communication-matrix) follow the same component names and pathways.
 
 ---
 
@@ -407,7 +407,7 @@ On **17 October 2026**, the TheHive UI displayed numerous test records with the 
 
 ### 8.4 Evidence and references
 
-- ![TheHive alerts](images/thhive/06-thehive-running.png)
+- ![TheHive alerts](images/thehive/06-thehive-running.png)
 - TheHive configuration notes: [`../case-management/thehive/README.md`](../case-management/thehive/README.md)
 
 ---
@@ -431,6 +431,5 @@ The matrix deliberately separates **observed collection** from **workflow/integr
 | Shuffle | MISP `10.10.20.50` | `443/TCP` (HTTPS, standard) | MISP API key | Threat-intelligence lookup; workflow route |
 | Shuffle | TheHive `10.10.20.247` | `9000/TCP` (service default; or configured proxy) | TheHive API key | Alert/case creation; test records visible |
 | TheHive | Cortex (same Docker host) | `9001/TCP` (internal service default) | Cortex API key | Case-management analyzer integration / architecture route |
-| Authorized evaluator | DFIR-IRIS `10.10.20.246` | `443/TCP` (HTTPS, standard) | UI session / API bearer key | Separate evaluation only — not in main triage flow |
 
-**Protocol notes:** `1514/TCP` and `1515/TCP` are the observed listener sockets on VM 203. HTTPS `3443` for Shuffle matches the lab UI access used in configuration testing; the internal Cortex/TheHive and MISP/IRIS ports follow product deployment conventions rather than a full audited firewall ruleset. Connectivity within Docker networks should be checked against the actual Compose service names and proxy mappings before building an allowlist.
+**Protocol notes:** `1514/TCP` and `1515/TCP` are the observed listener sockets on VM 203. HTTPS `3443` for Shuffle matches the lab UI access used in configuration testing; the internal Cortex/TheHive and MISP ports follow product deployment conventions rather than a full audited firewall ruleset. Connectivity within Docker networks should be checked against the actual Compose service names and proxy mappings before building an allowlist.
