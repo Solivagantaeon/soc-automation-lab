@@ -119,25 +119,4 @@ This mechanism provides source-event deduplication groundwork. It does not by it
 
 Correlation keys, time windows, first-seen/last-seen timestamps, counters and handling of large volumes of repeated events are covered by [issue #16 — Deduplication and correlation](https://github.com/Solivagantaeon/soc-automation-lab/issues/16).
 
-## 7. Verification checklist
-
-- [ ] Alert is created in the `demo` organisation.
-- [ ] Title includes useful source context.
-- [ ] Severity matches the decision step output.
-- [ ] `source` and `sourceRef` identify the originating Wazuh event.
-- [ ] The description includes the original rule ID and enrichment summary.
-- [ ] Tags include `auto-triage` and `source:wazuh`.
-- [ ] Available IP, domain and hash indicators appear in the Observables tab.
-- [ ] The Datastore mapping is created after a new alert is created.
-- [ ] Replaying the same event updates the existing alert.
-- [ ] The duplicate update returns HTTP `204`.
-- [ ] Sanitized workflow exports and example requests contain no credentials or secrets.
-
-## 8. Security and repository artifacts
-
-Never commit TheHive API keys, secret webhook URLs, authentication headers or unsanitized Shuffle workflow exports.
-
-The sanitized Shuffle workflow belongs in `soar/shuffle/workflows/`. The corresponding example request belongs in `samples/results/thehive/alert-request.json`.
-
-End-to-end screenshots should demonstrate the same event in Wazuh, the Shuffle execution and the resulting TheHive alert.
 
