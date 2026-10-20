@@ -1,0 +1,226 @@
+{
+  "response": [
+    {
+      "Event": {
+        "id": "1685",
+        "orgc_id": "1",
+        "org_id": "1",
+        "date": "2026-10-18",
+        "threat_level_id": "1",
+        "info": "SOC-LAB test IOCs – malicious",
+        "published": true,
+        "uuid": "a76e863f-678e-4896-8c1f-0c7773ab0461",
+        "attribute_count": "2",
+        "analysis": "1",
+        "timestamp": "1792346010",
+        "distribution": "0",
+        "proposal_email_lock": false,
+        "locked": false,
+        "publish_timestamp": "1792346027",
+        "first_publication": "1792345081",
+        "sharing_group_id": "0",
+        "disable_correlation": false,
+        "extends_uuid": "",
+        "protected": null,
+        "event_creator_email": "admin@admin.test",
+        "Org": {
+          "id": "1",
+          "name": "SOC-Lab",
+          "uuid": "76a742c7-d5aa-4630-9e43-05a29208c952",
+          "local": true
+        },
+        "Orgc": {
+          "id": "1",
+          "name": "SOC-Lab",
+          "uuid": "76a742c7-d5aa-4630-9e43-05a29208c952",
+          "local": true
+        },
+        "Attribute": [
+          {
+            "id": "586685",
+            "type": "ip-dst",
+            "category": "Network activity",
+            "to_ids": true,
+            "uuid": "24438874-8d7a-43f6-9e76-83fdfe17d78e",
+            "event_id": "1685",
+            "distribution": "5",
+            "timestamp": "1792345492",
+            "comment": "C2 IP - active botnet command & control server",
+            "sharing_group_id": "0",
+            "deleted": false,
+            "disable_correlation": false,
+            "object_id": "0",
+            "object_relation": null,
+            "first_seen": null,
+            "last_seen": null,
+            "value": "50.16.16.211",
+            "Galaxy": [],
+            "ShadowAttribute": []
+          },
+          {
+            "id": "586687",
+            "type": "md5",
+            "category": "Payload delivery",
+            "to_ids": true,
+            "uuid": "7289a902-6a50-4072-b454-d7c18e852769",
+            "event_id": "1685",
+            "distribution": "5",
+            "timestamp": "1792346002",
+            "comment": "TRITON/TRISIS ICS malware payload",
+            "sharing_group_id": "0",
+            "deleted": false,
+            "disable_correlation": false,
+            "object_id": "0",
+            "object_relation": null,
+            "first_seen": null,
+            "last_seen": null,
+            "value": "0face841f7b2953e7c29c064d6886523",
+            "Galaxy": [],
+            "ShadowAttribute": []
+          }
+        ],
+        "ShadowAttribute": [],
+        "RelatedEvent": [
+          {
+            "Event": {
+              "id": "1655",
+              "date": "2026-10-16",
+              "threat_level_id": "4",
+              "info": "TEST – lab enrichment (Shuffle)",
+              "published": false,
+              "uuid": "ed92905b-e0ed-4eae-9ade-75943c5b217e",
+              "analysis": "0",
+              "timestamp": "1792117888",
+              "distribution": "0",
+              "org_id": "1",
+              "orgc_id": "1",
+              "Org": {
+                "id": "1",
+                "name": "SOC-Lab",
+                "uuid": "76a742c7-d5aa-4630-9e43-05a29208c952"
+              },
+              "Orgc": {
+                "id": "1",
+                "name": "SOC-Lab",
+                "uuid": "76a742c7-d5aa-4630-9e43-05a29208c952"
+              }
+            },
+            "RelationshipInbound": []
+          },
+          {
+            "Event": {
+              "id": "1648",
+              "date": "2026-10-15",
+              "threat_level_id": "4",
+              "info": "Feodo IP Blocklist feed",
+              "published": false,
+              "uuid": "1a295f75-086f-4870-bc7f-f7e728bf7646",
+              "analysis": "2",
+              "timestamp": "1792026321",
+              "distribution": "0",
+              "org_id": "1",
+              "orgc_id": "1",
+              "Org": {
+                "id": "1",
+                "name": "SOC-Lab",
+                "uuid": "76a742c7-d5aa-4630-9e43-05a29208c952"
+              },
+              "Orgc": {
+                "id": "1",
+                "name": "SOC-Lab",
+                "uuid": "76a742c7-d5aa-4630-9e43-05a29208c952"
+              }
+            },
+            "RelationshipInbound": []
+          },
+          {
+            "Event": {
+              "id": "812",
+              "date": "2017-12-24",
+              "threat_level_id": "2",
+              "info": "OSINT -  Repository containting orignal and decompiled files of TRISIS/TRITON/HATMAN malware",
+              "published": true,
+              "uuid": "5a3faeda-9524-4a8c-a329-b4d302de0b81",
+              "analysis": "0",
+              "timestamp": "1621849558",
+              "distribution": "3",
+              "org_id": "1",
+              "orgc_id": "3",
+              "Org": {
+                "id": "1",
+                "name": "SOC-Lab",
+                "uuid": "76a742c7-d5aa-4630-9e43-05a29208c952"
+              },
+              "Orgc": {
+                "id": "3",
+                "name": "CIRCL",
+                "uuid": "55f6ea5e-2c60-40e5-964f-47a8950d210f"
+              }
+            },
+            "RelationshipInbound": []
+          },
+          {
+            "Event": {
+              "id": "794",
+              "date": "2017-12-14",
+              "threat_level_id": "3",
+              "info": "OSINT - Attackers Deploy New ICS Attack Framework â€œTRITONâ€ and Cause Operational Disruption to Critical Infrastructure",
+              "published": true,
+              "uuid": "5a329d19-03e0-4eaa-8b4d-4310950d210f",
+              "analysis": "2",
+              "timestamp": "1515812452",
+              "distribution": "3",
+              "org_id": "1",
+              "orgc_id": "3",
+              "Org": {
+                "id": "1",
+                "name": "SOC-Lab",
+                "uuid": "76a742c7-d5aa-4630-9e43-05a29208c952"
+              },
+              "Orgc": {
+                "id": "3",
+                "name": "CIRCL",
+                "uuid": "55f6ea5e-2c60-40e5-964f-47a8950d210f"
+              }
+            },
+            "RelationshipInbound": []
+          }
+        ],
+        "Galaxy": [],
+        "Object": [],
+        "EventReport": [],
+        "CryptographicKey": [],
+        "Tag": [
+          {
+            "id": "1850",
+            "name": "soc-lab:malicious",
+            "colour": "#ff0000",
+            "exportable": true,
+            "user_id": "0",
+            "hide_tag": false,
+            "numerical_value": null,
+            "is_galaxy": false,
+            "is_custom_galaxy": false,
+            "local_only": false,
+            "local": true,
+            "relationship_type": null
+          },
+          {
+            "id": "1852",
+            "name": "soc-lab:thehive",
+            "colour": "#0066ff",
+            "exportable": true,
+            "user_id": "0",
+            "hide_tag": false,
+            "numerical_value": null,
+            "is_galaxy": false,
+            "is_custom_galaxy": false,
+            "local_only": false,
+            "local": false,
+            "relationship_type": null
+          }
+        ]
+      }
+    }
+  ]
+}
