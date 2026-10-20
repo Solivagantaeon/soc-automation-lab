@@ -1,41 +1,91 @@
 name: checks
 
+# Runs on every push to every branch (the repository is public: a pushed commit is public at
+# once, so a leak must be noticed within minutes, not when a PR is opened) and on every PR.
 on:
   push:
-    branches: [main]
+    branches: ["**"]
   pull_request:
 
 permissions:
   contents: read
 
+concurrency:
+  group: checks-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   secret-scan:
-    name: Secret scan (gitleaks)
+    name: Secret scan (gitleaks, full history)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0   # full history, so old commits are scanned too
+          fetch-depth: 0 # full history of all branches: removed secrets are still found
       - name: Run gitleaks
         run: |
           docker run --rm --user "$(id -u):$(id -g)" \
             -v "$PWD:/repo" -w /repo \
-            ghcr.io/gitleaks/gitleaks:latest \
+            ghcr.io/gitleaks/gitleaks:v8.24.2 \
             git --config /repo/.gitleaks.toml --redact --verbose /repo
 
-  sanitizer-and-syntax:
-    name: Sanitiser check, syntax & tests
+  leak-check:
+    name: Secrets & personal data (files + every new commit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Current files
+        run: python3 scripts/sanitize_export.py --check .
+      - name: Every commit in this push / pull request
+        env:
+          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          if [ -z "$BASE" ] || [ "$BASE" = "0000000000000000000000000000000000000000" ] \
+             || ! git cat-file -e "$BASE^{commit}" 2>/dev/null; then
+            BASE=$(git merge-base origin/main "$HEAD_SHA" 2>/dev/null || true)
+          fi
+          if [ -z "$BASE" ] || [ "$BASE" = "$HEAD_SHA" ]; then
+            echo "No new commits to check."
+            exit 0
+          fi
+          python3 scripts/sanitize_export.py --check-commits "$BASE..$HEAD_SHA"
+
+  image-check:
+    name: Screenshots (metadata + OCR)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: No secrets in exports and configs
-        run: python3 scripts/sanitize_export.py --check soar detection enrichment case-management samples
-      - name: JSON / XML / YAML syntax
+      - name: Install tesseract and Pillow
         run: |
-          pip install pyyaml jsonschema
-          python3 scripts/validate_syntax.py
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq --no-install-recommends tesseract-ocr
+          pip install pillow
+      - name: Check every image
+        run: python3 scripts/check_images.py --ocr --require-ocr .
+
+  syntax-and-tests:
+    name: Syntax & unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq --no-install-recommends tesseract-ocr
+          pip install pyyaml jsonschema pillow
+      - name: JSON / XML / YAML syntax
+        run: python3 scripts/validate_syntax.py
       - name: Unit tests
         run: python3 -m unittest discover -s tests -v

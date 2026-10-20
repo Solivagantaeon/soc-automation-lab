@@ -7,17 +7,17 @@ Krótko: **nic nie trafia na `main` bez Pull Requesta**, **żadnych sekretów w 
 ```bash
 git clone <adres-repo>
 cd soc-automation-lab
-pip install pre-commit        # albo: pipx install pre-commit
-pre-commit install            # od teraz gitleaks sprawdza każdy commit
+pip install pre-commit                                          # albo: pipx install pre-commit
+pre-commit install --hook-type pre-commit --hook-type pre-push  # kontrola przed każdym commitem i pushem
 ```
 
 Test: `pre-commit run --all-files` → wszystko „Passed”.
 
-Ustaw w gicie e-mail podpięty do Twojego konta GitHub (inaczej commity nie policzą się do Twojego profilu):
+Ustaw w gicie **adres no-reply z GitHuba**, nie prywatny e-mail: adres autora jest publiczny w każdym commicie. Znajdziesz go w GitHub → **Settings → Emails**; zaznacz tam też *Keep my email addresses private* i *Block command line pushes that expose my email*. Commity dalej liczą się do Twojego profilu.
 
 ```bash
-git config user.name  "Imię Nazwisko"
-git config user.email "twoj-email-z-githuba@example.com"
+git config user.name  "Imię Nazwisko"   # albo login - to też jest publiczne
+git config user.email "<id>+<login>@users.noreply.github.com"
 ```
 
 ## 2. Codzienny cykl pracy
@@ -54,9 +54,11 @@ Repo będzie publiczne. Wszystko, co raz trafi do historii gita, zostaje w niej 
 **Eksport workflow z Shuffle / fragmenty `ossec.conf`** zawsze przepuszczaj przez skrypt:
 
 ```bash
-python3 scripts/sanitize_export.py eksport.json -o soar/shuffle/workflows/triage.json
-python3 scripts/sanitize_export.py --check soar/ detection/   # musi zwrócić 0 znalezisk
+python3 scripts/sanitize_export.py eksport.json -o soar/shuffle/workflows/soc-automation-v1.0.json
+python3 scripts/sanitize_export.py --check .   # musi zwrócić 0 znalezisk
 ```
+
+**Wgrywasz plik przez przeglądarkę („Add files via upload”)?** Hooki `pre-commit` wtedy nie działają, a commit jest od razu publiczny. Najpierw sprawdź plik u siebie: `python3 scripts/sanitize_export.py --check plik`, a zrzut ekranu: `python3 scripts/check_images.py --ocr zrzut.png`. Szczegóły, prywatna lista `.leakcheck-local` (Twoje IP, nazwisko) i co robić po wycieku: [SECURITY.md](SECURITY.md).
 
 Na Windowsie zamiast `python3` wpisz `python`. Potem i tak przejrzyj diff wzrokiem — skrypt łapie typowe przypadki, nie wszystkie.
 
