@@ -104,7 +104,9 @@ grep -i 'integratord.*error' /var/ossec/logs/ossec.log | tail -3
 Wait for any alert from a Windows agent (e.g. 92910 on SOC-WIN10-01) or generate one on the endpoint, then find its execution in Shuffle.
 
 Result 2026-10-19: rule **92910** (level 12, SOC-WIN10-01) at 01:37:45 → execution 01:37:47, FINISHED.
-Evidence: `docs/images/07-shuffle-execution.png`, `samples/alerts/windows-sysmon-92910.json`.
+Evidence: `docs/images/07-shuffle-execution.png`,
+![shuffle alert](../images/Shuffle/07-shuffle-execution.png)
+![shuffle-alert](../images/Shuffle/07c-shuffle-execution-web-31106.png)
 
 ### T2 – Real IDS alert (Suricata → Wazuh 86601)
 
