@@ -36,7 +36,7 @@
       "flow_id": "1782111108328439.000000",
       "in_iface": "vlan01",
       "event_type": "alert",
-      "src_ip": "194.36.32.202",
+      "src_ip": "203.0.113.10",
       "src_port": "80",
       "dest_ip": "10.10.10.200",
       "dest_port": "55863",
@@ -83,7 +83,7 @@
       "ts_progress": "request_complete",
       "tc_progress": "response_body",
       "http": {
-        "hostname": "194.36.32.202",
+        "hostname": "203.0.113.10",
         "url": "/d/msdownload/update/software/defu/2026/10/am_delta_patch_1.461.91.0_c667bdc66363785730340782236c03869febc883.exe?cacheHostOrigin=3.au.download.windowsupdate.com",
         "http_user_agent": "Microsoft-Delivery-Optimization/10.0",
         "http_content_type": "application/octet-stream",
@@ -117,7 +117,7 @@
         "bytes_toclient": "45540",
         "start": "2026-10-19T02:33:10.808146+0200",
         "src_ip": "10.10.10.200",
-        "dest_ip": "194.36.32.202",
+        "dest_ip": "203.0.113.10",
         "src_port": "55863",
         "dest_port": "80"
       }
