@@ -1,6 +1,6 @@
 # Architecture
 
-> Documentation baseline: 18 October 2026. The diagram and [communication matrix](components.md#10-communication-matrix) use the same component names and transport assumptions. Solid lines indicate observed ingestion or implemented/tested paths; dashed lines represent architecture/integration paths whose individual results are validated separately.
+> Documentation baseline: 18 October 2026. The diagram and [communication matrix](components.md#9-communication-matrix) use the same component names and transport assumptions. Solid lines indicate observed ingestion or implemented/tested paths; dashed lines represent architecture/integration paths whose individual results are validated separately.
 
 ## Network segmentation
 
@@ -35,9 +35,7 @@ flowchart LR
         CTX["Cortex: 10.10.20.247"]
         MISP["MISP: 10.10.20.50"]
         TH["TheHive: 10.10.20.247"]
-        IRIS["DFIR-IRIS: 10.10.20.246 / alternative"]
         A["Authorized SOC analyst"]
-        EV["Authorized evaluator"]
     end
     WINA -->|"1514/TCP: agent key"| WAZ
     WINA -.->|"1515/TCP: enrollment"| WAZ
@@ -49,10 +47,9 @@ flowchart LR
     SH -->|"9000/TCP default or proxy: API key"| TH
     TH -.->|"9001/TCP internal: API key"| CTX
     A -->|"443/TCP: Wazuh Dashboard session"| WAZ
-    EV -.->|"443/TCP: separate evaluation"| IRIS
 ```
 
-**Matrix scope:** endpoints may also use `1515/TCP` during registration; Wazuh Dashboard is exposed via `443/TCP`, Manager REST API via `55000/TCP`. The default Cortex/TheHive service ports are private service conventions, not substitutes for inspecting Docker's actual published ports. DFIR-IRIS is a separate evaluated alternative and is not wired into the main triage flow.
+**Matrix scope:** endpoints may also use `1515/TCP` during registration; Wazuh Dashboard is exposed via `443/TCP`, Manager REST API via `55000/TCP`. The default Cortex/TheHive service ports are private service conventions, not substitutes for inspecting Docker's actual published ports.
 
 ## Triage workflow
 
@@ -84,9 +81,9 @@ Workflow overview screenshot: [Shuffle editor](images/shuffle/06-shuffle-running
 
 ## Key design decisions
 
-1. **Alert routing:** filter on relevant Wazuh `rule_id` values rather than only Wazuh severity because useful Suricata events may be classified at lower levels (e.g. rule `86601`).
+1. **Alert routing:** all Wazuh alerts (level ≥ 3) are sent to Shuffle; filtering, deduplication and enrichment happen in the workflow (ADR 0001).
 2. **Human-in-the-loop:** enrich, group and prioritize automatically; a human decides on response and escalation.
-3. **Case management:** use TheHive as the integration target; DFIR-IRIS remains an evaluated alternative.
+3. **Case management:** use TheHive as the integration target; DFIR-IRIS was evaluated as an alternative and is no longer deployed.
 4. **Security:** do not store tokens, webhook URLs, API keys, private credentials or public IPs in the repository.
 5. **Clock alignment:** OPNsense NTP, DC and domain-member synchronization, and Linux time synchronization provide correlated event timestamps (see [Issue #5](https://github.com/Solivagantaeon/soc-automation-lab/issues/5)).
 
