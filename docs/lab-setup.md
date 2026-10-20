@@ -19,6 +19,7 @@ Single-host lab on **Proxmox VE 9.2**. Firewall/router: **OPNsense** with VLAN-a
 | SOC-DC01 | 10.10.10.200 | Windows Server (AD DS, DNS), Sysmon + sysmon-modular, Wazuh agent |
 | SOC-WIN10-01 | 10.10.10.150 | Windows 10, Sysmon, Wazuh agent |
 | SOC-WIN11-AI | 10.10.10.171 | Windows 11, Sysmon, Wazuh agent |
+| SOC-LIN-01 | 10.10.10.100 | Ubuntu 24.04 (Linux endpoint), Wazuh agent — see [runbook](runbooks/linux-agent.md) |
 | Kali | VLAN 30 | Kali Linux |
 | Wazuh | 10.10.20.243 | Wazuh 4.14 (manager, indexer, dashboard) |
 | MISP | 10.10.20.50 | MISP (misp-docker) on Ubuntu 24.04 |
