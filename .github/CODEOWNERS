@@ -1,8 +1,19 @@
-# Kto robi review w danym obszarze. Zamień @TODO-* na loginy GitHub zespołu.
-# Działa automatycznie (prośba o review) po włączeniu ochrony gałęzi main.
-*                       @TODO-admin
-/detection/             @TODO-detection
-/soar/                  @TODO-soar
-/enrichment/            @TODO-soar
-/case-management/       @TODO-soar
-/docs/                  @TODO-admin
+# Code owners are asked for a review automatically. With "Require review from Code Owners"
+# enabled for main (Settings -> Rules), these paths cannot be merged without their approval.
+# Note: the last matching line wins.
+
+# Leak prevention: the checks, CI, ignore rules and the allowlist. Nobody may weaken them or
+# add an exception (e.g. their own IP) without the repository owner's review.
+/.github/                  @Solivagantaeon
+/scripts/                  @Solivagantaeon
+/.gitleaks.toml            @Solivagantaeon
+/.leakcheck-allow          @Solivagantaeon
+/.pre-commit-config.yaml   @Solivagantaeon
+/.gitignore                @Solivagantaeon
+/SECURITY.md               @Solivagantaeon
+
+# Area owners - replace with team logins when roles are fixed, e.g.:
+# /detection/             @<login>
+# /soar/                  @<login>
+# /enrichment/            @<login>
+# /case-management/       @<login>

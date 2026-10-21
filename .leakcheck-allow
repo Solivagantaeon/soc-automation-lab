@@ -1,0 +1,47 @@
+# Values that scripts/sanitize_export.py and scripts/check_images.py must NOT report.
+#
+# One IP, CIDR, e-mail or literal value per line; '#' starts a comment.
+# Every entry needs a reason. This file is owned by the repository owner (see CODEOWNERS):
+# never add your home IP, a real e-mail or a real secret here - fix the file instead.
+#
+# Built in (no need to list): documentation ranges (RFC 5737 / RFC 3849), private and
+# reserved ranges, public DNS resolvers (8.8.8.8, 1.1.1.1, 9.9.9.9, ...), example/test
+# e-mail domains, placeholders (<KEY>, __NAME__, $variable, REDACTED, 00000000-...).
+
+# --- Commits already pushed and reviewed (history cannot be changed) --------------------
+# Only for commits whose problem was handled: secrets rotated, files fixed in a later commit.
+# PR #44: Linux login name of a lab VM in a helper script (deleted in 582008c) and a
+# Windows Update server IP in a sample (to be replaced before merge). Not credentials.
+commit:99ed19f88e489efc5dc23545c07da789b942be51
+
+# --- Screenshots reviewed by a human (entry stops working when the file changes) -------
+# OPNsense NTP status: public NTP pool servers and their upstream refs, not lab addresses
+sha256:e1d731eea5c1361b49133bca37672f6382d83a137f0bab0ae6843fc4fd2c1c1d  docs/images/network/5-opnsense-ntp-status.png
+
+# --- MISP test IOCs (enrichment/misp/events/, PR #43) -----------------------------------
+# Known-malicious test indicator from the abuse.ch Feodo feed; must match MISP exactly
+50.16.16.211
+
+# --- samples/normalized/maltiverse-normalized-example.json -----------------------------
+# A/AAAA records of example.com returned by the Maltiverse API (public CDN, not lab data)
+93.184.216.34
+23.192.228.80
+23.192.228.84
+23.215.0.136
+23.215.0.138
+96.7.128.175
+96.7.128.198
+104.18.26.120
+104.18.27.120
+104.20.23.154
+172.66.147.243
+2600:1406:3a00:21::173e:2e65
+2600:1406:3a00:21::173e:2e66
+2600:1406:bc00:53::b81e:94c8
+2600:1406:bc00:53::b81e:94ce
+2600:1408:ec00:36::1736:7f24
+2600:1408:ec00:36::1736:7f31
+2606:4700::6812:1a78
+2606:4700::6812:1b78
+2606:4700:10::ac42:93f3
+2606:4700:10::6814:179a

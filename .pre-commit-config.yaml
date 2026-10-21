@@ -1,3 +1,6 @@
+# Install once:  pre-commit install --hook-type pre-commit --hook-type pre-push
+# These hooks only run for commits made with git on your computer. Files uploaded through the
+# GitHub web page skip them - check such files by hand first (see SECURITY.md).
 repos:
   - repo: https://github.com/gitleaks/gitleaks
     rev: v8.24.2
@@ -21,9 +24,24 @@ repos:
 
   - repo: local
     hooks:
-      - id: sanitize-check
-        name: no secrets in exports (sanitize_export.py --check)
+      - id: leak-check
+        name: secrets & personal data (sanitize_export.py --check)
         entry: python scripts/sanitize_export.py --check
         language: python
-        files: '\.(json|xml|conf|ya?ml)$'
+        types: [text]
         exclude: '^tests/fixtures/'
+
+      - id: image-check
+        name: screenshots - metadata & visible text (check_images.py)
+        entry: python scripts/check_images.py --ocr
+        language: python
+        additional_dependencies: [pillow]
+        types: [image]
+
+      - id: leak-check-commits
+        name: secrets & personal data in every commit being pushed
+        entry: python scripts/sanitize_export.py --check-commits origin/main..HEAD
+        language: python
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push]
