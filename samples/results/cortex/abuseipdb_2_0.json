@@ -1,0 +1,1592 @@
+{
+  "summary": {
+    "taxonomies": [
+      {
+        "level": "info",
+        "namespace": "AbuseIPDB",
+        "predicate": "Usage",
+        "value": "Data Center/Web Hosting/Transit"
+      },
+      {
+        "level": "malicious",
+        "namespace": "AbuseIPDB",
+        "predicate": "Score",
+        "value": 100
+      },
+      {
+        "level": "malicious",
+        "namespace": "AbuseIPDB",
+        "predicate": "Reports",
+        "value": 1114
+      }
+    ]
+  },
+  "full": {
+    "values": [
+      {
+        "data": {
+          "ipAddress": "203.0.113.10",
+          "isPublic": true,
+          "ipVersion": 4,
+          "isWhitelisted": false,
+          "abuseConfidenceScore": 100,
+          "countryCode": "CH",
+          "usageType": "Data Center/Web Hosting/Transit",
+          "isp": "PRIVATE LAYER INC",
+          "domain": "privatelayer.com",
+          "hostnames": [
+            "swe1.tohou.io"
+          ],
+          "isTor": false,
+          "countryName": "Switzerland",
+          "totalReports": 1114,
+          "numDistinctUsers": 626,
+          "lastReportedAt": "2026-10-20T06:54:36+00:00",
+          "reports": [
+            {
+              "reportedAt": "2026-10-20T06:54:36+00:00",
+              "comment": "B: f2b 404 5x",
+              "categories": [
+                21
+              ],
+              "reporterId": 32715,
+              "reporterCountryCode": "DE",
+              "reporterCountryName": "Germany",
+              "categories_strings": [
+                "Web App Attack"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-18T11:21:43+00:00",
+              "comment": "Gate I blocked for categories:",
+              "categories": [
+                4,
+                6,
+                14,
+                15,
+                18
+              ],
+              "reporterId": 203872,
+              "reporterCountryCode": "RU",
+              "reporterCountryName": "Russian Federation",
+              "categories_strings": [
+                "DDOS Attack",
+                "Ping of Death",
+                "Port Scan",
+                "Hacking",
+                "Brute Force"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-17T16:36:14+00:00",
+              "comment": "Failed login attempt detected by Fail2Ban in plesk-modsecurity jail",
+              "categories": [
+                20
+              ],
+              "reporterId": 153522,
+              "reporterCountryCode": "US",
+              "reporterCountryName": "United States of America",
+              "categories_strings": [
+                "Exploited Host"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-15T14:18:22+00:00",
+              "comment": "IVski WAF | Sensitive file probe detected - looking for .env",
+              "categories": [
+                15,
+                18,
+                21
+              ],
+              "reporterId": 291695,
+              "reporterCountryCode": "DE",
+              "reporterCountryName": "Germany",
+              "categories_strings": [
+                "Hacking",
+                "Brute Force",
+                "Web App Attack"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-15T13:06:30+00:00",
+              "comment": "Oct  9 01:54:42 mail postfix/smtpd[15354]: lost connection after CONNECT from swe1.tohou.io[203.0.113.10]\nOct  9 02:33:36 mail postfix/smtpd[15541]: lost connection after CONNECT from swe1.tohou.io[203.0.113.10]",
+              "categories": [
+                15,
+                22
+              ],
+              "reporterId": 5687,
+              "reporterCountryCode": "UA",
+              "reporterCountryName": "Ukraine",
+              "categories_strings": [
+                "Hacking",
+                "SSH"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-15T06:25:47+00:00",
+              "comment": "Web directory scan: 10 requests in 22s (Last path: '/@fs/..%252f..%252f..%252f..%252f..%252fproc/self/environ?raw??').",
+              "categories": [
+                15,
+                21
+              ],
+              "reporterId": 324700,
+              "reporterCountryCode": "HK",
+              "reporterCountryName": "Hong Kong",
+              "categories_strings": [
+                "Hacking",
+                "Web App Attack"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-15T06:23:45+00:00",
+              "comment": "Connection to port 3000 with data transfer.\nData preview: GET /.env HTTP/1.1\r\naccept: */*\r\nuser-agent: Mozilla/5.0\r\nhost: 203.0.113.11:3000",
+              "categories": [
+                14,
+                15
+              ],
+              "reporterId": 246098,
+              "reporterCountryCode": "US",
+              "reporterCountryName": "United States of America",
+              "categories_strings": [
+                "Port Scan",
+                "Hacking"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-15T06:23:37+00:00",
+              "comment": "Honeypot Finding: repeated TCP service probing on TCP/3000 (HTTP/API); 79 application-level events across 79 source port(s). Sensor(s): Honeyaml.",
+              "categories": [
+                14
+              ],
+              "reporterId": 348146,
+              "reporterCountryCode": "DE",
+              "reporterCountryName": "Germany",
+              "categories_strings": [
+                "Port Scan"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-15T06:11:32+00:00",
+              "comment": "Honeypot Finding: repeated TCP service probing on TCP/3000 (HTTP/API); 131 application-level events across 131 source port(s). Sensor(s): Honeyaml.",
+              "categories": [
+                14
+              ],
+              "reporterId": 348146,
+              "reporterCountryCode": "FR",
+              "reporterCountryName": "France",
+              "categories_strings": [
+                "Port Scan"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-14T22:18:54+00:00",
+              "comment": "Attacking server service nginx-movimientos-forbidden (Permanently Banned by Fail2ban on TurnoControlPro VPS)",
+              "categories": [
+                15,
+                18,
+                19,
+                21
+              ],
+              "reporterId": 341880,
+              "reporterCountryCode": "ES",
+              "reporterCountryName": "Spain",
+              "categories_strings": [
+                "Hacking",
+                "Brute Force",
+                "Bad Web Bot",
+                "Web App Attack"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-13T12:54:11+00:00",
+              "comment": "Attacking server service nginx-movimientos-forbidden (Permanently Banned by Fail2ban on TurnoControlPro VPS)",
+              "categories": [
+                15,
+                18,
+                19,
+                21
+              ],
+              "reporterId": 341880,
+              "reporterCountryCode": "ES",
+              "reporterCountryName": "Spain",
+              "categories_strings": [
+                "Hacking",
+                "Brute Force",
+                "Bad Web Bot",
+                "Web App Attack"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-13T08:32:13+00:00",
+              "comment": "203.0.113.10 - - [22/Sep/2026:06:42:00 +0900] \"GET /.env HTTP/1.1\" 404 5685 \"-\" \"Mozilla/5.0\"",
+              "categories": [
+                19,
+                21
+              ],
+              "reporterId": 268923,
+              "reporterCountryCode": "KR",
+              "reporterCountryName": "Korea (the Republic of)",
+              "categories_strings": [
+                "Bad Web Bot",
+                "Web App Attack"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-13T02:52:35+00:00",
+              "comment": "Oct  9 01:54:42 mail postfix/smtpd[15354]: lost connection after CONNECT from swe1.tohou.io[203.0.113.10]\nOct  9 02:33:36 mail postfix/smtpd[15541]: lost connection after CONNECT from swe1.tohou.io[203.0.113.10]",
+              "categories": [
+                15,
+                22
+              ],
+              "reporterId": 5687,
+              "reporterCountryCode": "UA",
+              "reporterCountryName": "Ukraine",
+              "categories_strings": [
+                "Hacking",
+                "SSH"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-11T15:24:26+00:00",
+              "comment": "connection to honeypot",
+              "categories": [
+                11,
+                14
+              ],
+              "reporterId": 181131,
+              "reporterCountryCode": "DE",
+              "reporterCountryName": "Germany",
+              "categories_strings": [
+                "Email Spam",
+                "Port Scan"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-11T14:03:11+00:00",
+              "comment": "nftables: Port scan (TCP:3000) [srv2]",
+              "categories": [
+                14,
+                15
+              ],
+              "reporterId": 351652,
+              "reporterCountryCode": "RU",
+              "reporterCountryName": "Russian Federation",
+              "categories_strings": [
+                "Port Scan",
+                "Hacking"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-11T13:42:02+00:00",
+              "comment": "Attacking server service nginx-movimientos-forbidden (Permanently Banned by Fail2ban on TurnoControlPro VPS)",
+              "categories": [
+                15,
+                18,
+                19,
+                21
+              ],
+              "reporterId": 341880,
+              "reporterCountryCode": "ES",
+              "reporterCountryName": "Spain",
+              "categories_strings": [
+                "Hacking",
+                "Brute Force",
+                "Bad Web Bot",
+                "Web App Attack"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-11T13:19:57+00:00",
+              "comment": "2026-10-11T15:19:55.669197+02:00 vps kernel: [8095572.544398] [PORTSCAN DETECTED] IN=ens3 OUT= MAC=fa:16:3e:66:f6:24:02:37:19:0d:c2:f3:08:00 SRC=203.0.113.10 DST=203.0.113.12 LEN=52 TOS=0x00 PREC=0x00 TTL=49 ID=13695 PROTO=TCP SPT=33842 DPT=3000 WINDOW=65535 RES=0x00 SYN URGP=0 \n...",
+              "categories": [
+                14,
+                18
+              ],
+              "reporterId": 108632,
+              "reporterCountryCode": "FR",
+              "reporterCountryName": "France",
+              "categories_strings": [
+                "Port Scan",
+                "Brute Force"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-11T13:18:27+00:00",
+              "comment": "[incypit-web] Blocked by SysWarden Firewall [BLOCK] (Infra/DevOps Attack)",
+              "categories": [
+                15,
+                21
+              ],
+              "reporterId": 281946,
+              "reporterCountryCode": "FR",
+              "reporterCountryName": "France",
+              "categories_strings": [
+                "Hacking",
+                "Web App Attack"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-11T13:14:55+00:00",
+              "comment": "Wazuh rule 31178: L3: Active Response Trigger by ET CINS Active Threat Intelligence Poor Reputation IP group 252: CINS Poor Reputation IP Blocked.",
+              "categories": [
+                15
+              ],
+              "reporterId": 169334,
+              "reporterCountryCode": "ID",
+              "reporterCountryName": "Indonesia",
+              "categories_strings": [
+                "Hacking"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-11T13:14:47+00:00",
+              "comment": "Repeated unauthorized connection attempts to restricted service observed.",
+              "categories": [
+                14,
+                15,
+                19,
+                21
+              ],
+              "reporterId": 274837,
+              "reporterCountryCode": "US",
+              "reporterCountryName": "United States of America",
+              "categories_strings": [
+                "Port Scan",
+                "Hacking",
+                "Bad Web Bot",
+                "Web App Attack"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-11T13:14:27+00:00",
+              "comment": "Drop from IP address 203.0.113.10 to tcp-port 3000",
+              "categories": [
+                14
+              ],
+              "reporterId": 258539,
+              "reporterCountryCode": "SE",
+              "reporterCountryName": "Sweden",
+              "categories_strings": [
+                "Port Scan"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-11T13:11:18+00:00",
+              "comment": "tcp/3000",
+              "categories": [
+                14
+              ],
+              "reporterId": 37183,
+              "reporterCountryCode": "NL",
+              "reporterCountryName": "Netherlands",
+              "categories_strings": [
+                "Port Scan"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-11T13:05:11+00:00",
+              "comment": "Source IP from blacklist is still actively scanning our network. (6 hits in last hour, last seen 2026-10-11 14:58:50)",
+              "categories": [
+                14
+              ],
+              "reporterId": 78542,
+              "reporterCountryCode": "PL",
+              "reporterCountryName": "Poland",
+              "categories_strings": [
+                "Port Scan"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-11T13:05:02+00:00",
+              "comment": "firewall port scanning detected. 2 or more observation(s) from 2026-10-11T13:05:02.000Z through 2026-10-11T13:05:02.000Z.",
+              "categories": [
+                14
+              ],
+              "reporterId": 331019,
+              "reporterCountryCode": "US",
+              "reporterCountryName": "United States of America",
+              "categories_strings": [
+                "Port Scan"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-11T13:03:20+00:00",
+              "comment": "2026-10-11T13:03:20+00:00 iskariot kernel: AbuseIPDB-Blacklist-Dropped: IN=ens3 OUT= MAC=b6:ab:74:e6:2e:14:2c:dd:e9:13:03:d9:08:00 SRC=203.0.113.10 DST=203.0.113.13 LEN=52 TOS=0x00 PREC=0x00 TTL=49 ID=61013 PROTO=TCP SPT=53923 DPT=3000 WINDOW=65535 RES=0x00 SYN URGP=0 ",
+              "categories": [
+                15,
+                19
+              ],
+              "reporterId": 43401,
+              "reporterCountryCode": "AT",
+              "reporterCountryName": "Austria",
+              "categories_strings": [
+                "Hacking",
+                "Bad Web Bot"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-11T13:01:10+00:00",
+              "comment": "firewall-block, port(s): 3000/tcp",
+              "categories": [
+                14
+              ],
+              "reporterId": 16080,
+              "reporterCountryCode": "DE",
+              "reporterCountryName": "Germany",
+              "categories_strings": [
+                "Port Scan"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-11T12:59:39+00:00",
+              "comment": "Blocked by firewall on hugin [3000/tcp] | Rule: UFW | SPT: 54592 | TTL: 55 | LEN: 52 | TOS: 0x00 • Reported by: github.com/sefinek/UFW-AbuseIPDB-Reporter",
+              "categories": [
+                14
+              ],
+              "reporterId": 321383,
+              "reporterCountryCode": "DE",
+              "reporterCountryName": "Germany",
+              "categories_strings": [
+                "Port Scan"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-11T12:58:37+00:00",
+              "comment": "Blocked by UFW on mail [3000/tcp] | SPT: 41800 | TTL: 54 | LEN: 52 | TOS: 0x00 • Reported by: github.com/sefinek/UFW-AbuseIPDB-Reporter",
+              "categories": [
+                14
+              ],
+              "reporterId": 265094,
+              "reporterCountryCode": "FI",
+              "reporterCountryName": "Finland",
+              "categories_strings": [
+                "Port Scan"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-11T12:44:22+00:00",
+              "comment": "scanning closed ports\n...",
+              "categories": [
+                14
+              ],
+              "reporterId": 203164,
+              "reporterCountryCode": "FR",
+              "reporterCountryName": "France",
+              "categories_strings": [
+                "Port Scan"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-11T12:44:18+00:00",
+              "comment": "Blocked by UFW [3000/tcp] | SPT: 54349 | TTL: 49 | LEN: 52 | TOS: 0x00 • Reported by: github.com/sefinek/UFW-AbuseIPDB-Reporter",
+              "categories": [
+                14
+              ],
+              "reporterId": 251024,
+              "reporterCountryCode": "US",
+              "reporterCountryName": "United States of America",
+              "categories_strings": [
+                "Port Scan"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-11T12:38:40+00:00",
+              "comment": "Port scan from this IP. Firewall dropped every packet. Targeted TCP ports: 3000. Single burst at 2026-10-11 12:38 UTC.",
+              "categories": [
+                14
+              ],
+              "reporterId": 302411,
+              "reporterCountryCode": "NL",
+              "reporterCountryName": "Netherlands",
+              "categories_strings": [
+                "Port Scan"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-11T06:15:11+00:00",
+              "comment": "Hundreds of Attempts (at least) to Connect to and Access Firewall Ports",
+              "categories": [
+                14,
+                15,
+                18
+              ],
+              "reporterId": 168827,
+              "reporterCountryCode": "US",
+              "reporterCountryName": "United States of America",
+              "categories_strings": [
+                "Port Scan",
+                "Hacking",
+                "Brute Force"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-11T03:33:47+00:00",
+              "comment": "Automated block on a production VoIP/web server: HTTP requests probing a production web service on port 80,443/tcp after 5 detected failures. Blocked automatically at the host.",
+              "categories": [
+                18
+              ],
+              "reporterId": 352727,
+              "reporterCountryCode": "US",
+              "reporterCountryName": "United States of America",
+              "categories_strings": [
+                "Brute Force"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-11T02:02:27+00:00",
+              "comment": "scan port 22, 203.0.113.10 block",
+              "categories": [
+                14
+              ],
+              "reporterId": 130552,
+              "reporterCountryCode": "US",
+              "reporterCountryName": "United States of America",
+              "categories_strings": [
+                "Port Scan"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-11T00:05:22+00:00",
+              "comment": "Port scan detected: 6 attempts across 1 port (8000). | Evidence: REAPER_TARPIT: IN=eth0 SRC=203.0.113.10 LEN=40 TOS=0x14 PREC=0x00 TTL=50 ID=0 DF PROTO=TCP SPT=53804 DPT=8000 WINDOW=0 RES=0x00 RST URGP=0",
+              "categories": [
+                14
+              ],
+              "reporterId": 285590,
+              "reporterCountryCode": "HK",
+              "reporterCountryName": "Hong Kong",
+              "categories_strings": [
+                "Port Scan"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-11T00:00:35+00:00",
+              "comment": "This IP was detected by CrowdSec triggering crowdsecurity/suricata-major-severity(ET CINS Active Threat Intelligence Poor Reputation IP group 252).",
+              "categories": [
+                15,
+                21
+              ],
+              "reporterId": 66509,
+              "reporterCountryCode": "ID",
+              "reporterCountryName": "Indonesia",
+              "categories_strings": [
+                "Hacking",
+                "Web App Attack"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-10T23:59:19+00:00",
+              "comment": "[SRV-VPN1] Blocked by SysWarden Firewall (Port Scan / Probing)",
+              "categories": [
+                14
+              ],
+              "reporterId": 287064,
+              "reporterCountryCode": "FR",
+              "reporterCountryName": "France",
+              "categories_strings": [
+                "Port Scan"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-10T23:57:01+00:00",
+              "comment": "nftables: Port scan (TCP:8080) [srv1]",
+              "categories": [
+                14,
+                15
+              ],
+              "reporterId": 351652,
+              "reporterCountryCode": "RU",
+              "reporterCountryName": "Russian Federation",
+              "categories_strings": [
+                "Port Scan",
+                "Hacking"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-10T23:45:50+00:00",
+              "comment": "Blocked by firewall: 8 unsolicited inbound connection attempts within 24 hours to ports 8080, 25, 3306, 5888, 8000, 9000, 3000, 22. Automated report from a home network.",
+              "categories": [
+                14,
+                18,
+                21,
+                22
+              ],
+              "reporterId": 352371,
+              "reporterCountryCode": "NL",
+              "reporterCountryName": "Netherlands",
+              "categories_strings": [
+                "Port Scan",
+                "Brute Force",
+                "Web App Attack",
+                "SSH"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-10T23:43:44+00:00",
+              "comment": "Entered MySQL Honeypot (server 1)",
+              "categories": [
+                14,
+                18
+              ],
+              "reporterId": 268078,
+              "reporterCountryCode": "PL",
+              "reporterCountryName": "Poland",
+              "categories_strings": [
+                "Port Scan",
+                "Brute Force"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-10T23:34:43+00:00",
+              "comment": "Blocked by UFW [6000/tcp]\nSource port: 47176\nTTL: 246\nPacket length: 40",
+              "categories": [
+                14
+              ],
+              "reporterId": 191816,
+              "reporterCountryCode": "NL",
+              "reporterCountryName": "Netherlands",
+              "categories_strings": [
+                "Port Scan"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-10T23:03:24+00:00",
+              "comment": "Network port/address scan: probed 1 distinct port(s) across 64 host(s); 100% of connections received no service (SYN, no reply) -- passive network sensor.",
+              "categories": [
+                14
+              ],
+              "reporterId": 319362,
+              "reporterCountryCode": "CA",
+              "reporterCountryName": "Canada",
+              "categories_strings": [
+                "Port Scan"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-10T23:00:11+00:00",
+              "comment": "Honeytrapped",
+              "categories": [
+                14,
+                18
+              ],
+              "reporterId": 142211,
+              "reporterCountryCode": "US",
+              "reporterCountryName": "United States of America",
+              "categories_strings": [
+                "Port Scan",
+                "Brute Force"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-10T22:34:25+00:00",
+              "comment": "Activity from blacklisted IP",
+              "categories": [
+                15
+              ],
+              "reporterId": 30100,
+              "reporterCountryCode": "FR",
+              "reporterCountryName": "France",
+              "categories_strings": [
+                "Hacking"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-10T22:33:19+00:00",
+              "comment": "Repeated connection attempts to firewalled ports, detected by our ISP firewall Interconnect WL",
+              "categories": [
+                14
+              ],
+              "reporterId": 27021,
+              "reporterCountryCode": "GB",
+              "reporterCountryName": "United Kingdom of Great Britain and Northern Ireland",
+              "categories_strings": [
+                "Port Scan"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-10T22:28:39+00:00",
+              "comment": "firewall port scanning detected. 2 or more observation(s) from 2026-10-10T21:50:46.000Z through 2026-10-10T21:50:46.000Z. firewall port scanning detected. 2 or more observation(s) from 2026-10-10T22:25:34.000Z through 2026-10-10T22:25:34.000Z. firewall port scanning detected. 2 or more observation(s) from 2026-10-10T22:26:49.000Z through 2026-10-10T22:26:51.000Z. firewall port scanning detected. 2 or more observation(s) from 2026-10-10T22:27:58.000Z through 2026-10-10T22:27:58.000Z. firewall port scanning detected. 2 or more observation(s) from 2026-10-10T22:28:39.000Z through 2026-10-10T22:28:39.000Z.",
+              "categories": [
+                14
+              ],
+              "reporterId": 331019,
+              "reporterCountryCode": "US",
+              "reporterCountryName": "United States of America",
+              "categories_strings": [
+                "Port Scan"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-10T22:14:25+00:00",
+              "comment": "SRC=203.0.113.10, PROTO=TCP, SPT=39266, DPT=8080",
+              "categories": [
+                14
+              ],
+              "reporterId": 129322,
+              "reporterCountryCode": "HK",
+              "reporterCountryName": "Hong Kong",
+              "categories_strings": [
+                "Port Scan"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-10T22:13:46+00:00",
+              "comment": "Automated sensor: 3 MySQL connection/probe attempts over the last 24h (latest 2026-10-10T22:13Z).",
+              "categories": [
+                15,
+                18
+              ],
+              "reporterId": 60546,
+              "reporterCountryCode": "US",
+              "reporterCountryName": "United States of America",
+              "categories_strings": [
+                "Hacking",
+                "Brute Force"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-10T21:51:34+00:00",
+              "comment": "Attempt on port 25 (SMTP) - potential mail server attack attempt. Blocked by firewall (unsolicited inbound, no prior outbound connection). 9 attempts observed within the last 24h. Ports targeted: 25, 80, 3306, 5000, 8000, 8080, 27017.",
+              "categories": [
+                14,
+                15
+              ],
+              "reporterId": 249469,
+              "reporterCountryCode": "DE",
+              "reporterCountryName": "Germany",
+              "categories_strings": [
+                "Port Scan",
+                "Hacking"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-10T19:58:01+00:00",
+              "comment": "Honeypot hit: Empty payload (likely service probe); 9090 [1] TCP",
+              "categories": [
+                14
+              ],
+              "reporterId": 144463,
+              "reporterCountryCode": "AU",
+              "reporterCountryName": "Australia",
+              "categories_strings": [
+                "Port Scan"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-10T19:47:31+00:00",
+              "comment": "Port scan detected: 8 attempts across 1 port (8000). | Evidence: REAPER_TARPIT: IN=enp1s0f0 SRC=203.0.113.10 LEN=40 TOS=0x00 PREC=0x00 TTL=48 ID=18705 DF PROTO=TCP SPT=50536 DPT=8000 WINDOW=64240 RES=0x00 ACK FIN URGP=0",
+              "categories": [
+                14
+              ],
+              "reporterId": 285590,
+              "reporterCountryCode": "GB",
+              "reporterCountryName": "United Kingdom of Great Britain and Northern Ireland",
+              "categories_strings": [
+                "Port Scan"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-10T18:39:59+00:00",
+              "comment": "port=6000, indicator_type=scan",
+              "categories": [
+                14
+              ],
+              "reporterId": 169013,
+              "reporterCountryCode": "JP",
+              "reporterCountryName": "Japan",
+              "categories_strings": [
+                "Port Scan"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-10T18:20:54+00:00",
+              "comment": "Honeypot hit: Empty payload (likely service probe); 5888 [1] TCP",
+              "categories": [
+                14
+              ],
+              "reporterId": 202524,
+              "reporterCountryCode": "MN",
+              "reporterCountryName": "Mongolia",
+              "categories_strings": [
+                "Port Scan"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-10T15:04:44+00:00",
+              "comment": "[2026-10-10 15:04:44.715693] TELNET/8080 Unautorized connection, Suspicious Mirai Botnet.",
+              "categories": [
+                23,
+                18,
+                15,
+                14,
+                4
+              ],
+              "reporterId": 111689,
+              "reporterCountryCode": "US",
+              "reporterCountryName": "United States of America",
+              "categories_strings": [
+                "IoT Targeted",
+                "Brute Force",
+                "Hacking",
+                "Port Scan",
+                "DDOS Attack"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-10T14:08:24+00:00",
+              "comment": "Scan port: 5888 | 4 total | size=40B",
+              "categories": [
+                14
+              ],
+              "reporterId": 302832,
+              "reporterCountryCode": "FI",
+              "reporterCountryName": "Finland",
+              "categories_strings": [
+                "Port Scan"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-10T13:06:01+00:00",
+              "comment": "Oct  9 16:41:47 [redacted] kernel: CLOSED_PORT_PROBE: IN=eth0 OUT= MAC=[redacted]:6c:78:c1:10:f6:b0:08:00 SRC=203.0.113.10 DST=[redacted] LEN=40 TOS=0x00 PREC=0x00 TTL=245 ID=54321 PROTO=TCP SPT=49332 DPT=3306 WINDOW=65535 RES=0x00 SYN URGP=0 \nOct  9 20:06:08 [redacted] kernel: CLOSED_PORT_PROBE: IN=eth0 OUT= MAC=[redacted]:6c:78:c1:10:f6:b0:08:00 SRC=203.0.113.10 DST=[redacted] LEN=40 TOS=0x00 PREC=0x00 TTL=245 ID=54321 PROTO=TCP SPT=39982 DPT=5432 WINDOW=65535 RES=0x00 SYN URGP=0 \nOct 10 08:05:57 [redacted] kernel: CLOSED_PORT_PROBE: IN=eth0 OUT= MAC=[redacted]:6c:78:c1:10:f6:b0:08:00 SRC=203.0.113.10 DST=[redacted] LEN=40 TOS=0x00 PREC=0x00 TTL=245 ID=54321 PROTO=TCP SPT=57534 DPT=3306 WINDOW=65535 RES=0x00 SYN URGP=0",
+              "categories": [
+                14
+              ],
+              "reporterId": 10374,
+              "reporterCountryCode": "US",
+              "reporterCountryName": "United States of America",
+              "categories_strings": [
+                "Port Scan"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-10T12:46:07+00:00",
+              "comment": "Honeypot hit: Empty payload (likely service probe); 3333 [1] TCP",
+              "categories": [
+                14
+              ],
+              "reporterId": 144463,
+              "reporterCountryCode": "AU",
+              "reporterCountryName": "Australia",
+              "categories_strings": [
+                "Port Scan"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-10T10:46:25+00:00",
+              "comment": "Scan port: 9000 | 3 total | size=40B",
+              "categories": [
+                14
+              ],
+              "reporterId": 302832,
+              "reporterCountryCode": "FI",
+              "reporterCountryName": "Finland",
+              "categories_strings": [
+                "Port Scan"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-10T10:20:48+00:00",
+              "comment": "Global Docker honeypot port trap",
+              "categories": [
+                14
+              ],
+              "reporterId": 355317,
+              "reporterCountryCode": "NL",
+              "reporterCountryName": "Netherlands",
+              "categories_strings": [
+                "Port Scan"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-10T07:49:12+00:00",
+              "comment": "Port scan",
+              "categories": [
+                14
+              ],
+              "reporterId": 75319,
+              "reporterCountryCode": "DE",
+              "reporterCountryName": "Germany",
+              "categories_strings": [
+                "Port Scan"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-10T07:36:29+00:00",
+              "comment": "Connection to port 9090 with data transfer.\nData preview: GET / HTTP/1.1\r\nhost: 203.0.113.14\r\nuser-agent: TohouScanner/0.1 (+https://scan.tohou.io/; abuse:",
+              "categories": [
+                14,
+                15
+              ],
+              "reporterId": 246098,
+              "reporterCountryCode": "US",
+              "reporterCountryName": "United States of America",
+              "categories_strings": [
+                "Port Scan",
+                "Hacking"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-10T07:07:46+00:00",
+              "comment": "Connection to port 5432 with data transfer.\nData preview: ",
+              "categories": [
+                14,
+                15
+              ],
+              "reporterId": 246098,
+              "reporterCountryCode": "NL",
+              "reporterCountryName": "Netherlands",
+              "categories_strings": [
+                "Port Scan",
+                "Hacking"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-10T07:02:01+00:00",
+              "comment": "Blocked by on honeypot2 [6000/tcp] | SPT: 53247 | TTL: 239 | LEN: 40 | TOS: 0x00 • Reported by: abuse.terraforge.fun",
+              "categories": [
+                14
+              ],
+              "reporterId": 330541,
+              "reporterCountryCode": "US",
+              "reporterCountryName": "United States of America",
+              "categories_strings": [
+                "Port Scan"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-10T06:44:45+00:00",
+              "comment": "Connection to port 9090 with data transfer.\nData preview: GET / HTTP/1.1\r\nhost: 203.0.113.15\r\nuser-agent: TohouScanner/0.1 (+https://scan.tohou.io/; abuse:",
+              "categories": [
+                14,
+                15
+              ],
+              "reporterId": 246098,
+              "reporterCountryCode": "NL",
+              "reporterCountryName": "Netherlands",
+              "categories_strings": [
+                "Port Scan",
+                "Hacking"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-10T06:05:02+00:00",
+              "comment": "Blocked by os-abuseipdb; 4 hits, proto=tcp, ports=3306,443,5432,5888",
+              "categories": [
+                14,
+                15
+              ],
+              "reporterId": 317059,
+              "reporterCountryCode": "BE",
+              "reporterCountryName": "Belgium",
+              "categories_strings": [
+                "Port Scan",
+                "Hacking"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-10T06:01:54+00:00",
+              "comment": "Port scan detected on port 5888 (connection without data transfer)",
+              "categories": [
+                14
+              ],
+              "reporterId": 246098,
+              "reporterCountryCode": "NL",
+              "reporterCountryName": "Netherlands",
+              "categories_strings": [
+                "Port Scan"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-10T04:41:20+00:00",
+              "comment": "Connection to port 6379 with data transfer.\nData preview: PING",
+              "categories": [
+                14,
+                15
+              ],
+              "reporterId": 246098,
+              "reporterCountryCode": "US",
+              "reporterCountryName": "United States of America",
+              "categories_strings": [
+                "Port Scan",
+                "Hacking"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-10T04:34:05+00:00",
+              "comment": "Honeypot hit: Empty payload (likely service probe); 9000 [1] TCP",
+              "categories": [
+                14
+              ],
+              "reporterId": 144463,
+              "reporterCountryCode": "AU",
+              "reporterCountryName": "Australia",
+              "categories_strings": [
+                "Port Scan"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-10T04:20:34+00:00",
+              "comment": "1791606033 # Service_probe # SIGNATURE_SEND # source_ip:203.0.113.10 # dst_port:9000  \n...",
+              "categories": [
+                14
+              ],
+              "reporterId": 165062,
+              "reporterCountryCode": "JP",
+              "reporterCountryName": "Japan",
+              "categories_strings": [
+                "Port Scan"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-10T04:20:17+00:00",
+              "comment": "Honeypot hit: Unauthorized traffic on 3306/mysqld",
+              "categories": [
+                14
+              ],
+              "reporterId": 202524,
+              "reporterCountryCode": "MN",
+              "reporterCountryName": "Mongolia",
+              "categories_strings": [
+                "Port Scan"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-10T04:08:52+00:00",
+              "comment": "Kept connecting and disconnecting without issuing any commands",
+              "categories": [
+                4
+              ],
+              "reporterId": 52064,
+              "reporterCountryCode": "CH",
+              "reporterCountryName": "Switzerland",
+              "categories_strings": [
+                "DDOS Attack"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-10T03:46:45+00:00",
+              "comment": "connection to honeypot",
+              "categories": [
+                11,
+                14
+              ],
+              "reporterId": 181131,
+              "reporterCountryCode": "DE",
+              "reporterCountryName": "Germany",
+              "categories_strings": [
+                "Email Spam",
+                "Port Scan"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-10T03:34:12+00:00",
+              "comment": "[MK-Root1] Blocked by UFW",
+              "categories": [
+                18,
+                14
+              ],
+              "reporterId": 25833,
+              "reporterCountryCode": "DE",
+              "reporterCountryName": "Germany",
+              "categories_strings": [
+                "Brute Force",
+                "Port Scan"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-10T03:09:51+00:00",
+              "comment": "Fail2Ban Jail s2: tomcat-honeypot | Evidence: - 203.0.113.10 - - [21/Sep/2026:18:32:09 -0300] \"GET /.env HTTP/1.1\" 404 414\n- 203.0.113.10 - - [21/Sep/2026:18:32:10 -0300] \"GET /.env HTTP/1.1\" 404 414\n- 203.0.113.10 - - [21/Sep/2026:18:32:11 -0300] \"GET /.env.local HTTP/1.1\" 404 414\n- 203.0.113.10 - - [21/Sep/2026:18:32:13 -0300] \"GET /.env.production HTTP/1.1\" 404 414",
+              "categories": [
+                19
+              ],
+              "reporterId": 100525,
+              "reporterCountryCode": "BR",
+              "reporterCountryName": "Brazil",
+              "categories_strings": [
+                "Bad Web Bot"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-10T02:59:01+00:00",
+              "comment": "fail2ban jail apache-secrets-probe: 203.0.113.10 - - [21/Sep/2026:13:25:16 -0700] \"GET /.env HTTP/1.1\" 403 4401 \"-\" \"Mozilla/5.0\"",
+              "categories": [
+                21
+              ],
+              "reporterId": 224220,
+              "reporterCountryCode": "US",
+              "reporterCountryName": "United States of America",
+              "categories_strings": [
+                "Web App Attack"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-10T01:24:12+00:00",
+              "comment": "Port scan detected on port 3000 (connection without data transfer)",
+              "categories": [
+                14
+              ],
+              "reporterId": 246098,
+              "reporterCountryCode": "US",
+              "reporterCountryName": "United States of America",
+              "categories_strings": [
+                "Port Scan"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-10T01:05:04+00:00",
+              "comment": "Source IP from blacklist is still actively scanning our network. (7 hits in last hour, last seen 2026-10-10 02:59:51)",
+              "categories": [
+                14
+              ],
+              "reporterId": 78542,
+              "reporterCountryCode": "PL",
+              "reporterCountryName": "Poland",
+              "categories_strings": [
+                "Port Scan"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-10T01:03:13+00:00",
+              "comment": "Connection to port 3000 with data transfer.\nData preview: GET / HTTP/1.1\r\nhost: 203.0.113.14\r\nuser-agent: TohouScanner/0.1 (+https://scan.tohou.io/; abuse:",
+              "categories": [
+                14,
+                15
+              ],
+              "reporterId": 246098,
+              "reporterCountryCode": "US",
+              "reporterCountryName": "United States of America",
+              "categories_strings": [
+                "Port Scan",
+                "Hacking"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-10T00:57:09+00:00",
+              "comment": "Port Scan\n...",
+              "categories": [
+                14
+              ],
+              "reporterId": 44288,
+              "reporterCountryCode": "TH",
+              "reporterCountryName": "Thailand",
+              "categories_strings": [
+                "Port Scan"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-10T00:57:06+00:00",
+              "comment": "Blocked by UFW on hk [6000/tcp]\nSource port: 46650\nTTL: 243\nPacket length: 40\nTOS: 0x00\n\nThis report was generated by:\nhttps://github.com/sefinek/UFW-AbuseIPDB-Reporter",
+              "categories": [
+                14
+              ],
+              "reporterId": 253190,
+              "reporterCountryCode": "HK",
+              "reporterCountryName": "Hong Kong",
+              "categories_strings": [
+                "Port Scan"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-10T00:40:21+00:00",
+              "comment": "repeated unauthorized SSL VPN connection attempts",
+              "categories": [
+                4,
+                15,
+                18
+              ],
+              "reporterId": 60612,
+              "reporterCountryCode": "CZ",
+              "reporterCountryName": "Czechia",
+              "categories_strings": [
+                "DDOS Attack",
+                "Hacking",
+                "Brute Force"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-10T00:29:49+00:00",
+              "comment": "[203.0.113.10] triggered by honeypot on port [3306], Timestamp [2026-10-10T00:29:49Z](no payload)",
+              "categories": [
+                14,
+                15
+              ],
+              "reporterId": 92247,
+              "reporterCountryCode": "US",
+              "reporterCountryName": "United States of America",
+              "categories_strings": [
+                "Port Scan",
+                "Hacking"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-09T22:22:06+00:00",
+              "comment": "2026-10-09 22:22:05: Port scan detected from 203.0.113.10 on port 22 of racknerd-e7e1a9",
+              "categories": [
+                14,
+                22
+              ],
+              "reporterId": 88586,
+              "reporterCountryCode": "US",
+              "reporterCountryName": "United States of America",
+              "categories_strings": [
+                "Port Scan",
+                "SSH"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-09T22:15:13+00:00",
+              "comment": "Attacking common web applications. (n01)",
+              "categories": [
+                21
+              ],
+              "reporterId": 71402,
+              "reporterCountryCode": "US",
+              "reporterCountryName": "United States of America",
+              "categories_strings": [
+                "Web App Attack"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-09T21:58:31+00:00",
+              "comment": "Port scan detected: 19 attempts across 3 ports (443, 3001, 5432). | Evidence: REAPER_TARPIT: IN=enp1s0f0 SRC=203.0.113.10 LEN=48 TOS=0x00 PREC=0x00 TTL=48 ID=52394 DF PROTO=TCP SPT=43432 DPT=5432 WINDOW=64240 RES=0x00 ACK PSH URGP=0",
+              "categories": [
+                14
+              ],
+              "reporterId": 285590,
+              "reporterCountryCode": "GB",
+              "reporterCountryName": "United Kingdom of Great Britain and Northern Ireland",
+              "categories_strings": [
+                "Port Scan"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-09T21:57:08+00:00",
+              "comment": "Automated sensor: 2 port 5432 connection/probe attempts over the last 24h (latest 2026-10-09T21:57Z).",
+              "categories": [
+                14,
+                18
+              ],
+              "reporterId": 60546,
+              "reporterCountryCode": "US",
+              "reporterCountryName": "United States of America",
+              "categories_strings": [
+                "Port Scan",
+                "Brute Force"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-09T21:30:39+00:00",
+              "comment": "Wazuh rule 31178: L3: Active Response Trigger by ET CINS Active Threat Intelligence Poor Reputation IP group 252: CINS Poor Reputation IP Blocked.",
+              "categories": [
+                15
+              ],
+              "reporterId": 169334,
+              "reporterCountryCode": "ID",
+              "reporterCountryName": "Indonesia",
+              "categories_strings": [
+                "Hacking"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-09T21:25:14+00:00",
+              "comment": "Fail2Ban: Blocked by UFW for port scanning.",
+              "categories": [
+                14,
+                4
+              ],
+              "reporterId": 332237,
+              "reporterCountryCode": "ID",
+              "reporterCountryName": "Indonesia",
+              "categories_strings": [
+                "Port Scan",
+                "DDOS Attack"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-09T21:19:49+00:00",
+              "comment": "Attacking server service nginx-movimientos-forbidden (Permanently Banned by Fail2ban on TurnoControlPro VPS)",
+              "categories": [
+                15,
+                18,
+                19,
+                21
+              ],
+              "reporterId": 341880,
+              "reporterCountryCode": "ES",
+              "reporterCountryName": "Spain",
+              "categories_strings": [
+                "Hacking",
+                "Brute Force",
+                "Bad Web Bot",
+                "Web App Attack"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-09T20:42:02+00:00",
+              "comment": "Repeat portscan: 3306,443,8000,8080,9000",
+              "categories": [
+                14
+              ],
+              "reporterId": 343318,
+              "reporterCountryCode": "US",
+              "reporterCountryName": "United States of America",
+              "categories_strings": [
+                "Port Scan"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-09T20:40:38+00:00",
+              "comment": "Fleet-wide ban from the Ghostfleet 👻. Triggered by scenario: cwy/web-asn-lockdown-high.",
+              "categories": [
+                19,
+                21
+              ],
+              "reporterId": 302405,
+              "reporterCountryCode": "US",
+              "reporterCountryName": "United States of America",
+              "categories_strings": [
+                "Bad Web Bot",
+                "Web App Attack"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-09T20:34:23+00:00",
+              "comment": "Scan port: 443 | 2 total | size=40B",
+              "categories": [
+                14
+              ],
+              "reporterId": 302832,
+              "reporterCountryCode": "FI",
+              "reporterCountryName": "Finland",
+              "categories_strings": [
+                "Port Scan"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-09T20:26:31+00:00",
+              "comment": "Persistent port scanning or vulnerability scanning",
+              "categories": [
+                16,
+                14
+              ],
+              "reporterId": 157808,
+              "reporterCountryCode": "JP",
+              "reporterCountryName": "Japan",
+              "categories_strings": [
+                "SQL Injection",
+                "Port Scan"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-09T20:25:52+00:00",
+              "comment": "Attempt on port 8080 (used as HTTP) - potential web application attack attempt. Blocked by firewall (unsolicited inbound, no prior outbound connection). 3 attempts observed within the last 24h. Ports targeted: 5000, 8080.",
+              "categories": [
+                14,
+                21
+              ],
+              "reporterId": 249469,
+              "reporterCountryCode": "DE",
+              "reporterCountryName": "Germany",
+              "categories_strings": [
+                "Port Scan",
+                "Web App Attack"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-09T07:06:54+00:00",
+              "comment": "Unwanted traffic detected by honeypot on October 08, 2026: port scans (2 port 22 scans).",
+              "categories": [
+                14,
+                18,
+                22
+              ],
+              "reporterId": 103277,
+              "reporterCountryCode": "US",
+              "reporterCountryName": "United States of America",
+              "categories_strings": [
+                "Port Scan",
+                "Brute Force",
+                "SSH"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-09T07:00:06+00:00",
+              "comment": "Port scanning (Port 443)",
+              "categories": [
+                14,
+                15
+              ],
+              "reporterId": 108579,
+              "reporterCountryCode": "US",
+              "reporterCountryName": "United States of America",
+              "categories_strings": [
+                "Port Scan",
+                "Hacking"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-09T06:15:43+00:00",
+              "comment": "MikroTik RouterOS: repeated connection attempts against non-public admin/service ports (SSH/Telnet/FTP/Winbox/API/WWW) triggering escalating 5m/15m/1h/1d blacklist",
+              "categories": [
+                18,
+                15
+              ],
+              "reporterId": 339094,
+              "reporterCountryCode": "US",
+              "reporterCountryName": "United States of America",
+              "categories_strings": [
+                "Brute Force",
+                "Hacking"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-09T06:00:13+00:00",
+              "comment": "Brute force SSH login attempts.",
+              "categories": [
+                18,
+                22
+              ],
+              "reporterId": 28979,
+              "reporterCountryCode": "US",
+              "reporterCountryName": "United States of America",
+              "categories_strings": [
+                "Brute Force",
+                "SSH"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-09T05:49:24+00:00",
+              "comment": "SSH login attempts (endlessh): 2026-10-09T05:17:41.696Z ACCEPT host=::ffff:203.0.113.10 port=56686 fd=5 n=2/4096",
+              "categories": [
+                18,
+                22
+              ],
+              "reporterId": 143390,
+              "reporterCountryCode": "DE",
+              "reporterCountryName": "Germany",
+              "categories_strings": [
+                "Brute Force",
+                "SSH"
+              ]
+            },
+            {
+              "reportedAt": "2026-10-09T04:42:53+00:00",
+              "comment": "Honeypot detection: web application attack; port scan / service probe; Redis attack. 32 events observed. 22 distinct ports targeted. Reported automatically from a honeypot sensor.",
+              "categories": [
+                14,
+                15,
+                21
+              ],
+              "reporterId": 99435,
+              "reporterCountryCode": "ES",
+              "reporterCountryName": "Spain",
+              "categories_strings": [
+                "Port Scan",
+                "Hacking",
+                "Web App Attack"
+              ]
+            }
+          ]
+        },
+        "categories_strings": [
+          "Web App Attack",
+          "DDOS Attack",
+          "Ping of Death",
+          "Port Scan",
+          "Hacking",
+          "Brute Force",
+          "Exploited Host",
+          "SSH",
+          "Bad Web Bot",
+          "Email Spam",
+          "IoT Targeted",
+          "SQL Injection"
+        ],
+        "reporting_countries": [
+          {
+            "code": "US",
+            "name": "United States of America",
+            "count": 29
+          },
+          {
+            "code": "DE",
+            "name": "Germany",
+            "count": 12
+          },
+          {
+            "code": "NL",
+            "name": "Netherlands",
+            "count": 8
+          },
+          {
+            "code": "FR",
+            "name": "France",
+            "count": 6
+          },
+          {
+            "code": "ES",
+            "name": "Spain",
+            "count": 5
+          },
+          {
+            "code": "HK",
+            "name": "Hong Kong",
+            "count": 4
+          }
+        ],
+        "category_counts": [
+          {
+            "category": "Port Scan",
+            "count": 72
+          },
+          {
+            "category": "Hacking",
+            "count": 34
+          },
+          {
+            "category": "Brute Force",
+            "count": 21
+          },
+          {
+            "category": "Web App Attack",
+            "count": 17
+          },
+          {
+            "category": "Bad Web Bot",
+            "count": 9
+          },
+          {
+            "category": "SSH",
+            "count": 7
+          }
+        ],
+        "freshness": {
+          "last24h": 1,
+          "last7d": 10
+        }
+      }
+    ],
+    "query_type": "check"
+  },
+  "success": true,
+  "artifacts": [
+    {
+      "data": "privatelayer.com",
+      "dataType": "domain",
+      "message": null,
+      "tags": [
+        "AbuseIPDB"
+      ],
+      "tlp": 2
+    },
+    {
+      "data": "swe1.tohou.io",
+      "dataType": "fqdn",
+      "message": null,
+      "tags": [
+        "AbuseIPDB"
+      ],
+      "tlp": 2
+    }
+  ],
+  "operations": []
+}

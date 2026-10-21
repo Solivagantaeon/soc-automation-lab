@@ -1,0 +1,38 @@
+{
+  "summary": {
+    "taxonomies": [
+      {
+        "level": "info",
+        "namespace": "GoogleDNS",
+        "predicate": "RecordsCount",
+        "value": 1
+      }
+    ]
+  },
+  "full": {
+    "Status": "No Error",
+    "TC": false,
+    "RD": true,
+    "RA": true,
+    "AD": false,
+    "CD": false,
+    "Question": [
+      {
+        "name": "203.0.113.10.in-addr.arpa.",
+        "type": "*"
+      }
+    ],
+    "Answer": [
+      {
+        "name": "203.0.113.10.in-addr.arpa.",
+        "type": "PTR",
+        "TTL": 7200,
+        "data": "swe1.tohou.io."
+      }
+    ],
+    "Comment": "Response from 203.0.113.11."
+  },
+  "success": true,
+  "artifacts": [],
+  "operations": []
+}

@@ -1,0 +1,115 @@
+{
+  "summary": {
+    "taxonomies": [
+      {
+        "level": "info",
+        "namespace": "MaxMind",
+        "predicate": "Location",
+        "value": "Switzerland/Europe"
+      }
+    ]
+  },
+  "full": {
+    "city": {
+      "confidence": null,
+      "geoname_id": 2657896,
+      "name": "Zurich",
+      "names": {
+        "de": "Zürich",
+        "en": "Zurich",
+        "es": "Zúrich",
+        "fr": "Zurich",
+        "ja": "チューリッヒ",
+        "pt-BR": "Zurique",
+        "ru": "Цюрих",
+        "zh-CN": "苏黎世"
+      }
+    },
+    "continent": {
+      "code": "EU",
+      "geoname_id": 6255148,
+      "name": "Europe",
+      "names": {
+        "de": "Europa",
+        "en": "Europe",
+        "es": "Europa",
+        "fr": "Europe",
+        "ja": "ヨーロッパ",
+        "pt-BR": "Europa",
+        "ru": "Европа",
+        "zh-CN": "欧洲"
+      }
+    },
+    "country": {
+      "confidence": null,
+      "geoname_id": 2658434,
+      "iso_code": "CH",
+      "name": "Switzerland",
+      "names": {
+        "de": "Schweiz",
+        "en": "Switzerland",
+        "es": "Suiza",
+        "fr": "Suisse",
+        "ja": "スイス連邦",
+        "pt-BR": "Suíça",
+        "ru": "Швейцария",
+        "zh-CN": "瑞士"
+      }
+    },
+    "location": {
+      "accuracy_radius": null,
+      "latitude": 47.3667,
+      "longitude": 8.55,
+      "metro_code": null,
+      "time_zone": "Europe/Zurich"
+    },
+    "registered_country": {
+      "confidence": null,
+      "geoname_id": 3703430,
+      "iso_code": "PA",
+      "name": "Panama",
+      "names": {
+        "de": "Panama",
+        "en": "Panama",
+        "es": "Panamá",
+        "fr": "Panama",
+        "ja": "パナマ",
+        "pt-BR": "Panamá",
+        "ru": "Панама",
+        "zh-CN": "巴拿马"
+      }
+    },
+    "represented_country": {
+      "confidence": null,
+      "geoname_id": null,
+      "iso_code": null,
+      "name": null,
+      "names": {}
+    },
+    "subdivisions": {
+      "confidence": null,
+      "geoname_id": 2657895,
+      "iso_code": "ZH",
+      "name": "Zurich",
+      "names": {
+        "de": "Zürich",
+        "en": "Zurich",
+        "fr": "Zurich"
+      }
+    },
+    "traits": {
+      "autonomous_system_number": null,
+      "autonomous_system_organization": null,
+      "domain": null,
+      "ip_address": "203.0.113.10",
+      "is_anonymous_proxy": false,
+      "is_satellite_provider": false,
+      "isp": null,
+      "organization": null,
+      "user_type": null
+    }
+  },
+  "success": true,
+  "artifacts": [],
+  "operations": []
+}

@@ -1,8 +1,113 @@
 # Cortex IOC enrichment
 
+Cortex 4.1 (StrangeBee Docker image, `testing` profile), integrated with TheHive 5.x as the enrichment engine.
+Analyzers run per observable in TheHive cases and via the Shuffle SOAR workflow.
+
+> **Warning:** Do not click **Renew** on the Cortex API key used by TheHive — it invalidates the integration and requires reconfiguring the TheHive connector in Cortex.
+
+
+## Architecture
+
+```
+TheHive
+    └─► Cortex 4.1  (REST API, internal network)
+            ├─► AbuseIPDB        (HTTPS, api.abuseipdb.com)
+            ├─► VirusTotal       (HTTPS, www.virustotal.com)
+            ├─► Maltiverse       (HTTPS, api.maltiverse.com)
+            ├─► CyberCrime-Tracker (HTTPS, cybercrime-tracker.net)
+            ├─► Google DNS       (HTTPS, dns.google)
+            ├─► StopForumSpam   (HTTPS, api.stopforumspam.org)
+            └─► MaxMind GeoLite2 (local .mmdb file, no outbound call)
+```
+
+API keys are stored exclusively in Cortex organization settings - never in this repository or in GitHub Issues.
+
+---
+
+## Enabled Analyzers
+
+![Cortex analyzers enabled in TheHive](../../docs/images/cortex/01-cortex-analyzers.png)
+
+### IP Reputation
+
+| Analyzer | Version | Purpose | API Key | Daily Limit | Cache TTL |
+|---|---|---|---|---|---|
+| AbuseIPDB | 2.0 | Community-reported abuse score (0–100), report count, abuse categories | Yes | 1,000 req/day | 24 h |
+| VirusTotal_GetReport | 3.1 | 70+ AV engine verdicts, passive DNS, detection ratio | Yes | 500 req/day | 1 h |
+| Maltiverse_Report | 1.0 | Threat intelligence aggregator — verdict: malicious / suspicious / neutral | Yes | 25 req/day (Community) | 12 h |
+| StopForumSpam | 1.0 | Spammer and botnet IP lookup | No | 5,000 req/day | 24 h |
+| MaxMind_GeoIP | 4.0 | Geolocation, city, country, ASN — runs against local GeoLite2 .mmdb | No | unlimited (local) | 24 h |
+
+### Domain / FQDN
+
+| Analyzer | Version | Purpose | API Key | Daily Limit | Cache TTL |
+|---|---|---|---|---|---|
+| VirusTotal_GetReport | 3.1 | Domain reputation, category, detection ratio | Yes | shared with IP quota | 1 h |
+| Maltiverse_Report | 1.0 | Domain threat classification | Yes | shared with IP/domain/hash quota (25/day) | 12 h |
+| CyberCrime-Tracker | 1.0 | C2 server lookup (botnet command & control) | No | undocumented | 24 h |
+| GoogleDNS_resolve | 1.0.0 | DNS resolution via 8.8.8.8 over DoH — useful for fast-flux / DGA detection | No | undocumented (fair use) | 6 h |
+
+### File Hash (MD5 / SHA-1 / SHA-256)
+
+| Analyzer | Version | Purpose | API Key | Daily Limit | Cache TTL |
+|---|---|---|---|---|---|
+| VirusTotal_GetReport | 3.1 | Hash lookup across 70+ AV engines | Yes | shared with IP/domain quota | 1 h |
+| Maltiverse_Report | 1.0 | Hash threat classification | Yes | shared with IP/domain/hash quota (25/day) | 12 h |
+
+
+### Rationale
+
+| Source | Why it was chosen |
+|---|---|
+| **AbuseIPDB** | Largest community IP reputation database; industry standard in SOC triage for scanners, brute-force sources, and botnets |
+| **VirusTotal** | Aggregates 70+ AV engines — essential for hash analysis; free public API covers lab-scale volume |
+| **Maltiverse** | Open-source threat intel aggregator with a clear machine-readable verdict; complements AbuseIPDB with campaign and malware context |
+| **CyberCrime-Tracker** | Specialised C2 database; adds coverage for malware infrastructure beyond generic reputation sources |
+| **GoogleDNS** | Passive DNS over HTTPS — no dependency on the local resolver; validates fast-flux and DGA-generated domains |
+| **StopForumSpam** | Zero-cost spammer/botnet IP list; provides an additional signal for IP observables with a generous rate limit |
+| **MaxMind GeoLite2** | Geolocation and ASN data with no external calls; zero latency, no rate limit, refreshed monthly |
+
+---
+
+## Shuffle Workflow Mapping
+
+Analyzers triggered automatically by the Shuffle SOAR workflow per IOC type:
+
+| IOC Type | Analyzers |
+|---|---|
+| `ip` | AbuseIPDB_2_0 · VirusTotal_GetReport_3_1 · Maltiverse_Report_1_0 · StopForumSpam_1_0 · MaxMind_GeoIP_4_0 |
+| `domain` / `fqdn` | VirusTotal_GetReport_3_1 · Maltiverse_Report_1_0 · CyberCrime-Tracker_1_0 · GoogleDNS_resolve_1_0_0 |
+| `hash` | VirusTotal_GetReport_3_1 · Maltiverse_Report_1_0 |
+
+---
+
+## Manual Test Results
+
+**Observable:** `192.0.2.10`
+**Type:** ip
+**Case:** TheHive Case #3 — *Test malicious IP*
+**Date:** 2026-10-20
+**Context:** Private Layer INC (AS51852), Switzerland (registered: Panama) — hostname: `swe1.tohou.io` — AbuseIPDB score 100/100, activity: botnet, brute force, RDP/SSH bruteforce, HTTP DDoS, malware C2, web scanning, spam.
+
+| Analyzer | Result | Key Fields |
+|---|---|---|
+| AbuseIPDB_2_0 | **malicious** | score=100, reports=1,114 from 626 distinct users, usageType=Data Center/Web Hosting/Transit, categories: Port Scan, Hacking, Brute Force, Web App Attack, SSH, Bad Web Bot, DDoS, IoT, SQL Injection, Email Spam |
+| VirusTotal_GetReport_3_1 | **malicious** | 8 malicious + 4 suspicious / 92 engines, reputation=-9; malicious: BitDefender, Certego, Fortinet, G-Data, GreyNoise, Lionic, SOCRadar, VIPRE |
+| Maltiverse_Report_1_0 | **malicious** | classification=malicious, 32 blacklist entries; tags: ssh, bruteforce, bot, sip, ddos, spam, attacker; sources: Blocklist.de, Emerging Threats, HoneyDB, CIArmy, Barracuda, AbuseIPDB |
+| CyberCrime-Tracker_1_0 | clean | C2 hits=0 |
+| GoogleDNS_resolve_1_0_0 | info | PTR → `swe1.tohou.io` (TTL=7200s), status=No Error |
+| StopForumSpam_1_0 | clean | not found in database (appears=false, frequency=0) |
+| MaxMind_GeoIP_4_0 | info | city=Zurich, country=CH (Switzerland), registered_country=PA (Panama), continent=EU, timezone=Europe/Zurich; ASN/ISP not available in GeoLite2 free tier |
+
+![TheHive cortex report](../../docs/images/cortex/01-thehive-cortex-report-ip.png)
+Raw JSON: [`samples/results/cortex/`](../../samples/results/cortex/)
+
+
+# Cortex Enrichment flow
+
 **Related issue:** [#9 — IOC enrichment](https://github.com/Solivagantaeon/soc-automation-lab/issues/9)
 
-This page describes the Cortex enrichment work from the separate Issue #9 workflow contribution, including observable routing, analyzer results, scoring, alert-level aggregation, and lab evidence.
+This section describes the Cortex enrichment work from the separate Issue #9 workflow contribution, including observable routing, analyzer results, scoring, alert-level aggregation, and lab evidence.
 
 ## Enrichment flow
 
