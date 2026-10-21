@@ -118,7 +118,9 @@ jq -r 'select(.rule.id=="86601") | [.timestamp, .agent.name, .data.in_iface, .da
 ```
 
 Result 2026-10-19: rule **86601** from agent `opnsense`, `ET INFO Packed Executable Download`, 02:33:12 → execution in Shuffle.
-Evidence: `samples/alerts/suricata-86601.json`.
+Evidence: [`suricata-86601.json`](../../samples/alerts/suricata-86601.json)
+
+![Shuffle execution triggered by Suricata alert 86601 (APT User-Agent, 02:29)](../images/suricata/07b-shuffle-execution-suricata.png)
 
 Note: Suricata only inspects `vlan01` (10.10.10.0/24). Traffic between hosts in 10.10.20.0/24 (manager, Shuffle) does not cross the sensor and produces no IDS alert.
 
