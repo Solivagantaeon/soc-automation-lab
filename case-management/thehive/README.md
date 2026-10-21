@@ -15,7 +15,7 @@ The current implementation is the thin end-to-end flow. Full scoring and classif
 
 ## 2. Alert fields
 
-The workflow sends the following fields to TheHive:
+The workflow sends the following fields to TheHive. The full request template is in [`alert-request.json`](alert-request.json).
 
 | Field | Description |
 |---|---|
@@ -85,37 +85,41 @@ The summary records the fields returned by the relevant workflow steps, such as 
 
 Unavailable enrichment data must be distinguished from a negative result. An unavailable service or missing response does not establish that an indicator is benign.
 
-## 6. Datastore ID mapping and duplicate handling
+## 6. Duplicate handling
 
-Shuffle uses its Datastore to retain TheHive alert IDs so that a repeated source event can update an existing alert instead of creating another one.
-
-### Processing logic
-
-1. A Wazuh event enters the Shuffle workflow.
-2. The workflow normalizes the source alert and obtains its source-event identifier.
-3. Shuffle checks the Datastore for an existing mapping.
-4. If a mapping exists, the workflow retrieves the corresponding TheHive alert ID and updates that alert.
-5. If no mapping exists, the workflow follows the alert-creation path and stores the resulting TheHive alert ID for subsequent processing.
-6. Repeated events can then reuse the stored mapping.
-
-The update operation uses:
-
-`PATCH /api/v1/alert/{id}`
-
-The duplicate-update path has been tested with synthetic alerts. Successful updates returned HTTP `204 No Content`.
-
-### Identifier distinction
+A repeated source event updates the existing TheHive alert instead of creating a new one. Shuffle keeps the mapping between the source event and the TheHive alert ID in its Datastore.
 
 Two identifiers must not be confused:
 
 - **Source alert ID:** the original identifier from Wazuh, used in `sourceRef` and for source-event traceability.
-- **TheHive alert ID:** the identifier returned by TheHive after alert creation, used in the URL when updating that alert.
+- **TheHive alert ID:** the identifier returned by TheHive after alert creation, used to update that alert.
 
-The Datastore mapping connects the source-event key to the corresponding TheHive alert ID. The exact Datastore key format and stored value structure are defined by the deployed Shuffle workflow.
+The deduplication flow (fingerprint, Datastore categories, TheHive `Update Alert` action and duplicate counter) is documented in [PR #49](https://github.com/Solivagantaeon/soc-automation-lab/pull/49). Correlation keys, time windows, first-seen/last-seen timestamps and large volumes of repeated events are tracked in [issue #16](https://github.com/Solivagantaeon/soc-automation-lab/issues/16).
 
-### Scope and limitations
+## 7. Evidence
 
-This mechanism provides source-event deduplication groundwork. It does not by itself implement full cross-source correlation into a single incident.
-Correlation keys, time windows, first-seen/last-seen timestamps, counters and handling of large volumes of repeated events are covered by [issue #16 — Deduplication and correlation](https://github.com/Solivagantaeon/soc-automation-lab/issues/16).
+The end-to-end test used a synthetic Wazuh-format alert (`test-workstation`, rule `100521`) sent to the Shuffle webhook.
 
+![Shuffle ALERT_IN node with the test alert](../../docs/images/thehive/11-e2e-shuffle-alert-in.png)
 
+*Figure 1. The test alert received by the Shuffle `ALERT_IN` node.*
+
+![Indicators in the test alert](../../docs/images/thehive/11-e2e-shuffle-alert-in-iocs.png)
+
+*Figure 2. Source IP, destination IP, domain and file hash in the test alert.*
+
+![Shuffle workflow execution](../../docs/images/thehive/11-e2e-shuffle-execution.png)
+
+*Figure 3. Finished Shuffle execution: enrichment branches, decision step and Create Alert.*
+
+![TheHive alert details](../../docs/images/thehive/11-e2e-thehive-alert-details.png)
+
+*Figure 4. The resulting TheHive alert: title, tags, source reference, severity and the beginning of the triage report.*
+
+![TheHive alert enrichment summary](../../docs/images/thehive/11-e2e-thehive-alert-enrichment.png)
+
+*Figure 5. Enrichment results from all sources and the risk assessment with the routing decision.*
+
+![TheHive alert observables](../../docs/images/thehive/11-e2e-thehive-alert-observables.png)
+
+*Figure 6. Four observables attached to the alert: two IP addresses, a domain and a file hash.*
