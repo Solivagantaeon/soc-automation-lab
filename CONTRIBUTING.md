@@ -1,90 +1,91 @@
-# Jak pracujemy w tym repo
+# How we work in this repository
 
-Krótko: **nic nie trafia na `main` bez Pull Requesta**, **żadnych sekretów w repo**, każda zmiana ma test.
+In short: **nothing reaches `main` without a pull request**, **no secrets in the repository**, every change is tested.
 
-## 1. Pierwsze uruchomienie (raz, na swoim komputerze)
+## 1. First setup (once, on your computer)
 
 ```bash
-git clone <adres-repo>
+git clone <repo-url>
 cd soc-automation-lab
-pip install pre-commit                                          # albo: pipx install pre-commit
-pre-commit install --hook-type pre-commit --hook-type pre-push  # kontrola przed każdym commitem i pushem
+pip install pre-commit                                          # or: pipx install pre-commit
+pre-commit install --hook-type pre-commit --hook-type pre-push  # checks before every commit and push
 ```
 
-Test: `pre-commit run --all-files` → wszystko „Passed”.
+Test: `pre-commit run --all-files` → everything "Passed".
 
-Ustaw w gicie **adres no-reply z GitHuba**, nie prywatny e-mail: adres autora jest publiczny w każdym commicie. Znajdziesz go w GitHub → **Settings → Emails**; zaznacz tam też *Keep my email addresses private* i *Block command line pushes that expose my email*. Commity dalej liczą się do Twojego profilu.
+Use your **GitHub no-reply address** in git, not a private e-mail: the author address is public in every commit. You find it in GitHub → **Settings → Emails**; also tick *Keep my email addresses private* and *Block command line pushes that expose my email* there. Commits still count towards your profile.
 
 ```bash
-git config user.name  "Imię Nazwisko"   # albo login - to też jest publiczne
+git config user.name  "First Last"   # or your login - this is public too
 git config user.email "<id>+<login>@users.noreply.github.com"
 ```
 
-## 2. Codzienny cykl pracy
+## 2. Daily workflow
 
-1. Weź zadanie z zakładki **Issues** (albo załóż nowe), przypisz się.
-2. Utwórz gałąź od aktualnego `main`:
-   ```bash
+1. Take a task from **Issues** (or create one) and assign yourself.
+2. Create a branch from the current `main`:
+```bash
    git switch main && git pull
-   git switch -c feat/12-shuffle-cortex-step   # typ/numer-issue-krotki-opis
-   ```
-   Typy gałęzi: `feat/`, `fix/`, `docs/`, `detection/`, `chore/`.
-3. Commituj małymi krokami. Format wiadomości:
-   ```
-   feat(shuffle): dodaj krok cortex_run do workflow triage
-   fix(wazuh): popraw filtr integracji na rule_id 86601
-   docs: opisz konfigurację MISP w TheHive
-   ```
-4. `git push -u origin <gałąź>` → otwórz **Pull Request** do `main`, wypełnij szablon.
-5. Minimum jedna osoba z zespołu robi review. Po akceptacji: **Squash and merge**.
+   git switch -c feat/12-shuffle-cortex-step   # type/issue-number-short-description
+```
+   Branch types: `feat/`, `fix/`, `docs/`, `detection/`, `chore/`.
+3. Commit in small steps. Message format:
+```
+   feat(shuffle): add cortex_run step to the triage workflow
+   fix(wazuh): change the integration filter to rule_id 86601
+   docs: describe the MISP configuration in TheHive
+```
+4. `git push -u origin <branch>` → open a **Pull Request** to `main` and fill in the template.
+5. At least one team member reviews it. After approval: **Squash and merge**.
 
-## 3. Zasady dotyczące sekretów (najważniejsze)
+## 3. Secrets (the most important rules)
 
-Repo będzie publiczne. Wszystko, co raz trafi do historii gita, zostaje w niej na zawsze — nawet jeśli potem usuniesz plik.
+The repository is public. Anything that reaches the git history stays there forever - even if you delete the file later.
 
-**Nigdy nie commitujemy:**
-- haseł, kluczy API (Wazuh, Cortex, TheHive, MISP, Shuffle), tokenów, ciasteczek sesji,
-- kluczy prywatnych WireGuard / SSH / certyfikatów TLS,
-- adresów URL webhooków Shuffle (każdy, kto zna URL, może uruchomić workflow),
-- publicznego adresu IP domowej sieci ani danych logowania do routera,
-- plików `credentials.txt`, `.env`, kopii zapasowych VM, zrzutów pamięci.
+**We never commit:**
+- passwords, API keys (Wazuh, Cortex, TheHive, MISP, Shuffle), tokens, session cookies,
+- private keys (WireGuard, SSH, TLS certificates),
+- Shuffle webhook URLs (anyone who knows the URL can run the workflow),
+- the public IP address of the home network or router credentials,
+- `credentials.txt`, `.env`, VM backups, memory dumps.
 
-**Zamiast tego:** wartości zastępcze w stylu `<CORTEX_API_KEY>` i plik `.env.example`.
+**Instead:** placeholders like `<CORTEX_API_KEY>` and the `.env.example` file.
 
-**Eksport workflow z Shuffle / fragmenty `ossec.conf`** zawsze przepuszczaj przez skrypt:
+**Shuffle workflow exports and `ossec.conf` snippets** always go through the script:
 
 ```bash
-python3 scripts/sanitize_export.py eksport.json -o soar/shuffle/workflows/soc-automation-v1.0.json
-python3 scripts/sanitize_export.py --check .   # musi zwrócić 0 znalezisk
+python3 scripts/sanitize_export.py export.json -o soar/shuffle/workflows/soc-automation-v1.0.json
+python3 scripts/sanitize_export.py --check .   # must report 0 findings
 ```
 
-**Wgrywasz plik przez przeglądarkę („Add files via upload”)?** Hooki `pre-commit` wtedy nie działają, a commit jest od razu publiczny. Najpierw sprawdź plik u siebie: `python3 scripts/sanitize_export.py --check plik`, a zrzut ekranu: `python3 scripts/check_images.py --ocr zrzut.png`. Szczegóły, prywatna lista `.leakcheck-local` (Twoje IP, nazwisko) i co robić po wycieku: [SECURITY.md](SECURITY.md).
+**Uploading a file through the browser ("Add files via upload")?** The pre-commit hooks do not run then, and the commit is public at once. Check the file on your computer first: `python3 scripts/sanitize_export.py --check file`, and a screenshot: `python3 scripts/check_images.py --ocr screenshot.png`. Details, the private `.leakcheck-local` list (your IP, surname) and what to do after a leak: [SECURITY.md](SECURITY.md).
 
-Na Windowsie zamiast `python3` wpisz `python`. Potem i tak przejrzyj diff wzrokiem — skrypt łapie typowe przypadki, nie wszystkie.
+On Windows type `python` instead of `python3`. Look at the diff yourself anyway - the scripts catch typical cases, not all of them.
 
-**Jeśli sekret jednak trafił do repo:** od razu napisz na kanale zespołu, **zmień/unieważnij ten klucz w systemie** (to jest właściwa naprawa), dopiero potem sprzątamy historię.
+**If a secret does reach the repository:** tell the team channel immediately and **change / revoke the key in its system** (that is the real fix); only then do we clean up the history.
 
-## 4. Co gdzie trzymamy
+## 4. Where things go
 
-| Co | Gdzie |
+| What | Where |
 |---|---|
-| Reguły i dekodery Wazuha | `detection/wazuh/rules/`, `detection/wazuh/decoders/` |
-| Konfiguracja agentów (`agent.conf`) | `detection/wazuh/agent-config/` |
-| Fragmenty `ossec.conf` (integracje) | `detection/wazuh/integrations/` |
-| Workflow Shuffle (JSON, po sanitizacji) | `soar/shuffle/workflows/` |
-| Przykładowe alerty do testów | `samples/alerts/` (syntetyczne lub zanonimizowane) |
-| Pomiary lejka alertów | `metrics/` |
-| Decyzje architektoniczne | `docs/decisions/` (format ADR, kopiuj `0000-template.md`) |
-| Instrukcje krok po kroku | `docs/runbooks/` |
-| Zrzuty ekranu | `docs/images/` (sprawdź, czy nie widać na nich kluczy ani haseł!) |
+| Wazuh rules and decoders | `detection/wazuh/rules/`, `detection/wazuh/decoders/` |
+| Agent configuration (`agent.conf`) | `detection/wazuh/agent-config/` |
+| `ossec.conf` snippets (integrations) | `detection/wazuh/integrations/` |
+| Shuffle workflows (JSON, sanitised) | `soar/shuffle/workflows/` |
+| Sample alerts for testing | `samples/alerts/` (synthetic or anonymised) |
+| Normalised alerts and enrichment results | `samples/normalized/` |
+| Alert-funnel measurements | `metrics/` |
+| Architecture decisions | `docs/decisions/` (ADR format, copy `0000-template.md`) |
+| Step-by-step instructions | `docs/runbooks/` |
+| Screenshots | `docs/images/<component>/` (check them with `check_images.py` and by eye!) |
 
-## 5. Definicja „zrobione”
+## 5. Definition of done
 
-- [ ] zmiana przetestowana w labie (opis testu w PR),
-- [ ] dokumentacja zaktualizowana (README / runbook / ADR),
-- [ ] `pre-commit run --all-files` przechodzi,
-- [ ] review od co najmniej jednej osoby.
+- [ ] change tested in the lab (test described in the PR),
+- [ ] documentation updated (README / runbook / ADR),
+- [ ] `pre-commit run --all-files` passes,
+- [ ] reviewed by at least one person.
 
-## 6. Język
-- Całe repo prowadzimy **po angielsku**: dokumentacja, komentarze w kodzie i konfiguracji, commity, nazwy gałęzi, Issues i Pull Requesty.
-Po polsku rozmawiamy tylko na kanale zespołu.
+## 6. Language
+
+The whole repository is in **English**: documentation, comments in code and configuration, commits, branch names, issues and pull requests. We speak Polish only on the team channel.
