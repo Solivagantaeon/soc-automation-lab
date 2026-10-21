@@ -1,0 +1,32 @@
+{
+  "timestamp": "2026-10-20T14:25:00.000Z",
+  "id": "misp-issue10-20261020-1425-a8e2",
+  "source": "wazuh",
+  "agent": {
+    "id": "091",
+    "name": "soc-misp-issue10-test"
+  },
+  "manager": {
+    "name": "wazuh-manager"
+  },
+  "rule": {
+    "id": "109910",
+    "level": 10,
+    "description": "SOC Lab MISP Issue 10 lookup test",
+    "groups": [
+      "network",
+      "threat_intel",
+      "soc_test"
+    ]
+  },
+  "data": {
+    "srcip": "198.51.100.10",
+    "dstip": "203.0.113.53",
+    "domain": "google.com",
+    "win": {
+      "eventdata": {
+        "hashes": "MD5=0face841f7b2953e7c29c064d6886523,SHA256=bdf252bed33416f0b28efdf3ce750c54db59709bf25e7d41739cf62e760c7fe8"
+      }
+    }
+  }
+}

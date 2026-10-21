@@ -137,31 +137,68 @@ Output fields:
 
 ## MISP lookup
 
-The `MISP 1` node sends a POST request to the MISP attribute REST search endpoint using JSON input.
+The `MISP 1` branch searches each normalized observable using `POST /attributes/restSearch`. The Issue #10 test covered two IPs, a domain, an MD5 and a SHA-256. The workflow emits five Aggregate Score executions, one per observable. Each execution now contains a per-IOC MISP result with an explicit `status`, matching attributes, tags, comments, event context and warninglist/benign/malicious flags.
 
-The current workflow references the normalized `ip` field using the Shuffle expression:
+The request is not filtered by `to_ids`. This is demonstrated by returned attributes with both `to_ids: true` and `to_ids: false`, including the warninglist match and known-benign domain event.
 
-`$normalize_alert.message.ip.#`
+| Status | Meaning |
+|---|---|
+| `hit` | The request completed and returned one or more matching attributes. |
+| `no_hit` | The request completed and returned an empty attribute list. |
+| `unavailable` | The request failed, timed out or returned a response that could not be used. |
 
-This field represents a list of extracted IP addresses. Shuffle may treat list values as collections, so the request body and branch behavior must be verified to ensure the intended IP value is passed to MISP.
+### Per-observable MISP result object
 
-The IP validation node is separate from the main MISP path. The MISP branch should not be assumed to enforce public-IP validation unless that validation is explicitly connected to the path or implemented in the request preparation logic.
+`Normalize_MISP` emits one result for the observable handled by that execution. The aggregate workflow currently emits five executions for the five-observable test alert. This abbreviated example shows one representative matching attribute; the sample result contains all matches.
 
-An empty attribute list is a valid lookup result and means that no matching attributes were returned. An unsuccessful request, malformed request body or skipped branch must not be interpreted as a negative IOC match.
+```json
+{
+  "source": "misp",
+  "status": "hit",
+  "analysis_status": "complete",
+  "queried_ioc": {"type": "ip", "value": "198.51.100.10"},
+  "ioc_found": true,
+  "classification": "matched",
+  "attribute_count": 1,
+  "event_count": 1,
+  "attributes": [
+    {
+      "type": "ip-dst",
+      "value": "198.51.100.10",
+      "category": "Network activity",
+      "to_ids": true,
+      "event_id": "1685",
+      "comment": "C2 IP - active botnet command & control server",
+      "tags": ["soc-lab:malicious", "soc-lab:thehive"],
+      "event_info": "SOC-LAB test IOCs - malicious",
+      "event_date": "2026-10-18",
+      "first_seen": null,
+      "last_seen": null,
+      "warninglist_hit": false,
+      "known_benign_match": false,
+      "malicious_tag_match": true
+    }
+  ],
+  "event_ids": ["1685"],
+  "tags": ["soc-lab:malicious", "soc-lab:thehive"],
+  "warninglist_hit": false,
+  "known_benign_match": false,
+  "malicious_tag_match": true,
+  "to_ids_match": true,
+  "error": null
+}
+```
 
-Private, reserved and documentation-range addresses must not be submitted to external analyzers.
+The IP above is a documentation address replacing the public test IP. `attribute_count` counts returned attributes; `event_count` counts distinct events. `event_ids` and `tags` are deduplicated. `to_ids_match` is true when at least one matching attribute has `to_ids: true`. `first_seen` and `last_seen` remain null when MISP has no sighting data; do not treat the event date as a sighting.
 
-## Testing evidence
+`hit` means MISP returned a record, not that every matching record is malicious. Interpret `to_ids`, `soc-lab:malicious`, `soc-lab:benign`, warninglist flags, comments and event context separately.
 
-### Existing validation checks
+The latest Aggregate Score run returned `hit` for both IPs, the domain and MD5, and `no_hit` for the SHA-256. `misp_available` was true in all five executions. The warninglist IP result preserved its explanation and `to_ids: false`; `google.com` preserved the `soc-lab:benign` event tag; the malicious IP and MD5 preserved `soc-lab:malicious` and their `to_ids` signals. `hit` means that MISP has a record; it is not, by itself, a malicious verdict.
 
-The workflow and validation logic have previously been checked with synthetic test data.
+The sanitized test alert is in [`samples/alerts/misp-issue10-all-observable-types.json`](../samples/alerts/misp-issue10-all-observable-types.json). Its two IP values use RFC 5737 documentation ranges. The lookup and Aggregate Score evidence is in [`samples/results/misp/all-observable-types-issue10.json`](../samples/results/misp/all-observable-types-issue10.json), without request headers, cookies, internal URLs, usernames or API metadata.
 
-- The public IP validator rejected `198.51.100.25`, a documentation-range address.
-- The public IP validator accepted `8.8.8.8` and returned `reason: "public_ipv4"`.
-- The MISP request body was updated during testing to use normalized alert data rather than the obsolete `$exec.all_fields` reference.
-- The MISP endpoint returned HTTP 200 with an empty `Attribute` list for a lookup that returned no matching attributes.
-- During testing, an invalid request body was reported as `MISP body missing or invalid JSON`. The request body was subsequently adjusted and the MISP endpoint returned a successful response.
+MISP returned `first_seen: null` and `last_seen: null` in the tested attributes. Event dates are context, not sightings.
+
 
 ### Suricata alert wrapped by Wazuh
 
@@ -270,7 +307,6 @@ Evidence artifact:
 
 - Normalized enrichment results (AbuseIPDB, DShield, Google DNS, Maltiverse, MISP, Team Cymru, VirusTotal) and validation outputs: `samples/normalized/`
 - Raw input alerts used in the manual tests: `samples/alerts/`
-- Sanitized workflow export: `soar/shuffle/workflows/soc-automation-v1.0.json`
 - Schema: `soar/shuffle/schema/normalized-alert.schema.json`, checked in CI by `tests/test_normalized_alert_schema.py`
 
 ## Security and privacy
@@ -284,11 +320,3 @@ Evidence artifact:
 - Do not treat an empty MISP response as proof that an IOC is benign.
 - Keep MISP credentials, authentication headers and session cookies out of source code, workflow exports and test artifacts.
 
-## Known limitations and next steps
-
-- The confirmed manual tests cover a Suricata alert wrapped by Wazuh, a Sysmon Event ID 7 alert delivered through Wazuh, and a synthetic web alert.
-- Raw Suricata EVE JSON, raw Sysmon events and vendor-specific raw web-server logs have not been confirmed by the manual tests described above.
-- The `ip` field is a list. The current MISP expression `$normalize_alert.message.ip.#` should be checked to ensure that the intended single IP value is passed to the request body.
-- The MISP path and the public IP validator are separate. Public-IP validation must be enforced before external analysis; the presence of a separate validator does not by itself guarantee that MISP only receives public IP addresses.
-- Alerts without observables need a verified workflow path that skips IOC enrichment without treating the alert as an error or a negative IOC match.
-- Public IP validation and downstream analyzer routing should be verified against the actual normalized observable list, especially when an alert contains both public and private IP addresses.
