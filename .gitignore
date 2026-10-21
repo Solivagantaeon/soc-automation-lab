@@ -18,6 +18,49 @@ wg*.conf
 *.ovpn
 *.kdbx
 
+*.jks
+*.keystore
+.netrc
+.pgpass
+*.rdp
+
+# --- Lab files that contain secrets ---
+# backups made before editing configs (e.g. ossec.conf.bak-2026-10-19 holds the real webhook URL)
+*.bak
+*.bak-*
+*.orig
+# Wazuh installer output: all generated passwords
+wazuh-install-files.tar
+wazuh-passwords.txt
+# Wazuh agent keys / enrollment password
+client.keys
+authd.pass
+# OPNsense / pfSense configuration backups: password hashes, WireGuard keys, API secrets
+config-*.xml
+# browser HAR exports: session cookies and tokens
+*.har
+# attack-simulation loot: hashes, tickets, cracked passwords
+*.kirbi
+*.ccache
+*.pot
+*.hccapx
+ntds.dit
+# databases and dumps
+*.sqlite
+*.sqlite3
+*.db
+*.sql
+*.sql.gz
+*.dump
+# archives: check what is inside first, then `git add -f` if it is really needed
+*.zip
+*.7z
+*.tar
+*.tar.gz
+*.tgz
+# your private list for the leak check (see SECURITY.md)
+.leakcheck-local
+
 # --- Raw, unsanitised exports (sanitise first, see CONTRIBUTING.md) ---
 *.raw.json
 raw-exports/

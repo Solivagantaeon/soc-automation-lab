@@ -1,43 +1,140 @@
-# gitleaks configuration: default rules + a few lab-specific ones.
+# gitleaks configuration: default rules + lab-specific ones.
+# gitleaks scans the FULL history of every branch (CI and pre-commit), so a secret that was
+# committed and removed in a later commit is still found. Keep the rules in sync with
+# scripts/sanitize_export.py, which additionally checks personal data in the current files.
 title = "soc-automation-lab"
 
 [extend]
 useDefault = true
 
-[[rules]]
-id = "wazuh-integration-api-key"
-description = "api_key inside a Wazuh <integration> block"
-regex = '''<api_key>\s*([^<\s]{8,})\s*</api_key>'''
-secretGroup = 1
-keywords = ["api_key"]
+# --- Shuffle -----------------------------------------------------------------------------
 
 [[rules]]
-id = "shuffle-webhook-url"
-description = "Shuffle webhook URL (anyone with it can trigger the workflow)"
-regex = '''/api/v1/hooks/(webhook_[0-9a-fA-F-]{36})'''
+id = "shuffle-webhook-id"
+description = "Shuffle webhook ID - the webhook URL is /api/v1/hooks/webhook_<id>, anyone with it can run the workflow"
+regex = '''webhook_([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})'''
 secretGroup = 1
 keywords = ["webhook_"]
 
-[[rules]]
-id = "generic-apikey-json"
-description = "API key / password value in JSON (Shuffle, TheHive, Cortex, MISP exports)"
-regex = '''(?i)"(?:api_?key|apikey|password|secret|token|authorization)"\s*:\s*"([^"<]{12,})"'''
-secretGroup = 1
-keywords = ["apikey", "api_key", "password", "secret", "token", "authorization"]
+# --- HTTP credentials (TheHive, Cortex, MISP, VirusTotal, AbuseIPDB, ...) -------------------
 
 [[rules]]
-id = "wireguard-private-key"
-description = "WireGuard PrivateKey"
-regex = '''(?i)PrivateKey\s*=\s*([A-Za-z0-9+/]{42}[AEIMQUYcgkosw480]=)'''
+id = "authorization-header"
+description = "Authorization header value: Bearer / Basic token or a raw API key (MISP)"
+regex = '''(?i)(?:^|[\s"'`,;{(\[|]|\\n)(?:proxy-)?authorization["']?[ \t]*[:=][ \t]*["']?(?:(?:bearer|basic|token|apikey|key|digest)[ \t]+)?([A-Za-z0-9._~+/-]{16,}={0,2})'''
 secretGroup = 1
-keywords = ["privatekey"]
+entropy = 3.0
+keywords = ["authorization"]
+
+[[rules]]
+id = "bearer-token"
+description = "Bearer / Basic token anywhere (e.g. inside a Shuffle http node 'headers' string)"
+regex = '''(?i)\b(?:bearer|basic)[ \t]+([A-Za-z0-9._~+/-]{16,}={0,2})'''
+secretGroup = 1
+entropy = 3.0
+keywords = ["bearer", "basic"]
+
+[[rules]]
+id = "api-key-header"
+description = "API-key header or key: value pair (x-apikey, Key, x-misp-key, api-key, ...)"
+regex = '''(?i)(?:^|[\s"'`,;{(\[|]|\\n)(?:x-)?(?:api[-_]?key|apikey|api[-_]?token|auth[-_]?key|authkey|access[-_]?key|secret[-_]?key|x-auth-token|x-misp-key|key|token)["']?[ \t]*[:=][ \t]*["']?([A-Za-z0-9._~+/=-]{20,})'''
+secretGroup = 1
+entropy = 3.5
+keywords = ["key", "token"]
+
+[[rules]]
+id = "url-secret-param"
+description = "Credential in a URL query (?apikey=, &token=, &password=, ...)"
+regex = '''(?i)[?&](?:api[-_]?key|apikey|access[-_]?token|token|authkey|auth[-_]?token|password|passwd|pwd|secret|client[-_]?secret)=([^&\s"'<>#\\]{8,})'''
+secretGroup = 1
+entropy = 3.0
+keywords = ["key=", "token=", "password=", "passwd=", "pwd=", "secret="]
+
+[[rules]]
+id = "url-credentials"
+description = "user:password@ inside a URL"
+regex = '''\b[a-zA-Z][a-zA-Z0-9+.-]*://[^/\s:@"'<>]+:([^/\s@"'<>$]{3,})@'''
+secretGroup = 1
+keywords = ["://"]
+
+[[rules]]
+id = "cookie-header"
+description = "Cookie / Set-Cookie header value (session cookies)"
+regex = '''(?i)(?:^|[\s"'`,;{(\[|]|\\n)(?:set-)?cookie["']?[ \t]*[:=][ \t]*["']?([^"'\r\n\\]{16,})'''
+secretGroup = 1
+entropy = 3.5
+keywords = ["cookie"]
+
+# --- Lab infrastructure ---------------------------------------------------------------------
+
+[[rules]]
+id = "xml-secret-element"
+description = "Secret XML element (Wazuh ossec.conf, OPNsense config.xml backups, ...)"
+regex = '''(?i)<(api_?key|apikey|password|passwd|hook_url|webhook_url|privkey|psk|pre_?shared_?key|authkey|secret|token|auth_pass|shared_?secret)>\s*([^<\s][^<]*?)\s*</(?:api_?key|apikey|password|passwd|hook_url|webhook_url|privkey|psk|pre_?shared_?key|authkey|secret|token|auth_pass|shared_?secret)>'''
+secretGroup = 2
+keywords = ["api_key", "apikey", "password", "passwd", "hook_url", "webhook_url", "privkey", "psk", "authkey", "secret", "token", "auth_pass"]
+
+[[rules]]
+id = "wireguard-key"
+description = "WireGuard PrivateKey / PresharedKey"
+regex = '''(?im)^[ \t]*(?:PrivateKey|PresharedKey)[ \t]*=[ \t]*([A-Za-z0-9+/]{42,43}=)'''
+secretGroup = 1
+keywords = ["privatekey", "presharedkey"]
+
+[[rules]]
+id = "proxmox-api-token"
+description = "Proxmox API token (PVEAPIToken=user@realm!id=<uuid>) or auth ticket"
+regex = '''(?:PVEAPIToken=[^=\s"']+=([0-9a-fA-F-]{36})|PVEAuthCookie=([^;\s"']{20,}))'''
+keywords = ["pveapitoken", "pveauthcookie"]
+
+[[rules]]
+id = "wazuh-agent-key"
+description = "Wazuh client.keys line (agent authentication key)"
+regex = '''(?m)^[ \t]*\d{3,}[ \t]+[\w.-]+[ \t]+(?:any|[\d./]+)[ \t]+([0-9a-fA-F]{64})[ \t]*$'''
+secretGroup = 1
+keywords = ["any", "."]
+
+[[rules]]
+id = "password-hash"
+description = "Password hash (bcrypt, sha512crypt, yescrypt, argon2) - crackable offline"
+regex = '''(\$2[abxy]?\$\d{2}\$[./A-Za-z0-9]{53}|\$[56]\$(?:rounds=\d+\$)?[./A-Za-z0-9]{1,16}\$[./A-Za-z0-9]{43,86}|\$y\$[./A-Za-z0-9]+\$[./A-Za-z0-9]+\$[./A-Za-z0-9]{43}|\$argon2(?:id|i|d)\$[^\s"']{20,})'''
+secretGroup = 1
+keywords = ["$2", "$5$", "$6$", "$y$", "$argon2"]
+
+[[rules]]
+id = "ntlm-hash"
+description = "LM:NT hash pair (secretsdump / pwdump output from attack simulations)"
+regex = '''(?:^|[^0-9a-fA-F])([0-9a-fA-F]{32}:[0-9a-fA-F]{32})(?:[^0-9a-fA-F]|$)'''
+secretGroup = 1
+keywords = [":"]
+
+[[rules]]
+id = "assignment-secret"
+description = "KEY=value / key: value assignment of a password, secret or API key (.env, compose, YAML, shell)"
+regex = '''(?im)^[ \t]*(?:-[ \t]+)?(?:export[ \t]+|set[ \t]+|\$env:)?[A-Za-z0-9_.-]*(?:password|passwd|passphrase|secret|api[-_]?key|apikey|authkey|encryption[-_]?(?:key|modifier))[A-Za-z0-9_.-]*[ \t]*(?::=|=|:)[ \t]*["']?([^\s"'#<>$(){}\[\]]{8,})'''
+secretGroup = 1
+entropy = 3.0
+keywords = ["password", "passwd", "passphrase", "secret", "api_key", "apikey", "api-key", "authkey", "encryption"]
+[[rules.allowlists]]
+description = "assignments in source code are variables, not secrets"
+paths = ['''\.py$''']
+
+# --- allowlist ------------------------------------------------------------------------------
 
 [allowlist]
-description = "Placeholders and redaction markers"
+description = "Placeholders, redaction markers and intentionally fake test data"
 regexes = [
-  '''<[A-Z0-9_]+>''',
+  '''<[A-Za-z0-9_.-]+>''',
   '''REDACTED''',
+  '''^__[A-Za-z0-9_]+__$''',
+  '''(?i)replace[_-]?me''',
+  '''^00000000-0000-0000-0000-''',
+  '''^\$[A-Za-z_]''',
+  '''^\$\{''',
+  '''^\{\{''',
+  '''^%[A-Za-z_]+%$''',
 ]
 paths = [
   '''tests/fixtures/''',
+  '''(?:^|/)\.leakcheck-allow$''',
 ]
