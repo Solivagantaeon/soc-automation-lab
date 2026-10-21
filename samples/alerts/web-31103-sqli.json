@@ -1,0 +1,76 @@
+{
+  "severity": 2,
+  "pretext": "WAZUH Alert",
+  "title": "SQL injection attempt.",
+  "text": "10.10.20.243 - - [19/Oct/2026:02:50:02 +0200] \"GET /index.php?id=1%27%20UNION%20SELECT%201,2,3-- HTTP/1.1\" 404 196 \"-\" \"curl/8.5.0\"",
+  "rule_id": "31103",
+  "timestamp": "2026-10-19T02:50:14.898+0200",
+  "id": "1792371014.210167",
+  "all_fields": {
+    "timestamp": "2026-10-19T02:50:14.898+0200",
+    "rule": {
+      "level": 7,
+      "description": "SQL injection attempt.",
+      "id": "31103",
+      "mitre": {
+        "id": [
+          "T1190"
+        ],
+        "tactic": [
+          "Initial Access"
+        ],
+        "technique": [
+          "Exploit Public-Facing Application"
+        ]
+      },
+      "firedtimes": 1,
+      "mail": false,
+      "groups": [
+        "web",
+        "accesslog",
+        "attack",
+        "sql_injection"
+      ],
+      "pci_dss": [
+        "6.5",
+        "11.4",
+        "6.5.1"
+      ],
+      "gdpr": [
+        "IV_35.7.d"
+      ],
+      "nist_800_53": [
+        "SA.11",
+        "SI.4"
+      ],
+      "tsc": [
+        "CC6.6",
+        "CC7.1",
+        "CC8.1",
+        "CC6.1",
+        "CC6.8",
+        "CC7.2",
+        "CC7.3"
+      ]
+    },
+    "agent": {
+      "id": "000",
+      "name": "wazuh-master"
+    },
+    "manager": {
+      "name": "wazuh-master"
+    },
+    "id": "1792371014.210167",
+    "full_log": "10.10.20.243 - - [19/Oct/2026:02:50:02 +0200] \"GET /index.php?id=1%27%20UNION%20SELECT%201,2,3-- HTTP/1.1\" 404 196 \"-\" \"curl/8.5.0\"",
+    "decoder": {
+      "name": "web-accesslog"
+    },
+    "data": {
+      "protocol": "GET",
+      "srcip": "10.10.20.243",
+      "id": "404",
+      "url": "/index.php?id=1%27%20UNION%20SELECT%201,2,3--"
+    },
+    "location": "/var/log/apache2/access.log"
+  }
+}
