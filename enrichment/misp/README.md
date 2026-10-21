@@ -50,7 +50,7 @@ The MISP event list screenshot shows the malicious test event tagged with `soc-l
 
 Sanitized MISP event fixtures are available for the [malicious](events/soc-lab-test-iocs-malicious.json) and [benign](events/soc-lab-test-iocs-benign.json) test cases.
 
-![MISP malicious and benign test event tags](../../docs/images/misp/03-misp-test-event-tags.png)
+![MISP malicious and benign test event tags](../../docs/images/misp/10-misp-test-event-tags.png)
 
 The event pages are also captured separately:
 
@@ -74,7 +74,7 @@ The sanitized input alert is available at [`../../samples/alerts/misp-issue10-al
 
 The earlier Shuffle Debug capture shows the MISP action returning HTTP 200 with an `Attribute` collection. The attribute contents are collapsed in the screenshot; refer to the JSON result sample for the values, tags and interpretations.
 
-![Shuffle MISP action returned HTTP 200](../../docs/images/misp/04-shuffle-misp-lookup.png)
+![Shuffle MISP action returned HTTP 200](../../docs/images/misp/10-shuffle-misp-lookup.png)
 
 | Status | Meaning |
 |---|---|
