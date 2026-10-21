@@ -29,6 +29,7 @@ git config user.email "<id>+<login>@users.noreply.github.com"
    git switch -c feat/12-shuffle-cortex-step   # type/issue-number-short-description
 ```
    Branch types: `feat/`, `fix/`, `docs/`, `detection/`, `chore/`.
+   
 3. Commit in small steps. Message format:
 ```
    feat(shuffle): add cortex_run step to the triage workflow
@@ -81,11 +82,11 @@ On Windows type `python` instead of `python3`. Look at the diff yourself anyway 
 
 ## 5. Definition of done
 
-- [ ] change tested in the lab (test described in the PR),
+- [ ] change tested in the lab where applicable (validation described in the PR),
 - [ ] documentation updated (README / runbook / ADR),
 - [ ] `pre-commit run --all-files` passes,
 - [ ] reviewed by at least one person.
 
 ## 6. Language
 
-The whole repository is in **English**: documentation, comments in code and configuration, commits, branch names, issues and pull requests. We speak Polish only on the team channel.
+The whole repository is in **English**: documentation, comments in code and configuration, commits, branch names, issues and pull requests.
