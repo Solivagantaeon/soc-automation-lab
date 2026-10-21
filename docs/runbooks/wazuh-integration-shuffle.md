@@ -150,10 +150,11 @@ EOF
 ```
 
 Result 2026-10-19: **31103** (level 7, SQL injection attempt) and **31106** (level 6, web attack returned 200) at 02:50:14.
-Evidence: `samples/alerts/web-31103-sqli.json`, `samples/alerts/web-31106-attack-200.json`.
+Evidence: [`web-31103-sqli.json`](../../samples/alerts/web-31103-sqli.json), [`web-31106-attack-200.json`](../../samples/alerts/web-31106-attack-200.json)
+
+![Shuffle execution triggered by web alert 31106](../images/shuffle/07c-shuffle-execution-web-31106.png)
 
 The same injection method replays a Suricata event (`eve.json` line, location `/var/log/suricata/eve.json`). The JSON decoder needs the line to start with `{`, so `logger`/journald (which add a syslog header) cannot be used for this.
-
 ### Samples
 
 `samples/alerts/*.json` are built from `alerts.json` with the integration's own `generate_msg()` from `shuffle.py`, i.e. the same envelope Shuffle receives (`severity`, `pretext`, `title`, `rule_id`, `timestamp`, `id`, `all_fields`). Real lab alerts. They contain only lab hostnames, private addresses and the built-in Administrator account; the external IP in the Suricata sample was replaced with 203.0.113.10 (RFC 5737).
