@@ -39,3 +39,18 @@ Suricata runs on OPNsense; its alerts are shipped to Wazuh by a Wazuh agent on t
 6. Shuffle; Wazuh `<integration>` webhook → Shuffle.
 
 Step-by-step notes for each component live in [`runbooks/`](runbooks/).
+
+## Infrastructure Overview
+The infrastructure is divided into isolated network segments to simulate a realistic enterprise environment. Windows and Linux endpoints generate security events, while dedicated SOC services handle detection, enrichment, automation, and incident investigation.
+
+![SOC Automation Lab Infrastructure](../docs/images/main-workflow&lab-setup.png)
+
+### Security Monitoring and Alert Flow
+
+1. **Event Collection:** Windows Sysmon, Linux system logs, and OPNsense Suricata generate security telemetry.
+2. **Detection:** Wazuh collects, analyzes, and correlates security events.
+3. **Automation:** Shuffle receives Wazuh alerts through a webhook and executes automated workflows.
+4. **Enrichment:** Cortex analyzers and MISP provide threat intelligence and additional context for detected observables.
+5. **Incident Management:** TheHive supports alert triage, investigation, and case management.
+
+The ATTACK network hosts Kali Linux for controlled security testing, while the VICTIM network contains monitored endpoints. SOC services operate in a separate VLAN, with administrative access available through WireGuard VPN.
