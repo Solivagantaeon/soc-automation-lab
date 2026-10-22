@@ -1,0 +1,22 @@
+{
+  "summary": {
+    "taxonomies": [
+      {
+        "level": "info",
+        "namespace": "SFS",
+        "predicate": "ip",
+        "value": "Not found"
+      }
+    ]
+  },
+  "full": {
+    "value": "203.0.113.10",
+    "frequency": 0,
+    "appears": false,
+    "asn": 51852,
+    "country": "pa"
+  },
+  "success": true,
+  "artifacts": [],
+  "operations": []
+}

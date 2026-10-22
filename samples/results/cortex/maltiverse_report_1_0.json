@@ -1,0 +1,456 @@
+{
+  "summary": {
+    "taxonomies": [
+      {
+        "level": "malicious",
+        "namespace": "Maltiverse",
+        "predicate": "Report",
+        "value": "malicious"
+      }
+    ]
+  },
+  "full": {
+    "registrant_name": "Nix Web Solutions Pvt Ltd",
+    "last_updated": "-",
+    "asn_registry": "-",
+    "classification": "malicious",
+    "asn_country_code": "-",
+    "creation_time": "2025-06-14 04:32:07",
+    "visits": "-",
+    "blacklist": [
+      {
+        "count": 13,
+        "description": "DDoS attack on site promcomfort.com.ua",
+        "first_seen": "2025-07-06 12:37:59",
+        "labels": [
+          "malicious-activity"
+        ],
+        "last_seen": "2025-07-06 12:37:59",
+        "ref": [
+          21745
+        ],
+        "source": "Blocklist.net.ua"
+      },
+      {
+        "count": 16,
+        "description": "SSH Attacker",
+        "first_seen": "2025-10-12 11:28:35",
+        "labels": [
+          "attacker",
+          "malicious-activity"
+        ],
+        "last_seen": "2026-10-09 14:00:15",
+        "ref": [
+          21745
+        ],
+        "source": "Blocklist.de"
+      },
+      {
+        "count": 28,
+        "description": "Suspicious Host",
+        "first_seen": "2025-06-14 02:00:01",
+        "labels": [
+          "anomalous-activity"
+        ],
+        "last_seen": "2025-10-12 20:12:19",
+        "ref": [
+          21745
+        ],
+        "source": "AbuseIPDB"
+      },
+      {
+        "count": 49,
+        "description": "ET CINS Active Threat Intelligence Poor Reputation IP TCP",
+        "first_seen": "2026-03-20 02:24:17",
+        "labels": [
+          "attacker",
+          "malicious-activity"
+        ],
+        "last_seen": "2026-10-13 11:15:47",
+        "ref": [
+          21745
+        ],
+        "source": "Emerging Threats"
+      },
+      {
+        "count": 22,
+        "description": "SIP Attacker",
+        "first_seen": "2026-03-20 09:00:06",
+        "labels": [
+          "malicious-activity"
+        ],
+        "last_seen": "2026-05-10 09:01:42",
+        "ref": [
+          21745
+        ],
+        "source": "Blocklist.de"
+      },
+      {
+        "count": 11,
+        "description": "HTTP bot",
+        "first_seen": "2026-07-02 08:00:47",
+        "labels": [
+          "attacker",
+          "malicious-activity"
+        ],
+        "last_seen": "2026-07-02 08:00:47",
+        "ref": [
+          21745
+        ],
+        "source": "Blocklist.de"
+      },
+      {
+        "count": 19,
+        "description": "Bruteforce login attacker",
+        "first_seen": "2026-04-05 05:01:12",
+        "labels": [
+          "attacker",
+          "malicious-activity"
+        ],
+        "last_seen": "2026-09-22 09:00:17",
+        "ref": [
+          21745
+        ],
+        "source": "Blocklist.de"
+      },
+      {
+        "count": 41,
+        "description": "Malicious Host",
+        "first_seen": "2026-03-19 00:00:00",
+        "labels": [
+          "attacker",
+          "malicious-activity"
+        ],
+        "last_seen": "2026-10-08 00:00:00",
+        "ref": [
+          21745
+        ],
+        "source": "HoneyDB"
+      },
+      {
+        "count": 22,
+        "description": "HTTP Attacker",
+        "first_seen": "2026-04-05 03:01:12",
+        "labels": [
+          "attacker",
+          "malicious-activity"
+        ],
+        "last_seen": "2026-09-23 07:00:32",
+        "ref": [
+          21745
+        ],
+        "source": "Blocklist.de"
+      },
+      {
+        "count": 17,
+        "description": "Mail Spammer",
+        "first_seen": "2025-06-14 04:43:04",
+        "labels": [
+          "attacker",
+          "malicious-activity"
+        ],
+        "last_seen": "2026-10-04 20:34:27",
+        "source": "Barracuda"
+      },
+      {
+        "count": 12,
+        "description": "DNS Poisoning",
+        "first_seen": "2026-06-14 00:00:59",
+        "labels": [
+          "compromised",
+          "malicious-activity"
+        ],
+        "last_seen": "2026-06-14 00:00:59",
+        "source": "AbuseIPDB"
+      },
+      {
+        "count": 56,
+        "description": "FTP Attacker",
+        "first_seen": "2026-03-20 05:48:37",
+        "labels": [
+          "attacker",
+          "malicious-activity"
+        ],
+        "last_seen": "2026-06-14 00:00:59",
+        "source": "AbuseIPDB"
+      },
+      {
+        "count": 27,
+        "description": "Known Attacker",
+        "first_seen": "2026-03-28 09:35:38",
+        "labels": [
+          "attacker",
+          "malicious-activity"
+        ],
+        "last_seen": "2026-09-24 14:10:43",
+        "source": "AbuseIPDB"
+      },
+      {
+        "count": 153,
+        "description": "SIP Attacker",
+        "first_seen": "2026-03-19 00:36:49",
+        "labels": [
+          "attacker",
+          "malicious-activity"
+        ],
+        "last_seen": "2026-06-14 00:00:59",
+        "source": "AbuseIPDB"
+      },
+      {
+        "count": 15,
+        "description": "Proxy",
+        "first_seen": "2026-06-14 00:00:59",
+        "labels": [
+          "anonymization",
+          "proxy"
+        ],
+        "last_seen": "2026-09-21 11:52:52",
+        "source": "AbuseIPDB"
+      },
+      {
+        "count": 13,
+        "description": "VPN",
+        "first_seen": "2026-06-14 00:00:59",
+        "labels": [
+          "anonymization",
+          "vpn"
+        ],
+        "last_seen": "2026-09-21 20:34:20",
+        "source": "AbuseIPDB"
+      },
+      {
+        "count": 22,
+        "description": "IMAP Attacker",
+        "first_seen": "2026-06-13 23:23:00",
+        "labels": [
+          "attacker",
+          "malicious-activity"
+        ],
+        "last_seen": "2026-09-23 01:38:26",
+        "source": "AbuseIPDB"
+      },
+      {
+        "count": 34,
+        "description": "Mail Spammer",
+        "first_seen": "2026-03-19 01:54:22",
+        "labels": [
+          "attacker",
+          "malicious-activity"
+        ],
+        "last_seen": "2026-09-26 22:44:12",
+        "source": "AbuseIPDB"
+      },
+      {
+        "count": 20,
+        "description": "DNS Compromise",
+        "first_seen": "2026-06-13 17:21:59",
+        "labels": [
+          "compromised",
+          "malicious-activity"
+        ],
+        "last_seen": "2026-09-22 23:06:16",
+        "source": "AbuseIPDB"
+      },
+      {
+        "count": 94,
+        "description": "SQL Injection",
+        "first_seen": "2026-06-13 00:49:05",
+        "labels": [
+          "attacker",
+          "malicious-activity"
+        ],
+        "last_seen": "2026-09-24 07:53:27",
+        "source": "AbuseIPDB"
+      },
+      {
+        "count": 24,
+        "description": "Phishing",
+        "first_seen": "2026-06-13 00:31:18",
+        "labels": [
+          "malicious-activity",
+          "phishing"
+        ],
+        "last_seen": "2026-09-22 17:10:07",
+        "source": "AbuseIPDB"
+      },
+      {
+        "count": 18,
+        "description": "IoT Attacker",
+        "first_seen": "2026-06-09 09:36:11",
+        "labels": [
+          "iot",
+          "malicious-activity"
+        ],
+        "last_seen": "2026-08-31 16:01:36",
+        "source": "AbuseIPDB"
+      },
+      {
+        "count": 143,
+        "description": "DDoS Attacker",
+        "first_seen": "2026-04-05 21:38:36",
+        "labels": [
+          "attacker",
+          "malicious-activity"
+        ],
+        "last_seen": "2026-09-24 14:10:43",
+        "source": "AbuseIPDB"
+      },
+      {
+        "count": 181,
+        "description": "SSH Attacker",
+        "first_seen": "2026-03-19 05:23:26",
+        "labels": [
+          "attacker",
+          "malicious-activity"
+        ],
+        "last_seen": "2026-09-23 02:03:00",
+        "source": "AbuseIPDB"
+      },
+      {
+        "count": 2918,
+        "description": "HTTP Attacker",
+        "first_seen": "2026-03-19 00:40:12",
+        "labels": [
+          "attacker",
+          "malicious-activity"
+        ],
+        "last_seen": "2026-10-04 00:19:16",
+        "source": "AbuseIPDB"
+      },
+      {
+        "count": 1030,
+        "description": "HTTP Scrapper",
+        "first_seen": "2026-06-02 12:46:34",
+        "labels": [
+          "attacker",
+          "malicious-activity"
+        ],
+        "last_seen": "2026-10-04 00:19:16",
+        "source": "AbuseIPDB"
+      },
+      {
+        "count": 277,
+        "description": "Malicious Host",
+        "first_seen": "2025-06-24 20:05:21",
+        "labels": [
+          "attacker",
+          "compromised",
+          "malicious-activity"
+        ],
+        "last_seen": "2026-09-24 06:40:34",
+        "ref": [
+          21745
+        ],
+        "source": "AbuseIPDB"
+      },
+      {
+        "count": 2282,
+        "description": "Port Scanner",
+        "first_seen": "2026-03-19 01:13:10",
+        "labels": [
+          "attacker",
+          "malicious-activity",
+          "reconnaissance"
+        ],
+        "last_seen": "2026-10-02 16:49:22",
+        "source": "AbuseIPDB"
+      },
+      {
+        "count": 1438,
+        "description": "Hacking",
+        "first_seen": "2026-03-19 00:36:49",
+        "labels": [
+          "attacker",
+          "malicious-activity"
+        ],
+        "last_seen": "2026-10-04 00:19:16",
+        "source": "AbuseIPDB"
+      },
+      {
+        "count": 1427,
+        "description": "Bruteforce",
+        "first_seen": "2026-03-19 00:36:49",
+        "labels": [
+          "attacker",
+          "malicious-activity"
+        ],
+        "last_seen": "2026-10-04 03:33:18",
+        "source": "AbuseIPDB"
+      },
+      {
+        "count": 50,
+        "description": "ET CINS Active Threat Intelligence Poor Reputation IP UDP",
+        "first_seen": "2026-03-20 02:24:20",
+        "labels": [
+          "attacker",
+          "malicious-activity"
+        ],
+        "last_seen": "2026-10-13 11:15:48",
+        "ref": [
+          21745
+        ],
+        "source": "Emerging Threats"
+      },
+      {
+        "count": 45,
+        "description": "Malicious Host",
+        "first_seen": "2026-03-19 15:11:15",
+        "labels": [
+          "attacker",
+          "malicious-activity"
+        ],
+        "last_seen": "2026-10-08 20:03:25",
+        "ref": [
+          21745
+        ],
+        "source": "CIArmy"
+      },
+      {
+        "count": 12,
+        "description": "Unauthorized scanning of hosts",
+        "first_seen": "2026-09-19 16:07:54",
+        "labels": [
+          "attacker",
+          "malicious-activity",
+          "reconnaissance"
+        ],
+        "last_seen": "2026-10-16 16:35:28",
+        "ref": [
+          21745
+        ],
+        "source": "Blocklist.net.ua"
+      }
+    ],
+    "asn_date": "-",
+    "modification_time": "2026-10-16 16:35:28",
+    "asn_cidr": "-",
+    "location": {
+      "lat": 47.3666715,
+      "lon": 8.5540819
+    },
+    "country_code": "CH",
+    "address": "-",
+    "ip_addr": "203.0.113.10",
+    "cidr": "-",
+    "tag": [
+      "abuse",
+      "ssh",
+      "bruteforce",
+      "bot",
+      "sip",
+      "attacker",
+      "apache",
+      "ddos",
+      "rfi",
+      "login",
+      "joomla",
+      "wordpress",
+      "spam"
+    ],
+    "type": "ip",
+    "email": "-"
+  },
+  "success": true,
+  "artifacts": [],
+  "operations": []
+}

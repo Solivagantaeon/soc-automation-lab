@@ -1,0 +1,18 @@
+{
+  "summary": {
+    "taxonomies": [
+      {
+        "level": "info",
+        "namespace": "CCT",
+        "predicate": "C2 Search",
+        "value": "0 hits"
+      }
+    ]
+  },
+  "full": {
+    "results": []
+  },
+  "success": true,
+  "artifacts": [],
+  "operations": []
+}
