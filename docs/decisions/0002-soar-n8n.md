@@ -38,7 +38,7 @@ _Add rows for any other relevant criteria._
 
 ## 4. Research notes
 
-<!-- Jedna podsekcja na temat: co sprawdzałeś, jak (docs / test w labie), co wyszło, linki. -->
+<!-- Jedna podsekcja na temat: co sprawdzałeś, jak (docs / test w labie), co wyszło, linki. Reasercherujemy pod kątem odpowiadania na poniższe pytania -->
 
 ### 4.1 _Topic_ – @login
 
@@ -47,9 +47,8 @@ _Add rows for any other relevant criteria._
 <!-- Odpowiadamy w ramach researchu, zanim wybierzemy narzędzie. Można dopisywać pytania. -->
 
 1. How does each tool handle deduplication and updating an existing TheHive alert?
-2. Where should alert filtering happen – in the Wazuh integration or in the SOAR?
-3. How do we measure the alert funnel independently of the tool?
-4. What can we reuse from v0.1, and what must be rebuilt?
+2. What can we reuse from v0.1, and what must be rebuilt?
+3. How does each tool handle security measures
 
 ## 6. Decision
 
