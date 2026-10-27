@@ -8,4 +8,3 @@ Step-by-step instructions for installing, configuring or fixing something in the
 - `sysmon-deploy.md` - deploying Sysmon with sysmon-modular
 - `n8n-deploy.md` - deploying the n8n SOAR VM on Proxmox (queue mode, HTTPS behind Caddy)
 
-Passwords and keys are always written as `<PLACEHOLDER>`, never as real values.
