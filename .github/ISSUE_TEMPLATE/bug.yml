@@ -1,0 +1,32 @@
+name: Bug
+description: Something in the lab or the pipeline does not work
+labels: ["type:bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        After creating the issue, add one or two `area:` labels in the sidebar.
+        Never paste keys, tokens, passwords or our public IP - replace them with `<PLACEHOLDER>`.
+  - type: textarea
+    id: actual
+    attributes:
+      label: What happens
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What we expected
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: How to reproduce
+      description: Steps, host, logs (without secrets).
+      render: text
+  - type: input
+    id: component
+    attributes:
+      label: Component and version
+      placeholder: e.g. n8n 2.44.6 / TheHive 5.8.0
