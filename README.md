@@ -2,7 +2,7 @@
 
 > Reducing alert fatigue in a Security Operations Center: from **~1000 raw alerts to ~10 incidents** an analyst actually needs to look at — with open-source tooling and a human always making the final call.
 
-<!-- After going all work, add badges here (e.g. secret-scan workflow status, license). -->
+<!--Add badges here (e.g. secret-scan workflow status, license). -->
 
 
 

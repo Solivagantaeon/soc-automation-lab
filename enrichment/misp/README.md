@@ -70,7 +70,7 @@ The existing Shuffle screenshot shows the workflow layout and the MISP node. It 
 
 The normalized per-IOC result contains an explicit status, the queried observable, matching attributes, event IDs and counts, tags, comments, event context, warninglist/benign/malicious flags, and an error field when applicable:
 
-The sanitized input alert is available at [`../../samples/alerts/misp-issue10-all-observable-types.json`](../../samples/alerts/misp-issue10-all-observable-types.json). Its two IP values use RFC 5737 documentation ranges; hashes, domain, alert structure and test ID are retained. The five observed lookup and scoring results are in [`../../samples/results/misp/all-observable-types-issue10.json`](../../samples/results/misp/all-observable-types-issue10.json).
+The sanitized input alert is available at [`../../samples/alerts/wazuh/misp-all-observable-types.json`](../../samples/alerts/wazuh/misp-all-observable-types.json). Its two IP values use RFC 5737 documentation ranges; hashes, domain, alert structure and test ID are retained. The five observed lookup and scoring results are in [`../../samples/results/misp/all-observable-types-issue10.json`](../../samples/results/misp/all-observable-types-issue10.json).
 
 The earlier Shuffle Debug capture shows the MISP action returning HTTP 200 with an `Attribute` collection. The attribute contents are collapsed in the screenshot; refer to the JSON result sample for the values, tags and interpretations.
 
