@@ -2,7 +2,7 @@
 
 > Reducing alert fatigue in a Security Operations Center: from **~1000 raw alerts to ~10 incidents** an analyst actually needs to look at — with open-source tooling and a human always making the final call.
 
-<!-- After going public, add badges here (e.g. secret-scan workflow status, license). -->
+<!-- After going all work, add badges here (e.g. secret-scan workflow status, license). -->
 
 
 
@@ -86,14 +86,6 @@ _To be filled in at the end of the project:_ alert volume before vs after each p
 
 See [`docs/lab-setup.md`](docs/lab-setup.md). The lab runs on a single Proxmox host; all addresses are private lab ranges.
 
-## Team
-
-<!-- Name — role — GitHub/LinkedIn. Each person describes their own contribution. -->
-| Name | Role / contribution |
-|---|---|
-| _TBD_ | Lab infrastructure, network & integration |
-| _TBD_ | SOAR workflows |
-| _TBD_ | Detection engineering |
 
 ## Disclaimer
 
