@@ -8,3 +8,5 @@
 # dd06371 (squash merge of PR #59 into main): the same dummy LOGTEST header values as 0ef3a78.
 dd06371ba8ecc388ae9a65fa54a0cdfbff5f3938:docs/runbooks/n8n-deploy.md:curl-auth-header:625
 dd06371ba8ecc388ae9a65fa54a0cdfbff5f3938:docs/runbooks/n8n-deploy.md:generic-api-key:626
+# 8373dbb (docs/56-adr-n8n): the same placeholder Shuffle hook_url, moved to docs/research/soar-engine-comparison.md.
+8373dbb2dac001e93bcc6cc6eac139984b43a36b:docs/research/soar-engine-comparison.md:xml-secret-element:178
