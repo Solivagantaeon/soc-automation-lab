@@ -22,7 +22,7 @@ git config user.email "<id>+<login>@users.noreply.github.com"
 
 ## 2. Daily workflow
 
-1. Take a task from **Issues** (or create one) and assign yourself.
+1. Take a task from **Issues** (or create one, see [Issues and labels](#3-issues-and-labels)) and assign yourself.
 2. Create a branch from the current `main`:
 ```bash
    git switch main && git pull
@@ -39,7 +39,22 @@ git config user.email "<id>+<login>@users.noreply.github.com"
 4. `git push -u origin <branch>` → open a **Pull Request** to `main` and fill in the template.
 5. At least one team member reviews it. After approval: **Squash and merge**.
 
-## 3. Secrets (the most important rules)
+## 3. Issues and labels
+
+**When to open an issue:** for any planned piece of work, a bug, or something the team has to decide. A trivial fix (typo, broken link, formatting) can go straight to a pull request with a `fix/` branch and no issue.
+
+**How:** *New issue* → pick the form that matches the kind of work. The form sets the `type:` label for you; add the `area:` label(s) in the sidebar.
+
+Labels let anyone filter the backlog in one click, e.g. open tests nobody has taken: `is:open label:type:test no:assignee`. They describe *what kind* of work it is and *which part of the lab* it touches. *When* is the milestone, *who* is the assignee.
+
+| Axis | Rule | Labels |
+|---|---|---|
+| `type:` | exactly one per issue (set by the form) | `type:feature`, `type:bug`, `type:docs`, `type:test`, `type:chore`, `type:decision` |
+| `area:` | one or two per issue; none for repository chores | `area:detection`, `area:soar`, `area:enrichment`, `area:case-management`, `area:metrics`, `area:infra` |
+
+`type:decision` means the result is an ADR in `docs/decisions/`: the team agrees first, then builds.
+
+## 4. Secrets (the most important rules)
 
 The repository is public. Anything that reaches the git history stays there forever - even if you delete the file later.
 
@@ -65,7 +80,7 @@ On Windows type `python` instead of `python3`. Look at the diff yourself anyway 
 
 **If a secret does reach the repository:** tell the team channel immediately and **change / revoke the key in its system** (that is the real fix); only then do we clean up the history.
 
-## 4. Where things go
+## 5. Where things go
 
 | What | Where |
 |---|---|
@@ -80,13 +95,13 @@ On Windows type `python` instead of `python3`. Look at the diff yourself anyway 
 | Step-by-step instructions | `docs/runbooks/` |
 | Screenshots | `docs/images/<component>/` (check them with `check_images.py` and by eye!) |
 
-## 5. Definition of done
+## 6. Definition of done
 
 - [ ] change tested in the lab where applicable (validation described in the PR),
 - [ ] documentation updated (README / runbook / ADR),
 - [ ] `pre-commit run --all-files` passes,
 - [ ] reviewed by at least one person.
 
-## 6. Language
+## 7. Language
 
 The whole repository is in **English**: documentation, comments in code and configuration, commits, branch names, issues and pull requests.

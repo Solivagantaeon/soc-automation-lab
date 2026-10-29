@@ -1,1 +1,2 @@
-blank_issues_enabled: true
+# Every issue goes through one of the forms, so it gets its type: label automatically.
+blank_issues_enabled: false

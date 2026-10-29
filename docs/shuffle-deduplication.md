@@ -12,11 +12,11 @@ The SHA-256 fingerprint uses the agent ID, rule ID, source IP, destination IP, d
 - For a repeated fingerprint, `Get TheHive Alert ID` reads that cached scalar and the TheHive app's `Update Alert` action updates the same alert. Its `AlertId` input is mapped to `$get_thehive_alert_id.value`.
 - The duplicate counter is incremented for the repeated event.
 
-![Shuffle duplicate alert path with TheHive Update Alert](images/shuffle-deduplication.png)
+![Shuffle duplicate alert path with TheHive Update Alert](images/shuffle/16-dedup-workflow-path.png)
 
 *Figure 1. Current Shuffle path, including the TheHive app Update Alert node.*
 
-![TheHive Update Alert action mapping](images/shuffle-thehive-update-alert.png)
+![TheHive Update Alert action mapping](images/shuffle/16-thehive-update-alert-action.png)
 
 *Figure 2. The TheHive app action uses the ID returned by the cache lookup.*
 
@@ -39,11 +39,11 @@ The ID extractor accepts a Create Alert response or a list of responses, keeps s
 | Duplicate update | The TheHive app update targeted the cached alert ID and returned HTTP `204` |
 | Duplicate counter | The first repeated event produced `count 2` and stored value `"2"` |
 
-![TheHive alert ID lookup](images/thehive-id-lookup.png)
+![TheHive alert ID lookup](images/shuffle/16-thehive-alert-id-lookup.png)
 
 *Figure 3. Lookup returns the cached TheHive alert ID for the repeated fingerprint.*
 
-![Duplicate counter verification](images/duplicate-counter.png)
+![Duplicate counter verification](images/shuffle/16-duplicate-counter.png)
 
 *Figure 4. Shuffle returned count 2 and persisted it in the duplicate counter category.*
 

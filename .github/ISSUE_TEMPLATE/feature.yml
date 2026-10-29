@@ -1,0 +1,36 @@
+name: Feature
+description: New capability in the pipeline or the lab
+labels: ["type:feature"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        After creating the issue, add one or two `area:` labels in the sidebar and assign yourself if you take it.
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: What works after this issue is done, and why it matters.
+    validations:
+      required: true
+  - type: textarea
+    id: criteria
+    attributes:
+      label: Acceptance criteria
+      description: Concrete, testable checks, e.g. "Suricata alert 86601 creates a TheHive alert in under 1 min".
+      value: |
+        - [ ] 
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence in repo
+      description: Files that prove it works (config, workflow export, sample, screenshot in docs/images/<component>/).
+      value: |
+        - [ ] 
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes and dependencies
+      description: Related issues (#N), preconditions, what is out of scope.

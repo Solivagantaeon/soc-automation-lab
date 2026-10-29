@@ -12,8 +12,3 @@
 /.gitignore                @Solivagantaeon
 /SECURITY.md               @Solivagantaeon
 
-# Area owners - replace with team logins when roles are fixed, e.g.:
-# /detection/             @<login>
-# /soar/                  @<login>
-# /enrichment/            @<login>
-# /case-management/       @<login>
