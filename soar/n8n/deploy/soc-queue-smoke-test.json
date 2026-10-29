@@ -1,0 +1,52 @@
+{
+  "id": "SocQueueSmoke001",
+  "name": "SOC - queue smoke test",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "soc-queue-smoke",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "6f1d2c3a-1b2c-4d5e-8f90-0a1b2c3d4e01",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 0],
+      "webhookId": "0c9e4f5a-6b7c-4d8e-9f01-2a3b4c5d6e70"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Runs in the external JS task runner on the worker\nconst now = new Date().toISOString();\nreturn $input.all().map(item => ({\n  json: {\n    ok: true,\n    received: item.json.body ?? null,\n    processed_at: now,\n    execution_id: $execution.id,\n    runner: 'javascript'\n  }\n}));"
+      },
+      "id": "6f1d2c3a-1b2c-4d5e-8f90-0a1b2c3d4e02",
+      "name": "Code",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [220, 0]
+    },
+    {
+      "parameters": {
+        "respondWith": "firstIncomingItem",
+        "options": {}
+      },
+      "id": "6f1d2c3a-1b2c-4d5e-8f90-0a1b2c3d4e03",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [440, 0]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [[{ "node": "Code", "type": "main", "index": 0 }]]
+    },
+    "Code": {
+      "main": [[{ "node": "Respond to Webhook", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": { "executionOrder": "v1" },
+  "pinData": {}
+}
