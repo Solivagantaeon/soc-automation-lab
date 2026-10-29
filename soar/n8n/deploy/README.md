@@ -7,7 +7,7 @@
 | `compose.yml` | Defines the stack: Caddy (HTTPS proxy), n8n main, n8n worker, task runner, PostgreSQL and Redis, with networks, volumes, healthchecks and memory limits | `/opt/n8n/compose.yml` |
 | `Caddyfile` | HTTPS reverse proxy for n8n: certificates from Caddy's internal CA (by hostname and by IP), HTTP → HTTPS redirect, access log with the webhook token removed | `/opt/n8n/Caddyfile` (mounted read-only into the `caddy` container) |
 | `make-env.sh` | Generates `.env` (mode 600) with pinned versions, addressing and random secrets; never overwrites an existing `.env`, prints only variable names and checks the result with `docker compose config -q` | `/opt/n8n/make-env.sh` (root only, mode 700) |
-
+| `soc-queue-smoke-test.json` | Test workflow (Webhook → Code → Respond to Webhook) that echoes the posted JSON; proves the path webhook → queue → worker → runner works (runbook step 8.2) | `/opt/n8n/soc-queue-smoke-test.json` |
 
 ## Values to change on another environment
 
