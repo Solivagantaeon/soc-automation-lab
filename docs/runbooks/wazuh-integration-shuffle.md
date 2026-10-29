@@ -104,7 +104,7 @@ grep -i 'integratord.*error' /var/ossec/logs/ossec.log | tail -3
 Wait for any alert from a Windows agent (e.g. 92910 on SOC-WIN10-01) or generate one on the endpoint, then find its execution in Shuffle.
 
 Result 2026-10-19: rule **92910** (level 12, SOC-WIN10-01) at 01:37:45 → execution 01:37:47, FINISHED.
-Evidence: [`windows-sysmon-92910.json`](../../samples/alerts/windows-sysmon-92910.json)
+Evidence: [`sysmon-92910.json`](../../samples/alerts/shuffle-integration/sysmon-92910.json)
 
 ![Shuffle execution triggered by Sysmon alert 92910](../images/shuffle/07-shuffle-execution.png)
 
@@ -118,7 +118,7 @@ jq -r 'select(.rule.id=="86601") | [.timestamp, .agent.name, .data.in_iface, .da
 ```
 
 Result 2026-10-19: rule **86601** from agent `opnsense`, `ET INFO Packed Executable Download`, 02:33:12 → execution in Shuffle.
-Evidence: [`suricata-86601.json`](../../samples/alerts/suricata-86601.json)
+Evidence: [`suricata-86601.json`](../../samples/alerts/shuffle-integration/suricata-86601.json)
 
 ![Shuffle execution triggered by Suricata alert 86601 (APT User-Agent, 02:29)](../images/suricata/07b-shuffle-execution-suricata.png)
 
@@ -152,14 +152,14 @@ EOF
 ```
 
 Result 2026-10-19: **31103** (level 7, SQL injection attempt) and **31106** (level 6, web attack returned 200) at 02:50:14.
-Evidence: [`web-31103-sqli.json`](../../samples/alerts/web-31103-sqli.json), [`web-31106-attack-200.json`](../../samples/alerts/web-31106-attack-200.json)
+Evidence: [`web-31103-sqli.json`](../../samples/alerts/shuffle-integration/web-31103-sqli.json), [`web-31106-attack-200.json`](../../samples/alerts/shuffle-integration/web-31106-attack-200.json)
 
 ![Shuffle execution triggered by web alert 31106](../images/shuffle/07c-shuffle-execution-web-31106.png)
 
 The same injection method replays a Suricata event (`eve.json` line, location `/var/log/suricata/eve.json`). The JSON decoder needs the line to start with `{`, so `logger`/journald (which add a syslog header) cannot be used for this.
 ### Samples
 
-`samples/alerts/*.json` are built from `alerts.json` with the integration's own `generate_msg()` from `shuffle.py`, i.e. the same envelope Shuffle receives (`severity`, `pretext`, `title`, `rule_id`, `timestamp`, `id`, `all_fields`). Real lab alerts. They contain only lab hostnames, private addresses and the built-in Administrator account; the external IP in the Suricata sample was replaced with 203.0.113.10 (RFC 5737).
+`samples/alerts/shuffle-integration/*.json` are built from `alerts.json` with the integration's own `generate_msg()` from `shuffle.py`, i.e. the same envelope Shuffle receives (`severity`, `pretext`, `title`, `rule_id`, `timestamp`, `id`, `all_fields`). Real lab alerts. They contain only lab hostnames, private addresses and the built-in Administrator account; the external IP in the Suricata sample was replaced with 203.0.113.10 (RFC 5737).
 FIM samples (550, 554) come from alerts at 00:29, before the TLS fix – same format, but those particular alerts were not delivered to Shuffle.
 
 ---

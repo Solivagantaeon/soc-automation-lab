@@ -232,7 +232,7 @@ For process-access detection rule `92910`, a sample involving `OneDrive.exe` acc
 
 - Sysmon deployment notes: [`../detection/sysmon/README.md`](../detection/sysmon/README.md)
 - Agent configuration: [`../detection/wazuh/agent-config/agent.conf`](../detection/wazuh/agent-config/agent.conf)
-- Sanitized sample record: [`../samples/alerts/sysmon-windows-example.json`](../samples/alerts/sysmon-windows-example.json)
+- Sanitized sample record: [`../samples/alerts/wazuh/sysmon-92213-exe-in-temp.json`](../samples/alerts/wazuh/sysmon-92213-exe-in-temp.json)
 
 ---
 

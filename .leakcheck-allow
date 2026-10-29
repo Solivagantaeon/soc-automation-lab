@@ -16,7 +16,7 @@ commit:99ed19f88e489efc5dc23545c07da789b942be51
 
 # --- Screenshots reviewed by a human (entry stops working when the file changes) -------
 # OPNsense NTP status: public NTP pool servers and their upstream refs, not lab addresses
-sha256:e1d731eea5c1361b49133bca37672f6382d83a137f0bab0ae6843fc4fd2c1c1d  docs/images/network/5-opnsense-ntp-status.png
+sha256:e1d731eea5c1361b49133bca37672f6382d83a137f0bab0ae6843fc4fd2c1c1d  docs/images/network/05-opnsense-ntp-status.png
 
 # --- MISP test IOCs (enrichment/misp/events/, PR #43) -----------------------------------
 # Known-malicious test indicator from the abuse.ch Feodo feed; must match MISP exactly

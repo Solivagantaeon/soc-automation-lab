@@ -65,7 +65,7 @@ Wazuh rule **92213** "Executable file dropped in folder commonly used by malware
 
 ![Sysmon-based alert from SOC-WIN10-01 (rule 92213)](../../docs/images/sysmon/04-sysmon-win10-alert.png)
 
-Full alert (anonymised): [`samples/alerts/sysmon-windows-example.json`](../../samples/alerts/sysmon-windows-example.json)
+Full alert (anonymised): [`samples/alerts/wazuh/sysmon-92213-exe-in-temp.json`](../../samples/alerts/wazuh/sysmon-92213-exe-in-temp.json)
 
 ## Known errors
 

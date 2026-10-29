@@ -15,7 +15,7 @@ The current implementation is the thin end-to-end flow. Full scoring and classif
 
 ## 2. Alert fields
 
-The workflow sends the following fields to TheHive. The full request template is in [`alert-request.json`](alert-request.json).
+The workflow sends the following fields to TheHive. The full request template is in [`alert-request.json`](../../samples/case-management/thehive/alert-request.json).
 
 | Field | Description |
 |---|---|

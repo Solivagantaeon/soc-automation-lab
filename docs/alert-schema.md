@@ -195,7 +195,7 @@ The IP above is a documentation address replacing the public test IP. `attribute
 
 The latest Aggregate Score run returned `hit` for both IPs, the domain and MD5, and `no_hit` for the SHA-256. `misp_available` was true in all five executions. The warninglist IP result preserved its explanation and `to_ids: false`; `google.com` preserved the `soc-lab:benign` event tag; the malicious IP and MD5 preserved `soc-lab:malicious` and their `to_ids` signals. `hit` means that MISP has a record; it is not, by itself, a malicious verdict.
 
-The sanitized test alert is in [`samples/alerts/misp-issue10-all-observable-types.json`](../samples/alerts/misp-issue10-all-observable-types.json). Its two IP values use RFC 5737 documentation ranges. The lookup and Aggregate Score evidence is in [`samples/results/misp/all-observable-types-issue10.json`](../samples/results/misp/all-observable-types-issue10.json), without request headers, cookies, internal URLs, usernames or API metadata.
+The sanitized test alert is in [`samples/alerts/wazuh/misp-all-observable-types.json`](../samples/alerts/wazuh/misp-all-observable-types.json). Its two IP values use RFC 5737 documentation ranges. The lookup and Aggregate Score evidence is in [`samples/results/misp/all-observable-types-issue10.json`](../samples/results/misp/all-observable-types-issue10.json), without request headers, cookies, internal URLs, usernames or API metadata.
 
 MISP returned `first_seen: null` and `last_seen: null` in the tested attributes. Event dates are context, not sightings.
 
@@ -275,7 +275,7 @@ This test confirms normalization of a Sysmon Event ID 7 alert delivered through 
 
 **Status: PASS — manual execution**
 
-The `Normalize Alert` node was manually executed using the synthetic `web.json` sample. The sample represents an illustrative web alert and is not a vendor-specific raw access log.
+The `Normalize Alert` node was manually executed using the synthetic [`raw/web-access-lab-test.json`](../samples/alerts/raw/web-access-lab-test.json) sample. The sample represents an illustrative web alert and is not a vendor-specific raw access log.
 
 The output confirmed the following values:
 

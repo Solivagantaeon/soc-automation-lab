@@ -1,0 +1,27 @@
+name: Documentation
+description: Documentation, runbook, evidence or screenshots
+labels: ["type:docs"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        After creating the issue, add one or two `area:` labels in the sidebar and assign yourself if you take it.
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: What a reader can understand or reproduce after this is done.
+    validations:
+      required: true
+  - type: textarea
+    id: files
+    attributes:
+      label: Files to add or change
+      value: |
+        - [ ] 
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes and dependencies

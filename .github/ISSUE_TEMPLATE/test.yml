@@ -1,0 +1,35 @@
+name: Test
+description: Test scenario with expected and actual result
+labels: ["type:test"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        After creating the issue, add one or two `area:` labels in the sidebar and assign yourself if you take it.
+  - type: textarea
+    id: scenario
+    attributes:
+      label: Scenario
+      description: What we simulate and how (safe for the lab).
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected result
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps
+      value: |
+        - [ ] Prepare input data
+        - [ ] Run the scenario and record the actual result
+        - [ ] Add screenshots to docs/images/<component>/
+        - [ ] Add a row to the test results table (expected / actual / PASS-FAIL)
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes and dependencies
+      description: Preconditions, who must be told before (e.g. stopping a shared service).

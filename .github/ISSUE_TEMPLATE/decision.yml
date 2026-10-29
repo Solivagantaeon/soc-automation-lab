@@ -1,0 +1,30 @@
+name: Decision (ADR)
+description: Something the team has to agree on before building it
+labels: ["type:decision"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        After creating the issue, add one or two `area:` labels in the sidebar and assign yourself if you take it.
+  - type: textarea
+    id: question
+    attributes:
+      label: Question to decide
+    validations:
+      required: true
+  - type: textarea
+    id: options
+    attributes:
+      label: Options and context
+      description: Known options, constraints, links to research.
+  - type: textarea
+    id: done
+    attributes:
+      label: Done when
+      value: |
+        - [ ] ADR in docs/decisions/ (copy 0000-template.md), status Accepted
+        - [ ] Decision agreed in the PR discussion
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes and dependencies
