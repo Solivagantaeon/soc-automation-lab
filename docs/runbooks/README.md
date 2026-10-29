@@ -1,11 +1,10 @@
-# Runbooki
+# Runbooks
 
-Instrukcje krok po kroku: jak coś zainstalować, skonfigurować albo naprawić w labie. Jeden plik = jedna czynność, np.:
+Step-by-step instructions for installing, configuring or fixing something in the lab. One file covers one task, for example:
 
-- `wazuh-integration-shuffle.md` — podpięcie webhooka Shuffle w `ossec.conf`
-- `thehive-cortex-docker.md` — instalacja TheHive + Cortex (profil `testing`)
-- `misp-in-thehive.md` — konfiguracja MISP w TheHive
-- `sysmon-deploy.md` — wdrożenie Sysmona z sysmon-modular
+- `wazuh-integration-shuffle.md` - connecting the Shuffle webhook in `ossec.conf`
+- `thehive-cortex-docker.md` - installing TheHive + Cortex (`testing` profile)
+- `misp-in-thehive.md` - configuring MISP in TheHive
+- `sysmon-deploy.md` - deploying Sysmon with sysmon-modular
+- `n8n-deploy.md` - deploying the n8n SOAR VM on Proxmox (queue mode, HTTPS behind Caddy)
 
-Każdy runbook kończy się sekcją **Test**: jak sprawdzić, że działa.
-Hasła i klucze: zawsze jako `<PLACEHOLDER>`, nigdy prawdziwe wartości.

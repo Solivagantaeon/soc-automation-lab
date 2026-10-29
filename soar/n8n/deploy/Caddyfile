@@ -1,0 +1,46 @@
+# /opt/n8n/Caddyfile - HTTPS reverse proxy for n8n (Caddy internal CA) - v2
+#
+# What it does:
+#   - Terminates HTTPS for n8n and forwards everything to n8n-main:5678.
+#   - Certificates come from Caddy's own CA (tls internal): server certificates
+#     live 12 h and renew automatically; the root CA (valid 10 years) is stored
+#     in the caddy_data volume and is trusted by hand in browsers and by the
+#     Wazuh integration (/var/ossec/etc/n8n-ca.crt). Losing that volume means
+#     a new root CA and a broken Wazuh -> n8n integration.
+#   - Plain HTTP (port 80) only redirects to HTTPS.
+#   - Unknown host names get a TLS error, not n8n.
+#   - Security headers (X-Frame-Options, nosniff, Referrer-Policy) are set by
+#     n8n itself, so they are not repeated here. No HSTS on purpose: with an
+#     internal CA it would block anyone who has not trusted the root yet.
+#
+# v2 (2026-10-27) - changes against v1:
+#   - Access log to stdout (docker logs, rotated by the Docker daemon), with the
+#     webhook token and n8n API key headers removed. Cookie and Authorization
+#     are redacted by Caddy by default.
+#   - HTTP/3 disabled: only TCP 443 is published, so advertising h3 (UDP) made
+#     clients try a protocol that can never connect.
+#   - skip_install_trust: no attempt to install the root CA into the
+#     container's own trust store (it only produced a warning).
+{
+	# Clients connecting by IP send no SNI; serve them the certificate issued for the IP
+	default_sni {$N8N_IP}
+	skip_install_trust
+	servers {
+		protocols h1 h2
+	}
+}
+
+{$N8N_HOST}, {$N8N_IP} {
+	tls internal
+
+	log {
+		output stdout
+		format filter {
+			# Header names must be in canonical form (Go textproto)
+			request>headers>X-Wazuh-Token delete
+			request>headers>X-N8n-Api-Key delete
+		}
+	}
+
+	reverse_proxy n8n-main:5678
+}

@@ -1,0 +1,235 @@
+# n8n stack for SOC alert triage (Docker Compose, v2 - 2026-10-27)
+#
+# What it runs:
+#   caddy       HTTPS reverse proxy - the only service reachable from the network (80/443)
+#   n8n-main    web UI and webhooks; receives Wazuh alerts and puts jobs in the queue
+#   n8n-worker  takes jobs from the queue and runs the workflows (MISP, Cortex, TheHive)
+#   n8n-runner  isolated sandbox that runs Code node scripts for the worker
+#   redis       job queue + deduplication keys and daily alert counters
+#   postgres    workflows, encrypted credentials and execution history
+#
+# Secrets and versions are read from .env (root-only, never committed).
+#
+# Changes in v2:
+#   - Three networks: only caddy, main and worker can reach other hosts;
+#     postgres and redis are internal; the runner can talk only to the worker.
+#   - Redis saves every write to disk (AOF), so queued jobs and counters
+#     survive a crash.
+#   - Containers get 75 s to stop cleanly, so running workflows are not killed.
+#   - Extra hardening (no privilege escalation; the runner has no Linux
+#     capabilities and a process limit).
+#   - Healthcheck for the runner and a defined start order.
+#   - Exact image versions pinned in .env.
+
+name: n8n
+
+x-hardening: &hardening
+  security_opt:
+    - no-new-privileges:true
+
+x-n8n-env: &n8n-env
+  # Database
+  DB_TYPE: postgresdb
+  DB_POSTGRESDB_HOST: postgres
+  DB_POSTGRESDB_PORT: "5432"
+  DB_POSTGRESDB_DATABASE: ${POSTGRES_DB}
+  DB_POSTGRESDB_USER: ${POSTGRES_USER}
+  DB_POSTGRESDB_PASSWORD: ${POSTGRES_PASSWORD}
+  # Queue mode
+  EXECUTIONS_MODE: queue
+  QUEUE_BULL_REDIS_HOST: redis
+  QUEUE_BULL_REDIS_PORT: "6379"
+  OFFLOAD_MANUAL_EXECUTIONS_TO_WORKERS: "true"
+  # Seconds n8n waits for running executions on stop (keep below stop_grace_period)
+  N8N_GRACEFUL_SHUTDOWN_TIMEOUT: "60"
+  # Must be identical on main and every worker (decrypts stored credentials)
+  N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY}
+  # Task runners (Code node) in external mode
+  N8N_RUNNERS_MODE: external
+  N8N_RUNNERS_AUTH_TOKEN: ${N8N_RUNNERS_AUTH_TOKEN}
+  N8N_RUNNERS_BROKER_LISTEN_ADDRESS: 0.0.0.0
+  # Binary data: filesystem mode is not supported in queue mode
+  N8N_DEFAULT_BINARY_DATA_MODE: database
+  # Public URLs (n8n sits behind Caddy)
+  N8N_HOST: ${N8N_HOST}
+  N8N_PROTOCOL: https
+  N8N_PORT: "5678"
+  N8N_EDITOR_BASE_URL: https://${N8N_HOST}/
+  N8N_WEBHOOK_URL: https://${N8N_HOST}/
+  N8N_PROXY_HOPS: "1"
+  # Execution history: 14 days or 50 000 executions, whichever comes first
+  EXECUTIONS_DATA_PRUNE: "true"
+  EXECUTIONS_DATA_MAX_AGE: "336"
+  EXECUTIONS_DATA_PRUNE_MAX_COUNT: "50000"
+  # Misc
+  GENERIC_TIMEZONE: ${TZ}
+  TZ: ${TZ}
+  N8N_DIAGNOSTICS_ENABLED: "false"
+  N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS: "true"
+  # Defaults announced to change in future n8n versions - pinned to the stricter
+  # future values so an upgrade does not change behaviour silently
+  N8N_UNVERIFIED_PACKAGES_ENABLED: "false"
+  N8N_RUNNERS_TASK_TIMEOUT: "60"
+  N8N_COMPRESSION_NODE_MAX_DECOMPRESSED_SIZE_BYTES: "268435456"
+  N8N_COMPRESSION_NODE_MAX_ZIP_ENTRIES: "1000"
+
+services:
+  postgres:
+    <<: *hardening
+    image: postgres:${POSTGRES_VERSION}
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      TZ: ${TZ}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    stop_grace_period: 30s
+    mem_limit: 1g
+
+  redis:
+    <<: *hardening
+    image: redis:${REDIS_VERSION}
+    restart: unless-stopped
+    # Before the first start with this command enable AOF at runtime
+    # (CONFIG SET appendonly yes) - see runbook; otherwise data may not be loaded.
+    command:
+      - redis-server
+      - --appendonly
+      - "yes"
+      - --appendfsync
+      - everysec
+      - --maxmemory
+      - 384mb
+      - --maxmemory-policy
+      - noeviction
+    volumes:
+      - redis_data:/data
+    networks:
+      - data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    mem_limit: 512m
+
+  n8n-main:
+    <<: *hardening
+    image: n8nio/n8n:${N8N_VERSION}
+    restart: unless-stopped
+    environment:
+      <<: *n8n-env
+    volumes:
+      - n8n_main_data:/home/node/.n8n
+    networks:
+      - edge
+      - data
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:5678/healthz >/dev/null 2>&1 || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+    stop_grace_period: 75s
+    mem_limit: 2g
+
+  n8n-worker:
+    <<: *hardening
+    image: n8nio/n8n:${N8N_VERSION}
+    restart: unless-stopped
+    command: worker --concurrency=${N8N_WORKER_CONCURRENCY}
+    environment:
+      <<: *n8n-env
+      QUEUE_HEALTH_CHECK_ACTIVE: "true"
+    volumes:
+      - n8n_worker_data:/home/node/.n8n
+    networks:
+      - edge      # outbound: MISP, Cortex, TheHive
+      - data      # PostgreSQL, Redis
+      - sandbox   # task broker :5679 for the runner
+    depends_on:
+      n8n-main:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:5678/healthz/readiness >/dev/null 2>&1 || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+    stop_grace_period: 75s
+    mem_limit: 2g
+
+  # Code node sandbox for the worker (image version must match n8n).
+  # Runs user code: only the sandbox network, no capabilities, process limit.
+  n8n-runner:
+    <<: *hardening
+    image: n8nio/runners:${N8N_VERSION}
+    restart: unless-stopped
+    environment:
+      N8N_RUNNERS_TASK_BROKER_URI: http://n8n-worker:5679
+      N8N_RUNNERS_AUTH_TOKEN: ${N8N_RUNNERS_AUTH_TOKEN}
+    networks:
+      - sandbox
+    cap_drop:
+      - ALL
+    pids_limit: 256
+    depends_on:
+      n8n-worker:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:5680/healthz >/dev/null 2>&1 || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    mem_limit: 1g
+
+  caddy:
+    <<: *hardening
+    image: caddy:${CADDY_VERSION}
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      N8N_HOST: ${N8N_HOST}
+      N8N_IP: ${N8N_IP}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - edge
+    depends_on:
+      n8n-main:
+        condition: service_healthy
+    mem_limit: 256m
+
+networks:
+  edge: {}
+  data:
+    internal: true
+  sandbox:
+    internal: true
+
+volumes:
+  postgres_data:
+  redis_data:
+  n8n_main_data:
+  n8n_worker_data:
+  caddy_data:
+  caddy_config:
