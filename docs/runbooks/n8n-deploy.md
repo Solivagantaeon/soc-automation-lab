@@ -306,6 +306,7 @@ The whole stack is described by three text files, so it can be rebuilt on any ho
 | `compose.yml` | containers, pinned images, networks, volumes, health checks and memory limits |
 | `Caddyfile` | HTTPS reverse proxy in front of n8n |
 | `make-env.sh` | generates `.env` with random secrets on the VM itself |
+| `soc-queue-smoke-test.json` | test workflow (Webhook → Code → Respond) used in step 8.2 to prove the queue path works |
 
 Configuration and secrets are kept apart: `compose.yml` and `Caddyfile` only reference variables such as
 `${POSTGRES_PASSWORD}` and are safe to keep in this repository, while the values live only in `/opt/n8n/.env`,
@@ -318,10 +319,11 @@ which decrypts every credential stored in n8n - the unprivileged user `soclab` c
 ```bash
 install -d -m 750 -o root -g root /opt/n8n
 cd /opt/n8n
-nano compose.yml      # paste soar/n8n/deploy/compose.yml
-nano Caddyfile        # paste soar/n8n/deploy/Caddyfile
-nano make-env.sh      # paste soar/n8n/deploy/make-env.sh
-chmod 644 compose.yml Caddyfile
+nano compose.yml                 # paste soar/n8n/deploy/compose.yml
+nano Caddyfile                   # paste soar/n8n/deploy/Caddyfile
+nano make-env.sh                 # paste soar/n8n/deploy/make-env.sh
+nano soc-queue-smoke-test.json   # paste soar/n8n/deploy/soc-queue-smoke-test.json (used in step 8.2)
+chmod 644 compose.yml Caddyfile soc-queue-smoke-test.json
 chmod 700 make-env.sh
 ```
 
@@ -702,6 +704,9 @@ owner account and no clicking in the UI are needed.
 
 ```bash
 # import and publish the test workflow
+cd /opt/n8n
+test -f soc-queue-smoke-test.json || echo "missing - create it as in step 6"
+grep -m1 '"id"' soc-queue-smoke-test.json      # "id": "SocQueueSmoke001",
 docker compose cp soc-queue-smoke-test.json n8n-main:/tmp/soc-queue-smoke-test.json
 docker compose exec -T n8n-main n8n import:workflow --input=/tmp/soc-queue-smoke-test.json
 docker compose exec -T n8n-main n8n publish:workflow --id=SocQueueSmoke001
