@@ -36,4 +36,5 @@ The script generates `POSTGRES_PASSWORD`, `N8N_ENCRYPTION_KEY` and `N8N_RUNNERS_
 361cb570ddb4a248092dbc9fa123d5c36b4e33e18668425ffc156969a0caed4d  compose.yml
 c99466d3a5e7696404ccff99b724678c11baea5098fa780f78da629a177dc7ed  Caddyfile
 cddf79baabd2dbea601cf377e5665bc02a57777f7350dbe0f2b5ef18e49823d5  make-env.sh
+d4bc1ebf8c505769827654350be53762c61c8320796a056c090c4241f663cae3  soc-queue-smoke-test.json
 ```
