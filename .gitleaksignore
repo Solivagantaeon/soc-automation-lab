@@ -5,3 +5,6 @@
 7d420d72b0d4b012c9ea5f383139392bdf196e86:docs/decisions/0002-soar-n8n.md:xml-secret-element:180
 0ef3a78946617367f2cc35ebde399af522f75cdc:docs/runbooks/n8n-deploy.md:curl-auth-header:623
 0ef3a78946617367f2cc35ebde399af522f75cdc:docs/runbooks/n8n-deploy.md:generic-api-key:624
+# dd06371 (squash merge of PR #59 into main): the same dummy LOGTEST header values as 0ef3a78.
+dd06371ba8ecc388ae9a65fa54a0cdfbff5f3938:docs/runbooks/n8n-deploy.md:curl-auth-header:625
+dd06371ba8ecc388ae9a65fa54a0cdfbff5f3938:docs/runbooks/n8n-deploy.md:generic-api-key:626
