@@ -13,7 +13,10 @@
 # PR #44: Linux login name of a lab VM in a helper script (deleted in 582008c) and a
 # Windows Update server IP in a sample (to be replaced before merge). Not credentials.
 commit:99ed19f88e489efc5dc23545c07da789b942be51
-
+# docs/56-adr-n8n: placeholder Shuffle hook_url (shuffle.example.local/.../WEBHOOK_ID) in ADR 0002
+# and the SOAR comparison note; replaced with __SHUFFLE_WEBHOOK_URI__. Not a real webhook.
+commit:7d420d72b0d4b012c9ea5f383139392bdf196e86
+commit:8373dbb2dac001e93bcc6cc6eac139984b43a36b
 # --- Screenshots reviewed by a human (entry stops working when the file changes) -------
 # OPNsense NTP status: public NTP pool servers and their upstream refs, not lab addresses
 sha256:e1d731eea5c1361b49133bca37672f6382d83a137f0bab0ae6843fc4fd2c1c1d  docs/images/network/5-opnsense-ntp-status.png
