@@ -175,7 +175,7 @@ Wazuh includes a built-in `shuffle` integration, so basic alert forwarding requi
 ```xml
 <integration>
   <name>shuffle</name>
-  <hook_url>https://shuffle.example.local/api/v1/hooks/WEBHOOK_ID</hook_url>
+  <hook_url>__SHUFFLE_WEBHOOK_URI__</hook_url>
   <level>3</level>
   <alert_format>json</alert_format>
 </integration>
