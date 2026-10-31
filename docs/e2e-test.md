@@ -1,8 +1,7 @@
 # Issue #55 — Wazuh to TheHive end-to-end test
 
-This runbook records the first working version of the lab flow tested on 31 October 2026. It is written so another lab member can follow the same steps without needing to know how every product works.
+This runbook records the first working version of the lab flow tested on 31 October 2026. It is written so anybody can follow the same steps.
 
-## The result in one minute
 
 One controlled web request from Kali raised Wazuh rule 31103. Wazuh sent one alert to n8n. n8n found the IP in the MISP test event, submitted it to a Cortex analyzer, collected the job, and created a TheHive alert with the IP as an observable.
 
