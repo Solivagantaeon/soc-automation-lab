@@ -1,0 +1,2 @@
+stage,alert_count,notes
+raw,1766,"24h window 2026-10-24T00:00:00+02:00 .. 2026-10-25T00:00:00+02:00 (4 windows of 6h), all agents, min_level=0"
