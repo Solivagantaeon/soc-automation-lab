@@ -60,6 +60,8 @@ Only Caddy publishes ports. PostgreSQL, Redis and n8n itself are not reachable f
 
 Step-by-step runbook, with a test after every step: [`docs/runbooks/n8n-deploy.md`](../../docs/runbooks/n8n-deploy.md).
 
+First working end-to-end test (Wazuh → n8n → MISP/Cortex → TheHive): [`docs/e2e-test.md`](../../docs/e2e-test.md).
+
 | Component | Tested version |
 |---|---|
 | Proxmox VE | 9.2 |
