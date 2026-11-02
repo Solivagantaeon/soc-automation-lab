@@ -57,7 +57,7 @@ Node template:
 
 **Wazuh integration configuration:**
 
-To set the wazuh integration treshhold - Connect to the Wazuh manager and edit `/var/ossec/etc/ossec.conf`. In the existing `custom-n8n` integration block, replace the rule-ID filter with this minimum-level filter:
+To set the wazuh integration threshold - Connect to the Wazuh manager and edit `/var/ossec/etc/ossec.conf`. In the existing `custom-n8n` integration block, replace the rule-ID filter with this minimum-level filter:
 
 ```xml
 <level>12</level>
@@ -90,11 +90,28 @@ active
 
 **How to test it:** Generate a long-URL test request from Kali to the lab web server. Wazuh should create rule `31115` at level `13`, and n8n should record a successful execution after receiving the alert.
 
+To generate such test - Run this on Kali with `python3`:
+
+```python
+python3 - <<'PY'
+from urllib.request import urlopen
+
+url = "http://10.10.10.100/?probe=" + "A" * 8000
+
+with urlopen(url, timeout=10) as response:
+    print(f"HTTP {response.status}")
+PY
+```
+
 ![Wazuh recorded rule 31115 for the long-URL test](../images/n8n/66-webhook-wazuh-alert.png)
 
 ![Successful n8n execution for the test alert](../images/n8n/66-webhook-test.png)
 
+![Webhook output showing the received Wazuh alert](../images/n8n/66-webhook-payload.png)
+
+
 The test on 2026-11-02 produced the Wazuh alert at 23:36:28 and a successful n8n execution at 23:36:30, completed in 4.066 seconds.
+
 
 **If it does not work:**
 
