@@ -55,22 +55,24 @@ Node template:
 5. Publish the workflow and configure the Wazuh `custom-n8n` integration to send JSON alerts to the production Webhook URL.
 6. Set the Wazuh integration threshold to level 12. This forwards alerts at level 12 and above.
 
-**Wazuh integration configuration:**
+**Configure the Wazuh manager:**
 
-To set the wazuh integration threshold - Connect to the Wazuh manager and edit `/var/ossec/etc/ossec.conf`. In the existing `custom-n8n` integration block, replace the rule-ID filter with this minimum-level filter:
+`custom-n8n` is the custom integration script installed on the Wazuh manager at `/var/ossec/integrations/custom-n8n`. Wazuh invokes it for alerts matching the integration block. The script forwards each alert as JSON to the n8n production Webhook, using the `<api_key>` value as the authentication token.
 
-```xml
-<level>12</level>
-```
-This is a minimum threshold, so alerts at level 12 and above are forwarded. The integration continues to send JSON alerts. Keep the existing Webhook URL and authentication value in the server configuration; do not add them to the repository.
+Use the sanitized [Wazuh integration template](../../detection/wazuh/integrations/n8n-integration.xml). Add its `<integration>` block to `/var/ossec/etc/ossec.conf`, inside the existing `<ossec_config>` element. On the Wazuh manager, replace `N8N_WEBHOOK_URL` with the production Webhook URL and `N8N_WEBHOOK_TOKEN` with the token configured in the n8n Header Auth credential.
 
-After saving the file, restart the Wazuh manager and check its status:
-```xml
+The `<level>12</level>` setting is a minimum threshold, so Wazuh forwards alerts at level 12 and above. `<alert_format>json</alert_format>` sets the alert format to JSON. Keep the populated URL and token on the Wazuh manager; do not commit them.
+
+After saving the configuration, restart the Wazuh manager and check its status:
+
+```bash
 sudo systemctl restart wazuh-manager
 sudo systemctl is-active wazuh-manager
 ```
-Expected output:
-```xml
+
+The status command should return:
+
+```text
 active
 ```
 
