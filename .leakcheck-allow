@@ -46,6 +46,11 @@ sha256:e1d731eea5c1361b49133bca37672f6382d83a137f0bab0ae6843fc4fd2c1c1d  docs/im
 2606:4700:10::ac42:93f3
 2606:4700:10::6814:179a
 
+# --- Sanitized Wazuh n8n integration template placeholders -------------------------------
+N8N_WEBHOOK_URL  # Placeholder in the sanitized XML template; not a live URL.
+N8N_WEBHOOK_TOKEN  # Placeholder in the sanitized XML template; not a real token.
+
+
 # --- Service / container accounts (not people) -------------------------------------------
 # Lab VM service account on n8n-soar (home path /home/soclab in docs/runbooks/n8n-deploy.md)
 soclab
