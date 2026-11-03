@@ -10,3 +10,5 @@ dd06371ba8ecc388ae9a65fa54a0cdfbff5f3938:docs/runbooks/n8n-deploy.md:curl-auth-h
 dd06371ba8ecc388ae9a65fa54a0cdfbff5f3938:docs/runbooks/n8n-deploy.md:generic-api-key:626
 # 8373dbb (docs/56-adr-n8n): placeholder Shuffle hook_url in docs/research/soar-engine-comparison.md.
 8373dbb2dac001e93bcc6cc6eac139984b43a36b:docs/research/soar-engine-comparison.md:xml-secret-element:178
+2fa25f67d4d27d7a1d300ea2a1f6baa36dd0ad4d:detection/wazuh/integrations/n8n-integration.xml:xml-secret-element:7
+2fa25f67d4d27d7a1d300ea2a1f6baa36dd0ad4d:detection/wazuh/integrations/n8n-integration.xml:xml-secret-element:8
