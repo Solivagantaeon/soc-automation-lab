@@ -1,4 +1,3 @@
-
 #!/usr/bin/env python3
 """
 aggregate_baseline.py - Aggregates 6-hour windows collected by collect_alerts.py
