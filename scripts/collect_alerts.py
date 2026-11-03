@@ -1,4 +1,3 @@
-
 #!/usr/bin/env python3
 """
 collect_alerts.py - Collects Wazuh alerts from alerts.json for a single
