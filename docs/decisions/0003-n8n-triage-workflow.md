@@ -28,10 +28,10 @@ flowchart LR
 
 | # | Stage | What it does | Owner |
 |---|---|---|---|
-| 1 | Webhook | Receives the alert from Wazuh and checks that it really comes from Wazuh | @ |
+| 1 | Webhook | Receives the alert from Wazuh and checks that it really comes from Wazuh | @@MKonrad-afk |
 | 2 | Normalize | Turns the Wazuh alert into one common format and pulls out IPs, domains, hashes and file names | @ |
 | 3 | Dedup | Recognises the same alert sent again within a short time | @ |
-| 4 | MISP and Cortex | Checks the observables against threat intelligence | @ |
+| 4 | MISP and Cortex | Checks the observables against threat intelligence | @@MKonrad-afk |
 | 5 | Score | Gives the alert points and keeps the reason for each one | @ |
 | 6 | Decision | Picks one of three outcomes: close, review, malicious | @ |
 | 7 | Failure handling | Makes sure a broken service does not stop the workflow or hide an alert | @ |
