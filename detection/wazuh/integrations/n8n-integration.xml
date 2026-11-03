@@ -1,0 +1,12 @@
+<!--
+  Wazuh manager configuration: /var/ossec/etc/ossec.conf.
+  Place this block inside the existing <ossec_config> element.
+-->
+<integration>
+  <name>custom-n8n</name>
+  <hook_url>N8N_WEBHOOK_URL</hook_url>
+  <api_key>N8N_WEBHOOK_TOKEN</api_key>
+  <level>12</level>
+  <alert_format>json</alert_format>
+</integration>
+<!-- custom-n8n block 2; level=12; rule_id=not set -->
