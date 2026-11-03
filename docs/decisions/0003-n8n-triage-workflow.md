@@ -43,36 +43,35 @@ flowchart LR
 
 ### 1. Webhook
 
-**Owner:** @Mkonrad-afk
+**Owner:** @MKonrad-afk
 
 #### Context
 
-The goal of this stage is to send selected Wazuh alerts to the n8n Webhook. The initial design uses individual alerts so the integration can be tested without adding batch handling.
+This stage forwards selected Wazuh alerts to the n8n Webhook. The initial implementation sends alerts individually so the end-to-end integration can be validated before adding batch processing.
 
 #### Decision
 
-The Wazuh `custom-n8n` integration sends alerts in JSON format when their rule level is **12 or higher**. The setting `<level>12</level>` is a minimum threshold: it includes levels 12, 13, and above, rather than matching only alerts at level 12.
+The Wazuh `custom-n8n` integration forwards alerts in JSON format when their rule level is **12 or higher**. The `<level>12</level>` setting is a minimum threshold, so it includes alerts at levels 12, 13, and above.
 
-The n8n Webhook is configured to accept `POST` requests, authenticate using `Header Auth` with the credential named `Wazuh webhook token`, and respond using **Immediately** mode. The workflow was published so Wazuh could call its production Webhook endpoint.
+The n8n Webhook accepts `POST` requests, uses `Header Auth` with the `Wazuh webhook token` credential, and responds using **Immediately** mode.
 
-The endpoint URL and authentication value are stored in the relevant system configuration and are not included in this ADR.
+The sanitized [Wazuh integration template](../../detection/wazuh/integrations/n8n-integration.xml) is maintained in the repository. Deployment and verification steps are documented in the [n8n triage runbook](../runbooks/n8n-triage.md#1-webhook). The production Webhook URL and authentication value remain in the relevant system configuration and are not stored in the repository.
 
 #### Rationale
 
-The level 12 threshold defines a manageable first scope for individual alert forwarding. It focuses this integration on higher-level Wazuh alerts while the end-to-end Webhook path is validated.
+A level 12 threshold keeps the initial scope focused on higher-level alerts while the end-to-end Webhook path is validated. Sending alerts individually keeps the first implementation simple to verify.
 
-Header Auth requires the configured credential for a request to be accepted. Immediate response mode acknowledges the incoming request without making Wazuh wait for the workflow to finish. The n8n execution history is used to verify that processing completed successfully.
+Header Auth requires the configured credential for a request to be accepted. Immediate response mode acknowledges receipt without making Wazuh wait for the workflow to finish. The n8n execution history is used to verify that processing completed successfully.
 
 #### Verification
 
 A test request from Kali generated Wazuh rule `31115` at level `13`. Wazuh forwarded the alert, and n8n recorded a successful execution on 2026-11-02 at 23:36:30. The execution completed in 4.066 seconds.
 
-The Webhook settings and test evidence are shown in the [n8n triage runbook](../runbooks/n8n-triage.md#wazuh-webhook).
+The Webhook configuration and test evidence are shown in the [n8n triage runbook](../runbooks/n8n-triage.md#1-webhook).
 
 #### Follow-up
 
-Alerts below level 12 are not included in this stage. A follow-up should evaluate forwarding them in batches to control volume. That work will need to define the grouping interval, batch size, and whether a batch should create one or multiple TheHive alerts.
-
+Alerts below level 12 are outside this stage. [Issue #76](https://github.com/Solivagantaeon/soc-automation-lab/issues/76) tracks evaluating batch forwarding for those alerts, including the grouping interval, maximum batch size, and how batches should be represented in TheHive.
 
 ### 2. Normalize
 
