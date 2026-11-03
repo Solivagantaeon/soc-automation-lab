@@ -45,11 +45,11 @@ flowchart LR
 
 **Owner:** @Mkonrad-afk
 
-### Context
+#### Context
 
 The goal of this stage is to send selected Wazuh alerts to the n8n Webhook. The initial design uses individual alerts so the integration can be tested without adding batch handling.
 
-### Decision
+#### Decision
 
 The Wazuh `custom-n8n` integration sends alerts in JSON format when their rule level is **12 or higher**. The setting `<level>12</level>` is a minimum threshold: it includes levels 12, 13, and above, rather than matching only alerts at level 12.
 
@@ -57,19 +57,19 @@ The n8n Webhook is configured to accept `POST` requests, authenticate using `Hea
 
 The endpoint URL and authentication value are stored in the relevant system configuration and are not included in this ADR.
 
-### Rationale
+#### Rationale
 
 The level 12 threshold defines a manageable first scope for individual alert forwarding. It focuses this integration on higher-level Wazuh alerts while the end-to-end Webhook path is validated.
 
 Header Auth requires the configured credential for a request to be accepted. Immediate response mode acknowledges the incoming request without making Wazuh wait for the workflow to finish. The n8n execution history is used to verify that processing completed successfully.
 
-### Verification
+#### Verification
 
 A test request from Kali generated Wazuh rule `31115` at level `13`. Wazuh forwarded the alert, and n8n recorded a successful execution on 2026-11-02 at 23:36:30. The execution completed in 4.066 seconds.
 
 The Webhook settings and test evidence are shown in the [n8n triage runbook](../runbooks/n8n-triage.md#wazuh-webhook).
 
-### Follow-up
+#### Follow-up
 
 Alerts below level 12 are not included in this stage. A follow-up should evaluate forwarding them in batches to control volume. That work will need to define the grouping interval, batch size, and whether a batch should create one or multiple TheHive alerts.
 
