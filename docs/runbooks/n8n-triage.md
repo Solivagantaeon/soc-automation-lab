@@ -42,43 +42,43 @@ Node template:
 
 ## 1. Webhook
 
-**Owner:** @
+**Owner:** @MKonrad-afk
 
 ## 2. Normalize
 
-**Owner:** @
+**Owner:** @84rtek
 
 ## 3. Dedup
 
-**Owner:** @
+**Owner:** @arturesturemkuros
 
 ## 4. MISP and Cortex
 
-**Owner:** @
+**Owner:** @MKonrad-afk
 
 ## 5. Score
 
-**Owner:** @
+**Owner:** @arturesturemkuros
 
 ## 6. Decision
 
-**Owner:** @
+**Owner:** @arturesturemkuros
 
 ## 7. Failure handling
 
-**Owner:** @
+**Owner:** @p4chatek
 
 ## 8. TheHive
 
-**Owner:** @
+**Owner:** @Solivagantaeon
 
 ## 9. Audit
 
-**Owner:** @
+**Owner:** @Maartini22
 
 ## 10. Counters
 
-**Owner:** @
+**Owner:** @Maartini22
 
 ## Full test
 
