@@ -79,7 +79,59 @@ Alerts below level 12 are outside this stage. [Issue #76](https://github.com/Sol
 
 **Owner:** @84rtek
 
+#### Context
 
+Wazuh alerts can reach n8n in different JSON structures, depending on whether the payload is a raw Wazuh alert, an Elasticsearch document, or a Shuffle-style wrapper. Downstream workflow stages need a consistent representation of the alert and its observables.
+
+The Normalize stage was added to the separate `SOC - n8n E2E Skeleton` workflow directly after the Webhook. Version 1.2 of the JavaScript Code node was tested with six synthetic lab scenarios.
+
+#### Decision
+
+A JavaScript Code node normalizes all incoming items using **Run Once for All Items** mode. It recognizes these input formats:
+
+- raw Wazuh alerts;
+- Elasticsearch documents containing `_source`;
+- Shuffle-style payloads containing `all_fields`.
+
+The node produces a common alert object containing alert metadata, rule details, agent information, event context, observables, a primary observable, and a deduplication key.
+
+The observable extraction covers IP addresses, domains, URLs, URI paths, MD5/SHA1/SHA256 hashes, filenames, Windows registry keys, users, hostnames, and User-Agent values. Each observable retains its source field and an `internal` flag where applicable.
+
+An agent's internal IP is retained as context and marked `internal: true`; it is not automatically selected as the primary IOC. If no eligible primary observable is present, `primary_observable` is set to `-`.
+
+The node generates a `dedup_key` from the rule, signature, agent, and primary observable fields. This stage only creates the key; actual duplicate detection is handled by the separate Dedup stage.
+
+#### Rationale
+
+A common output structure allows later workflow stages to consume alert data without depending on the original payload layout. Keeping the source field and internal/external distinction helps downstream logic interpret observables correctly.
+
+The primary observable fallback of `-` prevents an endpoint's own internal IP from being mistaken for an external IOC when an alert contains no IOC. Keeping the agent IP in the observables list preserves useful endpoint context.
+
+Separating key generation from duplicate detection keeps Normalize focused on data preparation and Dedup responsible for duplicate handling.
+
+#### Verification
+
+Normalize v1.2 passed six functional tests using synthetic lab data:
+
+| Test | Input scenario | Verified result |
+|---|---|---|
+| 1 | Network / DNS / HTTP | Extracted IP, domain, URL, filename, user, and User-Agent |
+| 2 | Sysmon / hashes | Extracted MD5, SHA1, SHA256, file path, command line, and user |
+| 3 | Syscheck / Windows Registry | Classified the registry path as `registry_key` |
+| 4 | Raw Wazuh | Recognized raw input and extracted the external IP |
+| 5 | Shuffle wrapper | Recognized `all_fields` and extracted SHA256 and filename |
+| 6 | Alert without IOC | Preserved agent context and returned `primary_observable: "-"` |
+
+The Code node was also verified to use **Run Once for All Items** mode.
+
+These tests validate the normalization logic with the supplied test data. They do not, by themselves, validate Webhook authentication, live Wazuh delivery, downstream MISP/Cortex enrichment, or end-to-end deduplication. [Normalize v1.2 Code node](../../soar/n8n/nodes/normalize-v1.2.js)
+Detailed build and test instructions are recorded in the [n8n triage runbook](../runbooks/n8n-triage.md#2-normalize).
+
+#### Follow-up
+
+The current hash extraction test confirms that all three hash types are collected. The test selected MD5 as the primary hash because of the current extraction/selection order; a SHA256-first preference can be considered separately if required by downstream analyzer routing.
+
+The generated `dedup_key` must be consumed and tested by the Dedup stage.
 
 ### 3. Dedup
 

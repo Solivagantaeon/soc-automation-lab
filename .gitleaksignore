@@ -12,3 +12,6 @@ dd06371ba8ecc388ae9a65fa54a0cdfbff5f3938:docs/runbooks/n8n-deploy.md:generic-api
 8373dbb2dac001e93bcc6cc6eac139984b43a36b:docs/research/soar-engine-comparison.md:xml-secret-element:178
 2fa25f67d4d27d7a1d300ea2a1f6baa36dd0ad4d:detection/wazuh/integrations/n8n-integration.xml:xml-secret-element:7
 2fa25f67d4d27d7a1d300ea2a1f6baa36dd0ad4d:detection/wazuh/integrations/n8n-integration.xml:xml-secret-element:8
+# 1d290e9: sanitized Wazuh n8n template placeholders, not live values
+1d290e9a37d571215117fb9c5ac2015cbc9b184d:detection/wazuh/integrations/n8n-integration.xml:xml-secret-element:7
+1d290e9a37d571215117fb9c5ac2015cbc9b184d:detection/wazuh/integrations/n8n-integration.xml:xml-secret-element:8
