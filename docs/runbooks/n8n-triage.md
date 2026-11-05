@@ -159,15 +159,17 @@ Example expected output for the no-IOC scenario:
 }
 ```
 
+
 **Evidence:**
 
-Add screenshots of the Code node configuration and representative test outputs to `docs/images/n8n/`. Suggested filenames:
+The following screenshots show the Normalize configuration, its position in the workflow, and the mapping of the normalized primary observable into the MISP search node.
 
-- `67-normalize-settings.png` – Code node showing `Run Once for All Items` and JavaScript.
-- `67-normalize-network-test.png` – Network / DNS / HTTP output.
-- `67-normalize-hashes-test.png` – Sysmon hashes output.
-- `67-normalize-registry-test.png` – Windows Registry output.
-- `67-normalize-no-ioc-test.png` – No-IOC output showing `primary_observable: "-"`.
+![Normalize Code node settings](../images/n8n/67-normalize-settings.png)
+
+![Normalize node in the n8n workflow](../images/n8n/67-normalize-workflow.png)
+
+![MISP search using the normalized primary observable](../images/n8n/67-normalize-misp-mapping.png)
+
 
 Only include screenshots that have actually been captured and checked into the repository.
 
