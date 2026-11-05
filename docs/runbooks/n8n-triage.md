@@ -55,26 +55,11 @@ Node template:
 5. Publish the workflow and configure the Wazuh `custom-n8n` integration to send JSON alerts to the production Webhook URL.
 6. Set the Wazuh integration threshold to level 12. This forwards alerts at level 12 and above.
 
-**Configure the Wazuh manager:**
+**Wazuh manager integration:**
 
-`custom-n8n` is the custom integration script installed on the Wazuh manager at `/var/ossec/integrations/custom-n8n`. Wazuh invokes it for alerts matching the integration block. The script forwards each alert as JSON to the n8n production Webhook, using the `<api_key>` value as the authentication token.
+The Wazuh manager applies the alert-level filter before sending alerts to n8n. Its `custom-n8n` integration block selects JSON alerts at level 12 and above, then invokes the custom script to forward them to the Webhook. The n8n Webhook handles the incoming request; it does not set this threshold.
 
-Use the sanitized [Wazuh integration template](../../detection/wazuh/integrations/n8n-integration.xml). Add its `<integration>` block to `/var/ossec/etc/ossec.conf`, inside the existing `<ossec_config>` element. On the Wazuh manager, replace `N8N_WEBHOOK_URL` with the production Webhook URL and `N8N_WEBHOOK_TOKEN` with the token configured in the n8n Header Auth credential.
-
-The `<level>12</level>` setting is a minimum threshold, so Wazuh forwards alerts at level 12 and above. `<alert_format>json</alert_format>` sets the alert format to JSON. Keep the populated URL and token on the Wazuh manager; do not commit them.
-
-After saving the configuration, restart the Wazuh manager and check its status:
-
-```bash
-sudo systemctl restart wazuh-manager
-sudo systemctl is-active wazuh-manager
-```
-
-The status command should return:
-
-```text
-active
-```
+The sanitized [Wazuh integration template](../../detection/wazuh/integrations/n8n-integration.xml) shows the manager-side configuration. For the script installation, CA setup, and delivery verification steps, see the [Wazuh integrations README](../../detection/wazuh/integrations/README.md).
 
 **Webhook node settings:**
 | Setting | Value |
