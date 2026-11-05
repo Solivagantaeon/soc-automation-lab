@@ -41,35 +41,67 @@ Node template:
 -->
 
 ## 1. Webhook
-#### Context
+**What it does:** Receives Wazuh alerts as JSON over an authenticated HTTP POST request and immediately acknowledges receipt.
 
-This stage forwards selected Wazuh alerts to the n8n Webhook. The initial implementation sends alerts individually so the end-to-end integration can be validated before adding batch processing.
+**How to build it:**
 
-#### Decision
+1. Add a Webhook node to the n8n workflow.
+2. Set **HTTP Method** to `POST`.
+3. Set **Authentication** to `Header Auth` and select the existing `Wazuh webhook token` credential.
+4. Set **Respond** to `Immediately`.
+5. Publish the workflow and configure the Wazuh `custom-n8n` integration to send JSON alerts to the production Webhook URL.
+6. Set the Wazuh integration threshold to level 12. This forwards alerts at level 12 and above.
 
-The Wazuh `custom-n8n` integration forwards alerts in JSON format when their rule level is **12 or higher**. The `<level>12</level>` setting is a minimum threshold, so it includes alerts at levels 12, 13, and above.
+**Wazuh manager integration:**
 
-The n8n Webhook accepts `POST` requests, uses `Header Auth` with the `Wazuh webhook token` credential, and responds using **Immediately** mode.
+The Wazuh manager applies the alert-level filter before sending alerts to n8n. Its `custom-n8n` integration block selects JSON alerts at level 12 and above, then invokes the custom script to forward them to the Webhook. The n8n Webhook handles the incoming request; it does not set this threshold.
 
-The sanitized [Wazuh integration template](../../detection/wazuh/integrations/n8n-integration.xml) is maintained in the repository. Deployment and verification steps are documented in the [n8n triage runbook](../runbooks/n8n-triage.md#1-webhook). The production Webhook URL and authentication value remain in the relevant system configuration and are not stored in the repository.
+The sanitized [Wazuh integration template](../../detection/wazuh/integrations/n8n-integration.xml) shows the manager-side configuration. For the script installation, CA setup, and delivery verification steps, see the [Wazuh integrations README](../../detection/wazuh/integrations/README.md).
 
-The manager-side script, configuration, installation, and delivery checks are documented in the [Wazuh integrations README](../../detection/wazuh/integrations/README.md).
+**Webhook node settings:**
+| Setting | Value |
+|---|---|
+| HTTP Method | `POST` |
+| Authentication | `Header Auth` |
+| Credential | `Wazuh webhook token` |
+| Respond | `Immediately` |
+| Wazuh alert format | JSON |
+| Wazuh minimum level | `12` |
 
-#### Rationale
+![Webhook node settings: POST, Header Auth, and Respond Immediately](../images/n8n/66-webhook.png)
 
-A level 12 threshold keeps the initial scope focused on higher-level alerts while the end-to-end Webhook path is validated. Sending alerts individually keeps the first implementation simple to verify.
 
-Header Auth requires the configured credential for a request to be accepted. Immediate response mode acknowledges receipt without making Wazuh wait for the workflow to finish. The n8n execution history is used to verify that processing completed successfully.
 
-#### Verification
+**How to test it:** Generate a long-URL test request from Kali to the lab web server. Wazuh should create rule `31115` at level `13`, and n8n should record a successful execution after receiving the alert.
 
-A test request from Kali generated Wazuh rule `31115` at level `13`. Wazuh forwarded the alert, and n8n recorded a successful execution on 2026-11-02 at 23:36:30. The execution completed in 4.066 seconds.
+To generate such test - Run this on Kali with `python3`:
 
-The Webhook configuration and test evidence are shown in the [n8n triage runbook](../runbooks/n8n-triage.md#1-webhook).
+```python
+python3 - <<'PY'
+from urllib.request import urlopen
 
-#### Follow-up
+url = "http://10.10.10.100/?probe=" + "A" * 8000
 
-Alerts below level 12 are outside this stage. [Issue #76](https://github.com/Solivagantaeon/soc-automation-lab/issues/76) tracks evaluating batch forwarding for those alerts, including the grouping interval, maximum batch size, and how batches should be represented in TheHive.
+with urlopen(url, timeout=10) as response:
+    print(f"HTTP {response.status}")
+PY
+```
+
+![Wazuh recorded rule 31115 for the long-URL test](../images/n8n/66-webhook-wazuh-alert.png)
+
+![Successful n8n execution for the test alert](../images/n8n/66-webhook-test.png)
+
+![Webhook output showing the received Wazuh alert](../images/n8n/66-webhook-payload.png)
+
+
+The test on 2026-11-02 produced the Wazuh alert at 23:36:28 and a successful n8n execution at 23:36:30, completed in 4.066 seconds.
+
+
+**If it does not work:**
+
+| What you see | Cause | Fix |
+|---|---|---|
+| Wazuh records the alert, but no n8n execution appears | The workflow is not published, or Wazuh is sending to the test URL | Publish the workflow and configure Wazuh to use the production Webhook URL |
 
 ## 2. Normalize
 
