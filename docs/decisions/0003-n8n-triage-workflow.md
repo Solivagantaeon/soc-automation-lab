@@ -29,15 +29,15 @@ flowchart LR
 | # | Stage | What it does | Owner |
 |---|---|---|---|
 | 1 | Webhook | Receives the alert from Wazuh and checks that it really comes from Wazuh | @MKonrad-afk |
-| 2 | Normalize | Turns the Wazuh alert into one common format and pulls out IPs, domains, hashes and file names | @ |
-| 3 | Dedup | Recognises the same alert sent again within a short time | @ |
+| 2 | Normalize | Turns the Wazuh alert into one common format and pulls out IPs, domains, hashes and file names | @84rtek |
+| 3 | Dedup | Recognises the same alert sent again within a short time | @arturesturemkuros |
 | 4 | MISP and Cortex | Checks the observables against threat intelligence | @MKonrad-afk |
-| 5 | Score | Gives the alert points and keeps the reason for each one | @ |
-| 6 | Decision | Picks one of three outcomes: close, review, malicious | @ |
-| 7 | Failure handling | Makes sure a broken service does not stop the workflow or hide an alert | @ |
-| 8 | TheHive | Creates the alert the analyst works on | @ |
-| 9 | Audit | Keeps the reason for every alert closed automatically | @ |
-| 10 | Counters | Counts alerts at every stage, so we can show the reduction | @ |
+| 5 | Score | Gives the alert points and keeps the reason for each one | @arturesturemkuros |
+| 6 | Decision | Picks one of three outcomes: close, review, malicious | @arturesturemkuros |
+| 7 | Failure handling | Makes sure a broken service does not stop the workflow or hide an alert | @p4chatek |
+| 8 | TheHive | Creates the alert the analyst works on | @Solivagantaeon |
+| 9 | Audit | Keeps the reason for every alert closed automatically | @Maartini22 |
+| 10 | Counters | Counts alerts at every stage, so we can show the reduction | @arturesturemkuros |
 
 
 
@@ -77,51 +77,51 @@ Alerts below level 12 are outside this stage. [Issue #76](https://github.com/Sol
 
 ### 2. Normalize
 
-**Owner:** @
+**Owner:** @84rtek
 
 
 
 ### 3. Dedup
 
-**Owner:** @
+**Owner:** @arturesturemkuros
 
 
 
 ### 4. MISP and Cortex
 
-**Owner:** @
+**Owner:** @MKonrad-afk
 
 
 
 ### 5. Score
 
-**Owner:** @
+**Owner:** @arturesturemkuros
 
 
 
 ### 6. Decision
 
-**Owner:** @
+**Owner:** @arturesturemkuros
 
 
 
 ### 7. Failure handling
 
-**Owner:** @
+**Owner:** @p4chatek
 
 
 
 ### 8. TheHive
 
-**Owner:** @
+**Owner:** @Solivagantaeon
 
 
 
 ### 9. Audit
 
-**Owner:** @
+**Owner:** @Maartini22
 
 
 ### 10. Counters
 
-**Owner:** @
+**Owner:** @arturesturemkuros
