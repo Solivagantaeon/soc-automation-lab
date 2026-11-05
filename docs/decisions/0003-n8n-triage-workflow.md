@@ -50,136 +50,60 @@ flowchart LR
 
 **Owner:** @84rtek
 
-**What it does:** Converts raw Wazuh, Elasticsearch, and Shuffle-wrapper alert payloads into a common JSON structure and extracts observables for downstream processing.
+#### Context
 
-**How to build it:**
+Wazuh alerts can reach n8n in different JSON structures, depending on whether the payload is a raw Wazuh alert, an Elasticsearch document, or a Shuffle-style wrapper. Downstream workflow stages need a consistent representation of the alert and its observables.
 
-1. Add a **Code** node immediately after the Webhook node in the Skeleton workflow.
-2. Name the node `Normalize` (or keep the current node name if it is already referenced elsewhere in the workflow).
-3. Set **Mode** to `Run Once for All Items`.
-4. Set **Language** to `JavaScript`.
-5. Paste the Normalize v1.2 JavaScript implementation into the code editor.
-6. Connect the Code node output to the next workflow stage.
-7. Save the workflow.
+The Normalize stage was added to the separate `SOC - n8n E2E Skeleton` workflow directly after the Webhook. Version 1.2 of the JavaScript Code node was tested with six synthetic lab scenarios.
 
-**Code node settings:**
+#### Decision
 
-| Setting | Value |
-|---|---|
-| Node type | `Code` |
-| Mode | `Run Once for All Items` |
-| Language | `JavaScript` |
-| Implementation | Normalize v1.2 |
+A JavaScript Code node normalizes all incoming items using **Run Once for All Items** mode. It recognizes these input formats:
 
-**Input formats:**
+- raw Wazuh alerts;
+- Elasticsearch documents containing `_source`;
+- Shuffle-style payloads containing `all_fields`.
 
-| Format | Recognition |
-|---|---|
-| Raw Wazuh | Unwrapped Wazuh alert JSON |
-| Elasticsearch | Alert document containing `_source` |
-| Shuffle wrapper | Payload containing `all_fields` |
+The node produces a common alert object containing alert metadata, rule details, agent information, event context, observables, a primary observable, and a deduplication key.
 
-**Normalized output:**
+The observable extraction covers IP addresses, domains, URLs, URI paths, MD5/SHA1/SHA256 hashes, filenames, Windows registry keys, users, hostnames, and User-Agent values. Each observable retains its source field and an `internal` flag where applicable.
 
-The node produces one normalized alert object per input item. Main fields include:
+An agent's internal IP is retained as context and marked `internal: true`; it is not automatically selected as the primary IOC. If no eligible primary observable is present, `primary_observable` is set to `-`.
 
-| Field | Purpose |
-|---|---|
-| `alert_id` | Original alert identifier |
-| `timestamp` | Event timestamp |
-| `source_format` | Detected input format: `raw`, `elasticsearch`, or `shuffle-wrapper` |
-| `rule` | Rule ID, level, description, groups, and MITRE data |
-| `agent` | Agent ID, name, and IP |
-| `location`, `decoder` | Event source context |
-| `syscheck`, `signature`, `command_line`, `full_log` | Additional event context when available |
-| `observables` | Extracted observables with type, value, source field, and internal flag |
-| `primary_observable` | Selected primary observable, or `-` when none is eligible |
-| `dedup_key` | Key prepared for the separate Dedup stage |
+The node generates a `dedup_key` from the rule, signature, agent, and primary observable fields. This stage only creates the key; actual duplicate detection is handled by the separate Dedup stage.
 
-**Observable types:**
+#### Rationale
 
-| Type | Examples |
-|---|---|
-| `ip` | IPv4 and IPv6 addresses |
-| `domain` | Domain names |
-| `url` | Full URLs |
-| `uri_path` | URI paths |
-| `hash` | MD5, SHA1, SHA256 |
-| `filename` | File names |
-| `registry_key` | Windows registry paths |
-| `user` | User names |
-| `hostname` | Host names |
-| `other` | Other retained values, including User-Agent |
+A common output structure allows later workflow stages to consume alert data without depending on the original payload layout. Keeping the source field and internal/external distinction helps downstream logic interpret observables correctly.
 
-Internal endpoint data, such as `agent.ip`, remains available in `observables` with `internal: true`. It is not automatically treated as an external IOC or selected as `primary_observable`. When no eligible IOC is present, the primary value is `-`.
+The primary observable fallback of `-` prevents an endpoint's own internal IP from being mistaken for an external IOC when an alert contains no IOC. Keeping the agent IP in the observables list preserves useful endpoint context.
 
-The `dedup_key` is generated during normalization. This does not perform duplicate detection; that is the responsibility of the Dedup stage.
+Separating key generation from duplicate detection keeps Normalize focused on data preparation and Dedup responsible for duplicate handling.
 
-**How to test it:**
+#### Verification
 
-Use Webhook mock data (or the n8n node's pinned/mock input data) to execute the Code node against each of the six test scenarios below. These are functional tests of Normalize and do not test live Webhook delivery or Header Auth.
+Normalize v1.2 passed six functional tests using synthetic lab data:
 
-| Test | Input scenario | Expected result |
+| Test | Input scenario | Verified result |
 |---|---|---|
-| 1 | Network / DNS / HTTP | Extract IP, domain, URL, filename, user, and User-Agent |
-| 2 | Sysmon / hashes | Extract MD5, SHA1, SHA256, file path, command line, and user |
-| 3 | Syscheck / Windows Registry | Extract registry path as `registry_key` |
-| 4 | Raw Wazuh | Recognize `raw` format and extract external IP |
-| 5 | Shuffle wrapper | Recognize `shuffle-wrapper` and extract SHA256 and filename |
-| 6 | Alert without IOC | Preserve agent context and return `primary_observable: "-"` |
+| 1 | Network / DNS / HTTP | Extracted IP, domain, URL, filename, user, and User-Agent |
+| 2 | Sysmon / hashes | Extracted MD5, SHA1, SHA256, file path, command line, and user |
+| 3 | Syscheck / Windows Registry | Classified the registry path as `registry_key` |
+| 4 | Raw Wazuh | Recognized raw input and extracted the external IP |
+| 5 | Shuffle wrapper | Recognized `all_fields` and extracted SHA256 and filename |
+| 6 | Alert without IOC | Preserved agent context and returned `primary_observable: "-"` |
 
-All six scenarios passed with Normalize v1.2.
+The Code node was also verified to use **Run Once for All Items** mode.
 
-Example expected output for the no-IOC scenario:
+These tests validate the normalization logic with the supplied test data. They do not, by themselves, validate Webhook authentication, live Wazuh delivery, downstream MISP/Cortex enrichment, or end-to-end deduplication.
 
-```json
-{
-  "source_format": "raw",
-  "observables": [
-    {
-      "dataType": "ip",
-      "data": "10.10.10.171",
-      "field": "agent.ip",
-      "internal": true
-    },
-    {
-      "dataType": "other",
-      "data": "SYSTEM",
-      "field": "data.win.eventdata.user",
-      "internal": true,
-      "kind": "user"
-    },
-    {
-      "dataType": "hostname",
-      "data": "SOC-WIN11-AI",
-      "internal": true
-    }
-  ],
-  "primary_observable": "-",
-  "dedup_key": "soc:dedup:100506::004:-"
-}
-```
+Detailed build and test instructions are recorded in the [n8n triage runbook](../runbooks/n8n-triage.md#2-normalize).
 
-**Evidence:**
+#### Follow-up
 
-Add screenshots of the Code node configuration and representative test outputs to `docs/images/n8n/`. Suggested filenames:
+The current hash extraction test confirms that all three hash types are collected. The test selected MD5 as the primary hash because of the current extraction/selection order; a SHA256-first preference can be considered separately if required by downstream analyzer routing.
 
-- `67-normalize-settings.png` – Code node showing `Run Once for All Items` and JavaScript.
-- `67-normalize-network-test.png` – Network / DNS / HTTP output.
-- `67-normalize-hashes-test.png` – Sysmon hashes output.
-- `67-normalize-registry-test.png` – Windows Registry output.
-- `67-normalize-no-ioc-test.png` – No-IOC output showing `primary_observable: "-"`.
-
-Only include screenshots that have actually been captured and checked into the repository.
-
-**If it does not work:**
-
-| What you see | Cause | Fix |
-|---|---|---|
-| Code node reports an error when using `$input.all()` | The node is not configured to process all input items | Set Mode to `Run Once for All Items` |
-| `source_format` is unexpected | Input payload does not match the expected raw, Elasticsearch, or Shuffle-wrapper structure | Inspect the incoming JSON and confirm its wrapper/field names |
-| No IOC is found | The alert does not contain an eligible external observable, or the relevant field is not covered by the extractor | Inspect the original payload; keep internal agent context distinct from external IOC data |
-| Registry path is treated as a filename | The input field is not recognized as a Windows registry path | Check the source field and the registry detection logic |
+The generated `dedup_key` must be consumed and tested by the Dedup stage.
 
 ### 3. Dedup
 
