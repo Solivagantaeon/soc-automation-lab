@@ -143,6 +143,35 @@ The generated `dedup_key` must be consumed and tested by the Dedup stage.
 
 **Owner:** @MKonrad-afk
 
+#### Context
+
+MISP is the local threat-intelligence lookup, while Cortex runs analyzer jobs for supported observables. The initial graph checked a limited set of values and returned asynchronous Cortex jobs. Repeated hashes could create repeated analyzer jobs, and a finished workflow could still contain a pending report.
+
+#### Decision
+
+MISP Attribute Search receives the normalized observable values in one search request. Cortex observables are split into one item per observable, deduplicated within the alert by type plus normalized value, and routed by type to AbuseIPDB (IP), Maltiverse (domain), Team Cymru MHR and CIRCL Hashlookup (hash), or VirusTotal GetReport (URL). The current graph does not route file bytes, but it checks file hashes.
+
+The internal-IP eligibility IF sits on the IP route before AbuseIPDB. Tested private IPs were skipped and preserved in the summary. The graph does prove the equivalent rule for local domains and URLs. See the runbook section for the exact route evidence.
+
+Each analyzer is submitted once. If its report is still Waiting or InProgress, the workflow waits two seconds and retries Get a report using the same job ID. The configured wait/retry counts are 5 for eeach one. The earlier MaxMind branch used 2 and is no longer present. Each branch and the final result use Append Merge. Summary Enrichments groups MISP rows, Cortex reports, skipped IPs, pending jobs, and failures.
+
+Since Cortex itself can reuse a prior job according to each analyzer's `jobCache` configuration, the workflow has no additional cache. MISP has no separate workflow cache because its local lookup did not show repeated polling or a measured need for one.
+While testing the worflow I noticed that MISP work fast enough to not need aditinal cache, the situation was worse in the case of Cortex - some tests took close to 1 minute to finish. Therefore, I decided to not use analyzers like: UnshortenLink or MaxMindGeo.
+
+#### Rationale
+
+One MISP search keeps local threat-intelligence matching separate from external analysis. Type-specific routes avoid asking analyzers to process unsupported data. Deduplication reduces repeated work within a single alert, while Cortex-native caching may cover identical jobs across alerts if the analyzer configuration enables it.
+
+Report polling prevents unnecessary analyzer resubmissions and gives slow jobs a bounded opportunity to finish. A finite wait limit lets the workflow proceed with an explicit `partial` status instead of presenting an unfinished job as a clean result. Append is used to collect variable counts of MISP and Cortex rows; the JavaScript summary performs grouping after collection.
+
+#### Verification
+
+IP, domain, URL, hash, nested Sysmon IP, SSH authentication, and no-external-IOC tests are documented with observed outputs and runtimes in the [n8n triage runbook](../runbooks/n8n-triage.md#4-misp-and-cortex). Tests show that MISP preserves attribute/event context, supported observable types reach their configured analyzers, private IPs are skipped, and a no-IOC alert completes without a Cortex job.
+
+Timings varied from about 1.18 seconds to more than 50 seconds. They are whole-workflow observations with different inputs and pending states, not controlled analyzer benchmarks. Removing MaxMind and shortening Wait intervals coincided with faster runs, but the tests do not isolate either change as the sole cause.
+
+#### Follow-up
+ MISP deployment details remain in [Lab Setup](../lab-setup.md), [Components](../components.md), and the [MISP README](../../enrichment/misp/README.md).
 
 
 ### 5. Score
