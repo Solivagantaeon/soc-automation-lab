@@ -254,6 +254,221 @@ Only include screenshots that have actually been captured and checked into the r
 
 **Owner:** @MKonrad-afk
 
+**What it does:** Searches normalized alert observables in MISP and submits eligible IP, domain, URL, and hash observables to their configured Cortex analyzers. Cortex results and skipped observables are collected for the final alert summary.
+
+![Issue #69 n8n enrichment workflow overview](../images/n8n/69-workflow-overview.png)
+
+*Figure. The full workflow, including its separate MISP and Cortex enrichment branches.*
+
+### MISP branch
+
+#### Node: Get a filtered list of attributes
+
+**What it does:** Searches MISP for attributes matching the normalized observables and returns matches with their event and attribute context.
+
+**How to build it:**
+
+1. Add the MISP **Get a filtered list of attributes** node to the branch from `Normalize Alert`.
+2. Select the existing MISP credential.
+3. Map the normalized observable data to the node's search input, following the current node configuration.
+4. Keep the MISP branch independent of the Cortex eligibility and analyzer routes.
+
+![MISP Attribute Search and lab results](../images/n8n/69-misp-search-and-results.png)
+
+*Figure. MISP Attribute Search and example lab results for the public IP address.*
+
+| Setting | Value |
+|---|---|
+| Node | `Get a filtered list of attributes` |
+| Credential | Existing MISP credential |
+| Search input | Normalized alert observables |
+| Output used by summary | `misp.attribute_count`, `misp.unique_indicators` |
+
+**How to test it:** Send the raw Wazuh lab alert for rule `100723`. The test returned two MISP attributes for `1.1.1.1`. Both had `to_ids: false`. One included a warninglist comment identifying the address as a known public DNS resolver. Review each attribute's comment, `to_ids`, `disable_correlation`, event, and warninglist context. A match or a `to_ids` value alone is not a malicious or benign verdict.
+
+**If it does not work:**
+
+| What you see | Cause | Fix |
+|---|---|---|
+| `attribute_count` is `0` | The search completed without matching attributes, or the search input was empty or mapped incorrectly | Inspect the normalized observable values and the MISP node's search input |
+| An attribute has `to_ids: false` | IDS export is disabled for that attribute, for example by a warninglist | Preserve and review the attribute and event context. Do not treat this value as a verdict |
+
+### Cortex branch
+
+#### Node: Split Cortex Observables
+
+**What it does:** Converts the normalized `observables` array into one n8n item per observable while retaining the alert context.
+
+**How to build it:**
+
+1. Connect the node after `Normalize Alert`.
+2. Split the `observables` field into individual items.
+3. Confirm that each item still contains the alert metadata and the observable fields required by downstream nodes.
+
+![Cortex observable preparation and type routing](../images/n8n/69-normalize-dedup-routing.png)
+
+*Figure. Observable items after preparation, deduplication, and type routing.*
+
+| Setting | Value |
+|---|---|
+| Node | `Split Cortex Observables` |
+| Field to split | `observables` |
+| Expected output | One item per observable |
+
+**How to test it:** Use rule `100723`. Its seven observables should be available as individual items after the split.
+
+#### Node: Dedupe Cortex Observables
+
+**What it does:** Removes duplicate observables within the alert using the normalized observable type and value, while retaining the source fields and internal status.
+
+**How to build it:**
+
+1. Add a JavaScript **Code** node after `Split Cortex Observables`.
+2. Set **Mode** to `Run Once for All Items`.
+3. Use the implementation in [`dedupe-cortex-observadables.js`](../../soar/n8n/nodes/dedupe-cortex-observadables.js).
+
+| Setting | Value |
+|---|---|
+| Mode | `Run Once for All Items` |
+| Language | `JavaScript` |
+| Implementation | [`dedupe-cortex-observadables.js`](../../soar/n8n/nodes/dedupe-cortex-observadables.js) |
+
+**How to test it:** Confirm that repeated type/value pairs produce one item and that the retained item preserves its source fields and `internal` flag.
+
+#### Node: Cortex Eligibility
+
+**What it does:** Adds `cortex_eligible` and `cortex_skip_reason` to each observable so all Cortex routes use the same eligibility checks.
+
+**How to build it:**
+
+1. Add a JavaScript **Code** node after `Dedupe Cortex Observables`.
+2. Evaluate each observable item individually.
+3. Use the implementation in [`cortex-eligibility.js`](../../soar/n8n/nodes/cortex-eligibility.js).
+
+![Cortex eligibility check](../images/n8n/69-cortex-ip-eligibility-filter.png)
+
+*Figure. The shared eligibility check identifies observables that can continue to Cortex.*
+
+| Setting | Value |
+|---|---|
+| Mode | `Run Once for Each Item` |
+| Language | `JavaScript` |
+| Implementation | [`cortex-eligibility.js`](../../soar/n8n/nodes/cortex-eligibility.js) |
+| Eligibility fields | `cortex_eligible`, `cortex_skip_reason` |
+
+The current eligibility rules allow non-internal hashes and supported public IP, domain, and URL observables. Internal, invalid, or non-public values are skipped. Unsupported types such as `filename` are also skipped.
+
+#### Node: Cortex eligible?
+
+**What it does:** Sends eligible observables to the type router and sends ineligible observables to `Mark Cortex skipped`.
+
+**How to build it:**
+
+1. Add an IF node after `Cortex Eligibility`.
+2. Check whether `cortex_eligible` is `true`.
+3. Connect the true output to `router of types`.
+4. Connect the false output to `Mark Cortex skipped`.
+
+| Setting | Value |
+|---|---|
+| Condition | `{{$json.cortex_eligible}}` |
+| Operator | `is true` |
+| True output | `router of types` |
+| False output | `Mark Cortex skipped` |
+
+#### Node: Mark Cortex skipped
+
+**What it does:** Records an observable that was filtered out, including its type, value, source field, internal flag, and skip reason.
+
+**How to build it:**
+
+1. Connect the false output of `Cortex eligible?` to this node.
+2. Set `record_type` to `cortex_skipped`.
+3. Map the observable fields and `cortex_skip_reason` into the skipped record.
+4. Confirm that the reason is mapped once.
+
+**How to test it:** Rule `100723` should preserve the internal source IP, agent IP, and hostname in the skipped list with a reason for each.
+
+#### Node: router of types
+
+**What it does:** Routes each eligible observable to the analyzer branch for its type.
+
+| Observable type | Analyzer |
+|---|---|
+| `ip` | `AbuseIPDB_2_0` |
+| `domain` | `Maltiverse_Report_1_0` |
+| `hash` | `TeamCymruMHR_1_0` and `CIRCLHashlookup_1_1` |
+| `url` | `VirusTotal_GetReport_3_1` |
+
+The route rules use the normalized observable type. Analyzer nodes use the corresponding observable type and value from the observable item.
+
+#### Cortex analyzer execution and report polling
+
+**Execute** starts an analysis in Cortex for one observable. Cortex returns a job ID. Think of this ID as a tracking number for that analysis.
+
+**Get a report** uses that same ID to check whether the analysis is ready and to collect its result. If Cortex is still working, n8n waits two seconds and checks again. It repeats this up to five times. If the analysis is still unfinished, the workflow records it as pending and continues.
+
+```mermaid
+flowchart TD
+    A["Execute starts one analysis"] --> B["Cortex returns a job ID"]
+    B --> C["Get a report checks that same ID"]
+    C --> D{"Is the result ready?"}
+    D -- "Yes" --> E["Send the result to Merge"]
+    D -- "No" --> F["Wait 2 seconds"]
+    F --> G{"Are retries left?"}
+    G -- "Yes" --> C
+    G -- "No" --> H["Record as pending"]
+```
+
+*Figure. One Cortex job is checked repeatedly using the same job ID until it finishes or reaches the retry limit.*
+
+![Cortex analyzer routes and polling branches](../images/n8n/69-analyzer-polling-branches.png)
+
+*Figure. Analyzer branches submit jobs and poll their reports before sending results to Merge.*
+
+**How to test it:** Use rule `100723`. Open an **Execute** result and note its job ID. In the matching **Get a report** node, confirm that the same ID is used. Seeing `Waiting` on the first check is normal. The workflow should wait and check that same ID again.
+
+#### Node: Summary Enrichments
+
+**What it does:** Combines MISP results, Cortex results, skipped observables, and job states into the final enrichment summary.
+
+**How to build it:**
+
+1. Append the analyzer, MISP, and skipped-record branches through the existing `Merge` node.
+2. Connect the merged items to `Summary Enrichments`.
+3. Use the implementation in [`summary-enrichments.js`](../../soar/n8n/nodes/summary-enrichments.js).
+
+![Merge and summary path](../images/n8n/69-merge-and-summary-path.png)
+
+*Figure. MISP results, analyzer reports, and skipped observables flow into the final summary.*
+
+| Setting | Value |
+|---|---|
+| Merge mode | `Append` |
+| Summary node | `Summary Enrichments` |
+| Implementation | [`summary-enrichments.js`](../../soar/n8n/nodes/summary-enrichments.js) |
+
+**End-to-end verification:** Rule `100723` exercised all four Cortex observable routes:
+
+| Observable | Result |
+|---|---|
+| `soc-lab-postdns.example.org` | Maltiverse completed. Classification `neutral`, zero historical matches |
+| `1.1.1.1` | AbuseIPDB completed. Whitelisted, confidence score `0` |
+| Test SHA-256 | Team Cymru returned `No record found`. CIRCL Hashlookup returned `Non existing SHA-256` |
+| Test URL | VirusTotal job completed and returned `NotFoundError` for the exact URL |
+
+The workflow returned five Cortex result entries, `processing.status: complete`, and empty `pending` and `failed` lists. The VirusTotal `NotFoundError` means the URL was not found in that lookup. It is not a clean verdict. The internal source IP, agent IP, and hostname were retained under `skipped_by_filter`.
+
+**If it does not work:**
+
+| What you see | Cause | Fix |
+|---|---|---|
+| `Invalid Wazuh alert: missing rule.id` | The webhook input does not contain the rule ID expected by `Normalize Alert` | Inspect the actual input and send an alert in the expected structure with `rule.id` present |
+| An external observable is skipped | Its type, value, or `internal` flag is missing, or it failed the eligibility checks | Inspect the item after `Dedupe Cortex Observables` and the `cortex_skip_reason` value |
+| A report remains `Waiting` or `InProgress` | The analyzer job has not finished yet | Continue polling with the same job ID within the configured limit |
+| Cortex reports `Service parameter is missing` | The analyzer job failed before returning a usable report | Inspect the Cortex job and analyzer worker configuration. This message alone does not indicate a missing Wazuh field |
+| VirusTotal returns `NotFoundError` with a completed job | The exact URL was not found in that lookup | Preserve the analyzer response. Do not interpret it as proof that the URL is benign |
+
 ## 5. Score
 
 **Owner:** @arturesturemkuros
