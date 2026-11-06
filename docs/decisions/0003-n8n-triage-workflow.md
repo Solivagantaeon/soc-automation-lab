@@ -138,40 +138,55 @@ The generated `dedup_key` must be consumed and tested by the Dedup stage.
 **Owner:** @arturesturemkuros
 
 
-
 ### 4. MISP and Cortex
 
 **Owner:** @MKonrad-afk
 
 #### Context
 
-MISP is the local threat-intelligence lookup, while Cortex runs analyzer jobs for supported observables. The initial graph checked a limited set of values and returned asynchronous Cortex jobs. Repeated hashes could create repeated analyzer jobs, and a finished workflow could still contain a pending report.
+The workflow checks Wazuh alert observables against MISP and Cortex. MISP looks for matching attributes in local threat-intelligence data. Cortex runs analyzers for supported observables.
 
 #### Decision
 
-MISP Attribute Search receives the normalized observable values in one search request. Cortex observables are split into one item per observable, deduplicated within the alert by type plus normalized value, and routed by type to AbuseIPDB (IP), Maltiverse (domain), Team Cymru MHR and CIRCL Hashlookup (hash), or VirusTotal GetReport (URL). The current graph does not route file bytes, but it checks file hashes. To avoid duplication of the same Hashes and domain in one alert we use [dedup Cortex Observadables](../../soar/n8n/node/dedupe-cortex-observadables.js) node.
+MISP searches the normalized observables and returns matching attributes with their event context.
 
-The internal-IP eligibility IF sits on the IP route before AbuseIPDB. Tested private IPs were skipped and preserved in the summary. The graph does prove the equivalent rule for local domains and URLs. See the runbook section for the exact route evidence [n8n triage runbook](../runbooks/n8n-triage.md#4-misp-and-cortex).
+Before sending observables to Cortex, the workflow splits them into individual items, removes duplicates, and checks whether each item can be analyzed. Eligible items go to the matching analyzer. Skipped items are kept with a reason.
 
-Each analyzer is submitted once. If its report is still Waiting or InProgress, the workflow waits two seconds and retries Get a report using the same job ID. The configured wait/retry counts are 5 for eeach analyzer. The earlier MaxMind branch used 2 and is no longer present. Each branch and the final result use Append Merge. Summary Enrichments groups MISP rows, Cortex reports, skipped IPs, pending jobs, and failures. Details in the Script use in the Code Node named [Summary Enrichements](../../soar/n8n/nodes/summary-enrichments.js).
+| Observable | Cortex analyzer |
+|---|---|
+| Public IP | AbuseIPDB |
+| Domain | Maltiverse |
+| Hash | Team Cymru MHR and CIRCL Hashlookup |
+| URL | VirusTotal GetReport |
 
-Since Cortex itself can reuse a prior job according to each analyzer's `jobCache` configuration, the workflow has no additional cache. MISP has no separate workflow cache because its local lookup did not show repeated polling or a measured need for one.
-During testing, we found that MISP responds quickly enough that an additional caching layer is not needed, the situation was worse in the case of Cortex - some tests took close to 1 minute to finish. Therefore, we decided to not use analyzers like: UnshortenLink or MaxMindGeo to optimize time and lower wait/retry time.
+The workflow does not send file contents or filenames to Cortex. It can send a file hash.
+
+Each analyzer starts once and returns an ID for its analysis. `Get a report` uses that same ID to check the result. If the analysis is still running, n8n waits two seconds and checks again. It tries up to five times. If no result is ready, the summary marks the analysis as pending.
+
+`Summary Enrichments` combines the MISP matches, Cortex results, skipped observables, and job status.
 
 #### Rationale
 
-One MISP search keeps local threat-intelligence matching separate from external analysis. Type-specific routes avoid asking analyzers to process unsupported data. Deduplication reduces repeated work within a single alert, while Cortex-native caching may cover identical jobs across alerts if the analyzer configuration enables it.
+MISP and Cortex provide different information. MISP shows whether an observable matches a local attribute. Cortex returns results from external analyzers.
 
-Report polling prevents unnecessary analyzer resubmissions and gives slow jobs a bounded opportunity to finish. A finite wait limit lets the workflow proceed with an explicit `partial` status instead of presenting an unfinished job as a clean result. Append is used to collect variable counts of MISP and Cortex rows; the JavaScript summary performs grouping after collection.
+The eligibility check keeps internal or unsupported observables out of the analyzer branches. Removing duplicates avoids starting the same analysis more than once for an observable in the same alert. Reusing the analysis ID lets n8n check for a result without starting another analysis.
 
 #### Verification
 
-IP, domain, URL, hash, nested Sysmon IP, SSH authentication, and no-external-IOC tests are documented with observed outputs and runtimes in the [n8n triage runbook](../runbooks/n8n-triage.md#4-misp-and-cortex). Tests show that MISP preserves attribute/event context, supported observable types reach their configured analyzers, private IPs are skipped, and a no-IOC alert completes without a Cortex job.
+The raw Wazuh test alert for rule `100723` exercised all four Cortex routes and returned five results:
 
-Timings varied from about 1.18 seconds to more than 50 seconds. They are whole-workflow observations with different inputs and pending states, not controlled analyzer benchmarks. Removing MaxMind and shortening Wait intervals coincided with faster runs, but the tests do not isolate either change as the sole cause.
+| Observable | Result |
+|---|---|
+| `soc-lab-postdns.example.org` | Maltiverse returned `neutral` |
+| `1.1.1.1` | AbuseIPDB returned `whitelisted: true` and confidence score `0` |
+| Test SHA-256 | Team Cymru returned `No record found`. CIRCL Hashlookup returned `Non existing SHA-256` |
+| Test URL | VirusTotal completed the lookup but returned `NotFoundError` |
 
-#### Follow-up
- MISP deployment details remain in [Lab Setup](../lab-setup.md), [Components](../components.md), and the [MISP README](../../enrichment/misp/README.md).
+The workflow finished with no pending or failed jobs. VirusTotal did not find that URL. This does not confirm that the URL is safe. The internal source IP, agent IP, and hostname were kept in `skipped_by_filter`.
+
+MISP returned two attributes for `1.1.1.1`. Both had `to_ids: false`. One included a warninglist comment identifying it as a known public DNS resolver. These attributes provide context, not a standalone verdict.
+
+The [n8n triage runbook](../runbooks/n8n-triage.md#4-misp-and-cortex) documents the node settings and test steps. The [MISP README](../../enrichment/misp/README.md#n8n-lab-context--issue-69) and [Cortex README](../../enrichment/cortex/README.md#n8n-cortex-workflow--issue-69) describe the lab context.
 
 
 ### 5. Score
