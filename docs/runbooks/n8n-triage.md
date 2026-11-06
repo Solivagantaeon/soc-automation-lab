@@ -142,16 +142,16 @@ The node produces one normalized alert object per input item. Main fields includ
 
 | Field | Purpose |
 |---|---|
-| `alert_id` | Original alert identifier |
-| `timestamp` | Event timestamp |
+| `alert_id` | Wazuh alert ID, or Elasticsearch document ID when available |
+| `timestamp` | Wazuh alert timestamp |
 | `source_format` | Detected input format: `raw`, `elasticsearch`, or `shuffle-wrapper` |
-| `rule` | Rule ID, level, description, groups, and MITRE data |
+| `rule` | Rule ID, level, description, groups, MITRE data, and fired count |
 | `agent` | Agent ID, name, and IP |
-| `location`, `decoder` | Event source context |
-| `syscheck`, `signature`, `command_line`, `full_log` | Additional event context when available |
-| `observables` | Extracted observables with type, value, source field, and internal flag |
+| `location`, `decoder` | Event source and decoder context |
+| `syscheck`, `signature`, `command_line`, `full_log` | Additional event context when available; `full_log` is limited to 2,000 characters |
+| `observables` | Observable list. Each entry includes `dataType`, `data`, `field`, and `internal`; optional fields include `kind`, `algorithm`, or `path` |
 | `primary_observable` | Selected primary observable, or `-` when none is eligible |
-| `dedup_key` | Key prepared for the separate Dedup stage |
+| `dedup_key` | Key generated for the separate Dedup stage; generating it does not detect duplicate alerts |
 
 **Observable types:**
 
@@ -161,16 +161,20 @@ The node produces one normalized alert object per input item. Main fields includ
 | `domain` | Domain names |
 | `url` | Full URLs |
 | `uri_path` | URI paths |
-| `hash` | MD5, SHA1, SHA256 |
-| `filename` | File names |
-| `registry_key` | Windows registry paths |
-| `user` | User names |
-| `hostname` | Host names |
-| `other` | Other retained values, including User-Agent |
+| `hash` | MD5, SHA1, and SHA256 values |
+| `filename` | File basenames; the original path is retained in `path` |
+| `registry_key` | Windows Registry paths |
+| `other` | User names (`kind: "user"`) |
+| `hostname` | Agent host name |
+| `user-agent` | User-Agent values |
 
-Internal endpoint data, such as `agent.ip`, remains available in `observables` with `internal: true`. It is not automatically treated as an external IOC or selected as `primary_observable`. When no eligible IOC is present, the primary value is `-`.
+Normalize v1.2 reads domains from `data.domain` and DNS, HTTP, and TLS fields; URLs from `data.url` and `data.http.url`; and hashes from event hash data and Syscheck before/after fields. File observables contain the basename and retain the original path in `path`.
 
-The `dedup_key` is generated during normalization. This does not perform duplicate detection; that is the responsibility of the Dedup stage.
+Private, loopback, and link-local IP addresses are marked `internal: true`. An `agent.ip` value is marked internal only when it falls within those ranges. Domains ending in `.lab`, `.local`, `.lan`, `.internal`, or `.localdomain` are also marked internal. A URL itself is not marked internal, although its hostname may be emitted separately as a domain observable.
+
+The primary observable is selected in this order: non-internal IP, hash, non-internal domain, filename, registry key, or URI path. Full URLs, usernames, User-Agent values, and hostnames are not eligible.
+
+Normalize removes duplicate observables within one alert by case-insensitive type and value, retaining the first source field. The `dedup_key` prepares the alert for the separate Dedup stage; it does not itself detect duplicate alerts.
 
 **How to test it:**
 
@@ -178,7 +182,7 @@ Use Webhook mock data (or the n8n node's pinned/mock input data) to execute the 
 
 | Test | Input scenario | Expected result |
 |---|---|---|
-| 1 | Network / DNS / HTTP | Extract IP, domain, URL, filename, user, and User-Agent |
+| 1 | Network / DNS / HTTP | Extract IP, domain, URL, filename, username (`other`, `kind: "user"`), and User-Agent (`user-agent`) |
 | 2 | Sysmon / hashes | Extract MD5, SHA1, SHA256, file path, command line, and user |
 | 3 | Syscheck / Windows Registry | Extract registry path as `registry_key` |
 | 4 | Raw Wazuh | Recognize `raw` format and extract external IP |
