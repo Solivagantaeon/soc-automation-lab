@@ -1,12 +1,3 @@
-/**
- * SOC - n8n summary enrichment
- * Node: Summary Enrichments
- * Mode: Run Once for All Items
- *
- * This is the JavaScript supplied from the tested n8n Code node.
- * Keep this file synchronized with the Code node in n8n.
- */
-
 const rows = $input.all().map(item => item.json ?? {});
 
 let alert = {};
@@ -318,19 +309,39 @@ const ipWithoutCortexResult = observables.filter(item =>
 
 const skippedByFilterMap = new Map();
 
-for (const item of ipWithoutCortexResult) {
-  const value = String(item.value);
+function addSkipped(item) {
+  const value = item.value;
 
-  skippedByFilterMap.set(value, clean({
+  if (value === undefined || value === null || value === '') {
+    return;
+  }
+
+  const type = String(item.type ?? 'unknown');
+  const key = `${type.toLowerCase()}\u0000${String(value)}`;
+
+  skippedByFilterMap.set(key, clean({
+    type,
+    value,
+    field: item.field,
+    internal: item.internal,
+    reason: item.reason,
+  }));
+}
+
+for (const item of ipWithoutCortexResult) {
+  const isInternal =
+    item.internal === true ||
+    String(item.internal).toLowerCase() === 'true';
+
+  addSkipped({
     type: item.type ?? 'ip',
     value: item.value,
     field: item.field,
     internal: item.internal,
-    reason:
-      item.internal === true
-        ? 'Internal IP; external Cortex lookup skipped'
-        : 'No Cortex result for this IP',
-  }));
+    reason: isInternal
+      ? 'Internal IP; external Cortex lookup skipped'
+      : 'No Cortex result for this IP',
+  });
 }
 
 for (const item of skippedIpRows) {
@@ -352,21 +363,28 @@ for (const item of skippedIpRows) {
     item.is_internal ??
     normalizedObservable?.internal;
 
-  const reason =
-    item.reason ??
-    (
-      internal === true || String(internal).toLowerCase() === 'true'
-        ? 'Internal IP; external Cortex lookup skipped'
-        : 'Excluded by Cortex eligibility filter'
-    );
+  const isInternal =
+    internal === true ||
+    String(internal).toLowerCase() === 'true';
 
-  skippedByFilterMap.set(String(value), clean({
-    type: item.data_type ?? item.dataType ?? item.type ?? 'ip',
+  addSkipped({
+    type:
+      item.data_type ??
+      item.dataType ??
+      item.type ??
+      normalizedObservable?.type ??
+      'ip',
     value,
     field: item.field ?? normalizedObservable?.field,
     internal,
-    reason,
-  }));
+    reason:
+      item.reason ??
+      (
+        isInternal
+          ? 'Internal IP; external Cortex lookup skipped'
+          : 'Excluded by Cortex eligibility filter'
+      ),
+  });
 }
 
 const skippedByFilter = [...skippedByFilterMap.values()];
