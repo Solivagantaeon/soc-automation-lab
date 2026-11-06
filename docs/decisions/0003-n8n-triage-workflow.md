@@ -149,14 +149,14 @@ MISP is the local threat-intelligence lookup, while Cortex runs analyzer jobs fo
 
 #### Decision
 
-MISP Attribute Search receives the normalized observable values in one search request. Cortex observables are split into one item per observable, deduplicated within the alert by type plus normalized value, and routed by type to AbuseIPDB (IP), Maltiverse (domain), Team Cymru MHR and CIRCL Hashlookup (hash), or VirusTotal GetReport (URL). The current graph does not route file bytes, but it checks file hashes.
+MISP Attribute Search receives the normalized observable values in one search request. Cortex observables are split into one item per observable, deduplicated within the alert by type plus normalized value, and routed by type to AbuseIPDB (IP), Maltiverse (domain), Team Cymru MHR and CIRCL Hashlookup (hash), or VirusTotal GetReport (URL). The current graph does not route file bytes, but it checks file hashes. To avoid duplication of the same Hashes and domain in one alert we use [dedup Cortex Observadables](../../soar/n8n/node/dedupe-cortex-observadables.js) node.
 
-The internal-IP eligibility IF sits on the IP route before AbuseIPDB. Tested private IPs were skipped and preserved in the summary. The graph does prove the equivalent rule for local domains and URLs. See the runbook section for the exact route evidence.
+The internal-IP eligibility IF sits on the IP route before AbuseIPDB. Tested private IPs were skipped and preserved in the summary. The graph does prove the equivalent rule for local domains and URLs. See the runbook section for the exact route evidence [n8n triage runbook](../runbooks/n8n-triage.md#4-misp-and-cortex).
 
-Each analyzer is submitted once. If its report is still Waiting or InProgress, the workflow waits two seconds and retries Get a report using the same job ID. The configured wait/retry counts are 5 for eeach one. The earlier MaxMind branch used 2 and is no longer present. Each branch and the final result use Append Merge. Summary Enrichments groups MISP rows, Cortex reports, skipped IPs, pending jobs, and failures. Details in the Script use in the Code Node named [Summary Enrichements](../../soar/n8n/nodes/summary-enrichments.js).
+Each analyzer is submitted once. If its report is still Waiting or InProgress, the workflow waits two seconds and retries Get a report using the same job ID. The configured wait/retry counts are 5 for eeach analyzer. The earlier MaxMind branch used 2 and is no longer present. Each branch and the final result use Append Merge. Summary Enrichments groups MISP rows, Cortex reports, skipped IPs, pending jobs, and failures. Details in the Script use in the Code Node named [Summary Enrichements](../../soar/n8n/nodes/summary-enrichments.js).
 
 Since Cortex itself can reuse a prior job according to each analyzer's `jobCache` configuration, the workflow has no additional cache. MISP has no separate workflow cache because its local lookup did not show repeated polling or a measured need for one.
-While testing the worflow I noticed that MISP work fast enough to not need aditinal cache, the situation was worse in the case of Cortex - some tests took close to 1 minute to finish. Therefore, I decided to not use analyzers like: UnshortenLink or MaxMindGeo.
+During testing, we found that MISP responds quickly enough that an additional caching layer is not needed, the situation was worse in the case of Cortex - some tests took close to 1 minute to finish. Therefore, we decided to not use analyzers like: UnshortenLink or MaxMindGeo to optimize time and lower wait/retry time.
 
 #### Rationale
 
