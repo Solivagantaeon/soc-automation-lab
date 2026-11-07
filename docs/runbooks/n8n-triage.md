@@ -419,17 +419,18 @@ The route rules use the normalized observable type. Analyzer nodes use the corre
 
 ```mermaid
 flowchart TD
-    A["Execute once"] --> B["Cortex returns job ID"]
-    B --> C["Get report with same ID"]
-    C --> D{"Still waiting?"}
-    D -- "No" --> M["Merge report"]
-    D -- "Yes" --> W["Wait 2 seconds"]
-    W --> R{"Retry limit reached?"}
-    R -- "No, retry remains" --> C
+    A["Execute"] --> B["Job ID"]
+    B --> C["Get report"]
+    C --> D{"Waiting?"}
+    D -- "No" --> M["Merge"]
+    D -- "Yes" --> W["Wait 2s"]
+    W --> R{"Limit hit?"}
+    R -- "No" --> C
     R -- "Yes" --> M
-    M --> S["Summary records final state"]
+    M --> S["Summary"]
 ```
 
+**Figure:** Cortex polling and merge flow for one job.
 *Figure. One Cortex job is checked repeatedly using the same job ID until it finishes or reaches the retry limit.*
 
 ![Cortex analyzer routes and polling branches](../images/n8n/69-analyzer-polling-branches.png)
