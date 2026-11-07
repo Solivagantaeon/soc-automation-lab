@@ -264,33 +264,42 @@ Only include screenshots that have actually been captured and checked into the r
 
 #### Node: Get a filtered list of attributes
 
-**What it does:** Searches MISP for attributes matching the normalized observables and returns matches with their event and attribute context.
+**What it does:** Searches MISP for attributes matching the values in the normalized alert observables. Matching attributes are returned with their attribute and event context.
 
 **How to build it:**
 
-1. Add the MISP **Get a filtered list of attributes** node to the branch from `Normalize Alert`.
+1. Add the MISP **Get a filtered list of attributes** node to the branch from `Normalize`.
 2. Select the existing MISP credential.
-3. Map the normalized observable data to the node's search input, following the current node configuration.
-4. Keep the MISP branch independent of the Cortex eligibility and analyzer routes.
+3. Set **Resource** to `Attribute` and **Operation** to `Search`.
+4. Turn on **Use JSON to Specify Fields**.
+5. In the **JSON** field, enter this expression:
+
+   `{{ { "value": $json.observables.map(observable => observable.data) } }}`
+
+   This collects the `data` value from every item in the normalized `observables` array and passes the values to MISP as its `value` search filter. The expression uses the alert's observable values at runtime.
+
+6. Keep the MISP branch connected directly to `Normalize`, independently of the Cortex eligibility and analyzer routes.
 
 ![MISP Attribute Search and lab results](../images/n8n/69-misp-search-and-results.png)
 
-*Figure. MISP Attribute Search and example lab results for the public IP address.*
+**Figure:** MISP Attribute Search configuration and matching lab results.
 
 | Setting | Value |
 |---|---|
-| Node | `Get a filtered list of attributes` |
 | Credential | Existing MISP credential |
-| Search input | Normalized alert observables |
+| Resource | `Attribute` |
+| Operation | `Search` |
+| Use JSON to Specify Fields | On |
+| JSON search filter | `value` mapped from `$json.observables[].data` |
 | Output used by summary | `misp.attribute_count`, `misp.unique_indicators` |
 
-**How to test it:** Send the raw Wazuh lab alert for rule `100723`. The test returned two MISP attributes for `1.1.1.1`. Both had `to_ids: false`. One included a warninglist comment identifying the address as a known public DNS resolver. Review each attribute's comment, `to_ids`, `disable_correlation`, event, and warninglist context. A match or a `to_ids` value alone is not a malicious or benign verdict.
+**How to test it:** Send the raw Wazuh lab alert for rule `100723`. Check that the MISP node's JSON field evaluates to the alert's observable values. In the observed test, MISP returned two attributes for `1.1.1.1`. Both had `to_ids: false`. One included a warninglist comment identifying the address as a known public DNS resolver. Review each attribute's comment, `to_ids`, `disable_correlation`, event, and warninglist context. A match or a `to_ids` value alone is not a malicious or benign verdict.
 
 **If it does not work:**
 
 | What you see | Cause | Fix |
 |---|---|---|
-| `attribute_count` is `0` | The search completed without matching attributes, or the search input was empty or mapped incorrectly | Inspect the normalized observable values and the MISP node's search input |
+| `attribute_count` is `0` | The search found no matching attributes, or the JSON expression produced an empty or incorrectly mapped value list | Inspect `$json.observables` at the MISP node input and confirm that the JSON field uses `observable.data` |
 | An attribute has `to_ids: false` | IDS export is disabled for that attribute, for example by a warninglist | Preserve and review the attribute and event context. Do not treat this value as a verdict |
 
 ### Cortex branch
@@ -301,7 +310,7 @@ Only include screenshots that have actually been captured and checked into the r
 
 **How to build it:**
 
-1. Connect the node after `Normalize Alert`.
+1. Connect the node after `Normalize`.
 2. Split the `observables` field into individual items.
 3. Confirm that each item still contains the alert metadata and the observable fields required by downstream nodes.
 
