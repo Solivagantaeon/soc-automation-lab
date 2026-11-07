@@ -419,14 +419,15 @@ The route rules use the normalized observable type. Analyzer nodes use the corre
 
 ```mermaid
 flowchart TD
-    A["Execute starts one analysis"] --> B["Cortex returns a job ID"]
-    B --> C["Get a report checks that same ID"]
-    C --> D{"Is the result ready?"}
-    D -- "Yes" --> E["Send the result to Merge"]
-    D -- "No" --> F["Wait 2 seconds"]
-    F --> G{"Are retries left?"}
-    G -- "Yes" --> C
-    G -- "No" --> H["Record as pending"]
+    A["Execute once"] --> B["Cortex returns job ID"]
+    B --> C["Get report with same ID"]
+    C --> D{"Still waiting?"}
+    D -- "No" --> M["Merge report"]
+    D -- "Yes" --> W["Wait 2 seconds"]
+    W --> R{"Retry limit reached?"}
+    R -- "No, retry remains" --> C
+    R -- "Yes" --> M
+    M --> S["Summary records final state"]
 ```
 
 *Figure. One Cortex job is checked repeatedly using the same job ID until it finishes or reaches the retry limit.*
