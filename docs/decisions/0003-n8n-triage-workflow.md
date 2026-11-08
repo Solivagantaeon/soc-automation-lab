@@ -205,7 +205,52 @@ The [n8n triage runbook](../runbooks/n8n-triage.md#4-misp-and-cortex) documents 
 
 **Owner:** @p4chatek
 
+#### Context
 
+External services (Cortex analyzers, MISP, TheHive) can be temporarily unavailable. Without error handling, a single failed node stops the entire workflow and the alert disappears without trace. The enrichment result looks complete even when a service was down.
+
+#### Decision
+
+**Retry On Fail** is enabled on all nodes that call external services.
+
+| Node | Max Tries | Wait Between Tries |
+|---|---|---|
+| Execute Maltiverse | 3 | 2 000 ms |
+| Get a report Maltiverse | 3 | 3 000 ms |
+| Execute AbuseIPDB | 3 | 2 000 ms |
+| Get a report AbuseIPDB | 3 | 3 000 ms |
+| Execute TeamCymru | 3 | 2 000 ms |
+| Get a report TeamCymru | 3 | 3 000 ms |
+| Execute CirclHash | 3 | 2 000 ms |
+| Get a report CirclHash | 3 | 3 000 ms |
+| Execute VirusTotal | 3 | 2 000 ms |
+| Get a report UnshortenLink | 3 | 3 000 ms |
+| Get a filtered list of attributes (MISP) | 5 | 2 000 ms |
+| Create an alert (TheHive) | 5 | 5 000 ms |
+
+![Workflow overview](../images/n8n/72-workflow-overview.png)
+
+**On Error → Continue (using error output)** is enabled on all Cortex and MISP nodes. When all retries are exhausted, the error port routes to an **Error Formatter** Code node instead of stopping the workflow. Each Error Formatter produces `{service, node, observable, error, timestamp}` and sends it to the final Merge node.
+
+![Retry On Fail and On Error settings](../images/n8n/72-execute-node-settings-retry-on-error.png)
+
+![Error Formatter code](../images/n8n/72-error-formatter-code.png)
+
+`Summary Enrichments` reads all items arriving at the main Merge. Items that contain a `service` and `error` field are appended to `processing.failed`. The `processing.status` field is set to `complete_with_errors` when at least one service failed.
+
+**TheHive** (`Create an alert`) uses Retry On Fail (5×, 5 000 ms) and **Stop and Error**. A retry queue was considered and rejected - it would hide failures from the n8n execution dashboard.
+
+#### Rationale
+
+Routing errors to Merge instead of stopping the workflow ensures that a broken service produces a visible record rather than a silent gap. `processing.failed` gives downstream stages (Score, Decision) the information they need to avoid closing an alert as benign when enrichment was incomplete.
+
+Stop and Error for TheHive was chosen over a retry queue because every undelivered alert must be visible in the n8n execution log. A queue would make the workflow appear healthy while alerts were lost.
+
+#### Verification
+
+Tested with dedicated broken credentials (`TEST FAILED`) on AbuseIPDB and MISP simultaneously. Both services failed, the workflow completed, and `processing.failed` contained two records - one for AbuseIPDB (`Invalid URL`) and one for MISP (`Unsupported protocol`). `processing.status` was `complete_with_errors`. The workflow did not stop.
+
+![Summary Enrichments output with failed services](../images/n8n/72-summary-enrichments-output-failed.png)
 
 ### 8. TheHive
 

@@ -492,6 +492,139 @@ The workflow returned five Cortex result entries, `processing.status: complete`,
 
 **Owner:** @p4chatek
 
+**What it does:** Ensures that a service being down does not stop the workflow or make the alert look complete when enrichment is missing.
+
+### Node: Retry On Fail (all external nodes)
+
+**What it does:** Retries a failed node automatically before triggering the error output.
+
+**How to build it:**
+
+1. Open each node listed below.
+2. Go to the **Settings** tab.
+3. Enable **Retry On Fail**.
+4. Set **Max. Tries** and **Wait Between Tries** as shown in the table.
+
+| Node | Max Tries | Wait Between Tries |
+|---|---|---|
+| Execute Maltiverse | 3 | 2 000 ms |
+| Get a report Maltiverse | 3 | 3 000 ms |
+| Execute AbuseIPDB | 3 | 2 000 ms |
+| Get a report AbuseIPDB | 3 | 3 000 ms |
+| Execute TeamCymru | 3 | 2 000 ms |
+| Get a report TeamCymru | 3 | 3 000 ms |
+| Execute CirclHash | 3 | 2 000 ms |
+| Get a report CirclHash | 3 | 3 000 ms |
+| Execute VirusTotal | 3 | 2 000 ms |
+| Get a report UnshortenLink | 3 | 3 000 ms |
+| Get a filtered list of attributes (MISP) | 5 | 2 000 ms |
+| Create an alert (TheHive) | 5 | 5 000 ms |
+
+![Retry On Fail and On Error settings](../images/n8n/72-execute-node-settings-retry-on-error.png)
+
+### Node: Error Formatter (one per service)
+
+**What it does:** Catches the error output of a failed Cortex or MISP node and formats it as `{service, node, observable, error, timestamp}` for the Merge node.
+
+**How to build it:**
+
+1. On each Cortex and MISP node, go to **Settings** → **On Error** → select **Continue (using error output)**.
+2. A red error port appears on the node.
+3. Connect both the Execute and Get a report error ports of each service to one shared **Code** node named `Error Formatter — <service>`.
+4. Set **Language** to `JavaScript`.
+5. Paste the code below, changing only `SERVICE_NAME`.
+
+```js
+const SERVICE_NAME = 'AbuseIPDB'; // change per service
+
+const input = $input.first().json;
+const observable = typeof input?.primary_observable === 'string'
+  ? input.primary_observable
+  : input?.observables?.find(o => o.internal === false)?.data ?? '';
+
+return [{
+  json: {
+    service:    SERVICE_NAME,
+    node:       $prevNode.name,
+    observable: observable,
+    error:      input?.error?.message ?? input?.error ?? 'unknown',
+    timestamp:  new Date().toISOString(),
+  }
+}];
+```
+
+6. Connect the Error Formatter output to the serwisowy Merge node (e.g. `MergeAbuseIPBD`) as an additional input in **Append** mode.
+7. For MISP, connect to the main **Merge** node before Summary Enrichments.
+
+![Error Formatter code](../images/n8n/72-error-formatter-code.png)
+
+![Workflow overview showing Error Formatters](../images/n8n/72-workflow-overview.png)
+
+| Setting | Value |
+|---|---|
+| Node type | `Code` |
+| Language | `JavaScript` |
+| Mode | `Run Once for All Items` |
+| On Error (source node) | `Continue (using error output)` |
+
+### Node: Summary Enrichments (failure handling addition)
+
+**What it does:** Reads error records from the Merge node and appends them to `processing.failed`. Sets `processing.status` to `complete_with_errors` when at least one service failed.
+
+**How to build it:**
+
+Add this block to the existing Summary Enrichments code, after `const rows = $input.all()...`, before `return`:
+
+```js
+const errorRows = rows.filter(item => item.json?.service && item.json?.error !== undefined);
+
+const failed = [
+  ...cortexResults
+    .filter(result => result.status === 'failed')
+    .map(result => ({
+      analyzer: result.analyzer,
+      observable: result.observable,
+      status: result.status,
+    })),
+  ...errorRows.map(item => ({
+    service: item.json.service,
+    node: item.json.node,
+    observable: item.json.observable,
+    error: item.json.error,
+  })),
+];
+```
+
+### TheHive: Create an alert
+
+**What it does:** Uses Retry On Fail (5×) and Stop and Error. If all retries fail, the execution is marked as failed in n8n and is visible in the execution log.
+
+| Setting | Value |
+|---|---|
+| Retry On Fail | ON |
+| Max Tries | 5 |
+| Wait Between Tries | 5 000 ms |
+| On Error | Stop Workflow |
+
+**How to test it:**
+
+1. Create a credential `TEST FAILED` with an invalid URL for the service you want to test.
+2. Set that credential on the Execute node of one service.
+3. Run the workflow.
+4. Check that the workflow completed and that `processing.failed` contains a record for that service.
+5. Restore the original credential.
+
+![Summary Enrichments output with failed services](../images/n8n/72-summary-enrichments-output-failed.png)
+
+**If it does not work:**
+
+| What you see | Cause | Fix |
+|---|---|---|
+| Workflow stops on a failed node | On Error is set to Stop Workflow instead of Continue | Change On Error to Continue (using error output) on that node |
+| `processing.failed` is empty despite a service failing | Error Formatter is not connected to the Merge node | Check the connection from Error Formatter to the serwisowy Merge |
+| `observable` is empty in the error record | `primary_observable` is not a string and no external observable is found | Check what fields are available in the error branch input |
+| Python syntax error in Error Formatter | Code node language is set to Python | Change Language to JavaScript in the node settings |
+
 ## 8. TheHive
 
 **Owner:** @Solivagantaeon
