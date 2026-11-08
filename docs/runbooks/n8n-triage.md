@@ -255,13 +255,13 @@ Position: `Webhook -> Normalize Alert -> Dedup -> New Alert? -> (true) -> MISP l
 
 **Testing.** Static data is not persisted on manual runs, so put all test alerts in
 one pinned Webhook output and execute once. Sample set: 7 alerts, expected
-4 on true and 3 on false (see screenshots).
+3 on true and 4 on false (see screenshots).
 
 **Screenshots** (`docs/images/n8n/`):
 ![The workflow with the new nodes](../images/n8n/68-dedup-workflow.png)
-![Dedup output with `is_duplicate: true`, `duplicate_count: 2`](../images/n8n/68-dedup-workflow.png)
-- `dedup-output.png` – Dedup output with `is_duplicate: true`, `duplicate_count: 2`
-- `dedup-if.png` – New Alert? showing 4 true / 3 false
+![Dedup output with `is_duplicate: true`, `duplicate_count: 2`](../images/n8n/68-dedup-output.png)
+![New Alert? showing 3 true / 4 false](../images/n8n/68-dedup-if.png)
+
 
 
 ## 4. MISP and Cortex
