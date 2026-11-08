@@ -137,6 +137,41 @@ The generated `dedup_key` must be consumed and tested by the Dedup stage.
 
 **Owner:** @arturesturemkuros
 
+**Decision.** Duplicate alerts are dropped right after Normalize and before any
+enrichment (MISP, Cortex analyzers), so a repeated alert never uses API quota.
+
+**Mechanism.** A Code node ("Dedup") keeps a map of `dedup_key -> {first_seen, count}`
+in n8n workflow static data. An alert whose key is already in the map within the
+window is marked `is_duplicate: true`; otherwise it is stored and passes. An If node
+("New Alert?") routes new alerts on and ends the execution for duplicates.
+
+**Window: 10 minutes**, fixed from the first occurrence (not sliding).
+- Why: short enough that a recurring problem is reported again soon, long enough
+  to absorb bursts of the same event.
+- Trade-off: a continuous flood yields one alert per 10 minutes, not one in total.
+
+**Key** (built in Normalize):
+`soc:dedup:<rule.id>:<signature_id>:<agent.id>:<source_ip>:<primary_observable>`
+- Private source IPs are kept in the key, so two internal attackers are not merged.
+- For web rules (groups `web`, `accesslog`, `web_scan`) the last element is `*`:
+  the path is ignored, so a scan from one IP on one agent is one key.
+  Without a source IP, the default key is used.
+
+**Why static data and not Remove Duplicates:** the built-in node has no time window.
+
+**Known limitations**
+- Alerts with no observables and no source IP differ only by rule/agent, so
+  different events from the same rule and agent merge within the window.
+- Web rules ignore the path, so one interesting hit inside a scan can be
+  dropped as a duplicate of the first alert.
+- Duplicates are dropped silently (false branch is empty); nothing is updated in TheHive.
+- The window runs on processing time, not alert `timestamp`, so replaying
+  baseline alerts through the pipeline dedups by replay speed.
+- Static data is only persisted by active workflows, not manual runs.
+
+**Considered, not implemented:** HTTP status code in the key, never deduplicating
+high-level alerts, updating the existing TheHive alert on duplicates.
+
 
 
 ### 4. MISP and Cortex
