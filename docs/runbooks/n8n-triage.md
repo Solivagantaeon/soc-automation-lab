@@ -293,7 +293,7 @@ return $input.all().map(item => {
 | Node type | `Code` |
 | Mode | `Run Once for All Items` |
 | Language | `JavaScript` |
-| Window (`WINDOW_MS`) | `3 * 60 * 1000` (3 minutes) |
+| Window (`WINDOW_MS`) | `7 * 60 * 1000` (7 minutes) |
 | State | `$getWorkflowStaticData('global')`, key `dedup` |
 | Input | `dedup_key` from Normalize |
 | Output fields added | `is_duplicate`, `duplicate_count`, `first_seen` (duplicates only) |
@@ -361,6 +361,7 @@ The screenshots show the workflow with the new nodes, the Dedup output for a dup
 | Dedup fails with a missing `dedup_key` | The node is not connected after Normalize, or Normalize failed | Check the connection and the Normalize output |
 | Different events from one rule and agent are dropped | The alerts have no observables and no source IP, so they share one key | Known limitation; check the original alerts and consider adding a field to the key |
 | An alert is dropped as a duplicate, but its first copy failed in a later stage | The key is stored before enrichment | Wait until the window ends and resend |
+
 ## 4. MISP and Cortex
 
 **Owner:** @MKonrad-afk
