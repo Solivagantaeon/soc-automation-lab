@@ -242,74 +242,125 @@ Only include screenshots that have actually been captured and checked into the r
 
 
 
-### 3. Dedup
+## 3. Dedup
 
 **Owner:** @arturesturemkuros
 
-#### Context
+**What it does:** Detects an alert that was already seen within the last 3 minutes and stops it before MISP and Cortex, so a repeated alert is not processed twice.
 
-Wazuh can send the same alert many times in a short period, for example when a scan or a repeated login attempt keeps triggering one rule. Every copy that reaches the enrichment stages costs a MISP query and up to five Cortex analyzer runs, some of which have API rate limits (Maltiverse, AbuseIPDB, TeamCymru, CirclHash, VirusTotal).
+**How to build it:**
 
-The Dedup stage was added to the `SOC - n8n E2E Skeleton` workflow directly after Normalize, as early as possible, so a duplicate is stopped before any enrichment. It depends on the `dedup_key` produced by the Normalize stage.
+1. Open the workflow and remove the connections that leave the Normalize node (to the MISP search node and to Split Cortex Observables).
+2. Add a **Code** node after Normalize and name it `Dedup`.
+3. Set **Mode** to `Run Once for All Items` and **Language** to `JavaScript`.
+4. Paste the code below into the editor.
+5. Add an **If** node after Dedup and name it `New Alert?`.
+6. In the condition, set the value to `{{ $json.is_duplicate }}` and the operator to **Boolean -> is false**.
+7. Connect the **true** output to both the MISP search node and Split Cortex Observables. Leave the **false** output empty.
+8. Save and publish the workflow.
 
-#### Decision
+```javascript
+const WINDOW_MS = 3 * 60 * 1000; // dedup window, 3 minutes
 
-Two nodes are added after Normalize:
+const now = Date.now();
+const store = $getWorkflowStaticData('global');
+store.dedup = store.dedup ?? {};
 
-1. A JavaScript Code node, **Dedup**, in **Run Once for All Items** mode. It keeps a map of `dedup_key -> {first_seen, count}` in n8n workflow static data. If the key is already in the map and younger than the window, the alert is marked `is_duplicate: true` and its `duplicate_count` is increased. Otherwise the key is stored and the alert is marked `is_duplicate: false`. Entries older than the window are removed on every run.
-2. An If node, **New Alert?**, which tests `{{ $json.is_duplicate }}` is false. The true branch continues to the MISP lookup and to Split Cortex Observables. The false branch is empty, so the execution ends there.
+// entries older than the window are removed
+for (const [k, v] of Object.entries(store.dedup)) {
+  if (now - v.first_seen > WINDOW_MS) delete store.dedup[k];
+}
 
-**Window.** 3 minutes, counted from the first occurrence (a fixed window, not a sliding one).
+return $input.all().map(item => {
+  const key = item.json.dedup_key;
+  const hit = store.dedup[key]; // undefined when the key was not seen
 
-**Key.** Normalize builds the key as:
+  if (hit) {
+    hit.count++;
+    return { json: { ...item.json, is_duplicate: true,
+      duplicate_count: hit.count, first_seen: hit.first_seen } };
+  }
 
-`soc:dedup:<rule.id>:<signature_id>:<agent.id>:<source_ip>:<primary_observable>`
+  store.dedup[key] = { first_seen: now, count: 1 };
+  return { json: { ...item.json, is_duplicate: false, duplicate_count: 1 } };
+});
+```
 
-- The source IP is taken from `data.srcip`, `data.src_ip`, `data.win.eventdata.sourceIp` or `data.win.eventdata.ipAddress`. Private addresses are kept, so two internal attackers do not share a key.
-- For web rules (rule groups `web`, `accesslog` or `web_scan`) that have a source IP, the last element is `*` instead of the primary observable. The path is ignored, so a scan from one IP against one agent is one key. Without a source IP the default key is used.
-- Normalize also outputs `source_ip` and `dedup_mode` (`default` or `web-source`).
+**Dedup node settings:**
 
-#### Rationale
+| Setting | Value |
+|---|---|
+| Node type | `Code` |
+| Mode | `Run Once for All Items` |
+| Language | `JavaScript` |
+| Window (`WINDOW_MS`) | `3 * 60 * 1000` (3 minutes) |
+| State | `$getWorkflowStaticData('global')`, key `dedup` |
+| Input | `dedup_key` from Normalize |
+| Output fields added | `is_duplicate`, `duplicate_count`, `first_seen` (duplicates only) |
 
-**Early position.** A duplicate that is stopped right after Normalize never reaches MISP or Cortex, which protects the rate-limited APIs. Putting the stage later would only save work on the nodes after it.
+**New Alert? node settings:**
 
-**Code node and static data instead of Remove Duplicates.** The built-in Remove Duplicates node compares against earlier executions and has no time window, so it cannot express "the same alert within a short time". Static data with a timestamp can.
+| Setting | Value |
+|---|---|
+| Node type | `If` |
+| Condition | `{{ $json.is_duplicate }}` -> Boolean -> is false |
+| true output | MISP search node and Split Cortex Observables |
+| false output | Not connected (duplicate, execution ends) |
 
-**Short fixed window.** A short window absorbs bursts of the same event, while a problem that keeps recurring is reported again after the window ends. The cost is that a continuous flood produces one alert per window, not one in total. A fixed window was chosen over a sliding one because a sliding window would suppress a never-ending flood forever.
+**The key:**
 
-**Source IP in the key.** Without it, two different internal attackers triggering the same rule on the same agent, with no public IOC, would share one key and the second would be dropped.
+Normalize builds the key as `soc:dedup:<rule.id>:<signature_id>:<agent.id>:<source_ip>:<primary_observable>`. The source IP includes private addresses. For web rules (groups `web`, `accesslog`, `web_scan`) with a source IP, the last element is `*`, so the path is not part of the key. Normalize also outputs `source_ip` and `dedup_mode` (`default` or `web-source`) to show which form was used.
 
-**Path ignored for web rules.** Tools such as gobuster try hundreds of paths. If the path were part of the key, every path would be a new alert and the flood would not be reduced. The price is that one interesting hit inside a scan can be dropped as a duplicate of the first alert.
+**How to test it:**
 
-**Considered, not implemented.**
-- Adding the HTTP status code to the key for web rules, so that 404 and 200 responses from one IP stay separate.
-- Never deduplicating alerts above a chosen rule level.
-- Updating the existing TheHive alert with the repeat count when a duplicate arrives.
+Static data is not saved when the workflow is run manually, so a duplicate is only recognised inside one execution. Put all test alerts into one pinned Webhook output and run the workflow once.
 
-#### Verification
+1. Open the Webhook node, choose **Edit Output** and paste the seven test alerts (see the table).
+2. Click **Execute workflow**.
+3. Open the Dedup output and check `is_duplicate` and `duplicate_count` for every item.
+4. Open New Alert? and check how many items went to each branch.
 
-The stage was tested on 2026-11-08 with seven synthetic alerts pinned in the Webhook node and executed once:
-
-| Test | Scenario | Verified result |
+| Test | Input scenario | Expected result |
 |---|---|---|
 | 1 | New alert, public source IP | `is_duplicate: false`, `dedup_mode: default` |
 | 2 | Same alert again | `is_duplicate: true`, `duplicate_count: 2` |
 | 3 | Web rule, private source IP, path `/dvwa/admin` | `is_duplicate: false`, `dedup_mode: web-source` |
-| 4 | Same web rule, same source IP, other path `/dvwa/backup` | `is_duplicate: true`, same key as test 3 |
+| 4 | Same web rule and source IP, other path | `is_duplicate: true`, same key as test 3 |
 | 5 | Same web rule, different source IP | `is_duplicate: false`, different key |
 | 6 | No observables, no source IP | `is_duplicate: false`, `primary_observable: "-"` |
-| 7 | Same alert as test 6 again | `is_duplicate: true` (known limitation below) |
+| 7 | Same alert as test 6 again | `is_duplicate: true` |
 
-New Alert? sent 4 items to the true branch and 3 items to the false branch, as expected.
+Expected: **4 items on the true branch and 3 items on the false branch.**
 
-Normal alerts with a public IOC continued through Split Cortex Observables, Dedupe Cortex Observables and Cortex Eligibility. The synthetic public IP in test 1 is in a documentation range, so Cortex Eligibility correctly rejected it and no analyzer was started.
+The test was run on 2026-11-08 and gave this result. Window expiry was not tested, because it needs the active workflow. To test it, send the same alert twice to the production Webhook URL, wait longer than 3 minutes and send it again; the last one should pass as new.
 
-These tests do not cover: expiry of the window, because static data is not persisted on manual runs; delivery through the live Webhook; or real web-scan alerts, whose `rule.groups` and `data.url` fields were assumed from the synthetic data.
+**Evidence:**
 
-Build and test instructions are in the [n8n triage runbook](../runbooks/n8n-triage.md#3-dedup).
+The screenshots show the workflow with the new nodes, the Dedup output for a duplicate, and the New Alert? split.
 
+![The n8n workflow with the Dedup and New Alert? nodes after Normalize](../images/n8n/68-dedup-workflow.png)
 
+*Figure. Dedup and New Alert? placed between Normalize Alert and the MISP and Cortex branches.*
 
+![Dedup output showing is_duplicate true and duplicate_count 2](../images/n8n/68-dedup-output.png)
+
+*Figure. Dedup output for a repeated alert, with `is_duplicate: true` and `duplicate_count: 2`.*
+
+![New Alert? output showing 4 items on true and 3 items on false](../images/n8n/68-dedup-if.png)
+
+*Figure. New Alert? result for the seven test alerts: 4 items continue (true), 3 duplicates stop (false).*
+
+**If it does not work:**
+
+| What you see | Cause | Fix |
+|---|---|---|
+| Every alert is new, even an identical one sent in a separate run | Static data is not saved on manual runs | Put all test alerts into one pinned output and execute once, or test on the active workflow with the production Webhook URL |
+| Duplicates are not recognised on the active workflow | The workflow is not published, or alerts are sent to the test URL | Publish the workflow and send to the production Webhook URL |
+| New Alert? reports a type error | `is_duplicate` is missing, because the If node is not connected to the Dedup output | Connect Dedup to New Alert? and check the Dedup output |
+| Web alerts are not merged and `dedup_mode` is `default` | The alert has no web group in `rule.groups`, or no source IP | Check `rule.groups` and `source_ip` in the Normalize output and add the group to `WEB_GROUPS` in Normalize |
+| Dedup fails with a missing `dedup_key` | The node is not connected after Normalize, or Normalize failed | Check the connection and the Normalize output |
+| Different events from one rule and agent are dropped | The alerts have no observables and no source IP, so they share one key | Known limitation; check the original alerts and consider adding a field to the key |
+| An alert is dropped as a duplicate, but its first copy failed in a later stage | The key is stored before enrichment | Wait until the window ends and resend |
 ## 4. MISP and Cortex
 
 **Owner:** @MKonrad-afk
