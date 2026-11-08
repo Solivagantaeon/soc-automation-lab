@@ -137,43 +137,75 @@ The generated `dedup_key` must be consumed and tested by the Dedup stage.
 
 **Owner:** @arturesturemkuros
 
-**Decision.** Duplicate alerts are dropped right after Normalize and before any
-enrichment (MISP, Cortex analyzers), so a repeated alert never uses API quota.
+#### Context
 
-**Mechanism.** A Code node ("Dedup") keeps a map of `dedup_key -> {first_seen, count}`
-in n8n workflow static data. An alert whose key is already in the map within the
-window is marked `is_duplicate: true`; otherwise it is stored and passes. An If node
-("New Alert?") routes new alerts on and ends the execution for duplicates.
+Wazuh can send the same alert many times in a short period, for example when a scan or a repeated login attempt keeps triggering one rule. Every copy that reaches the enrichment stages costs a MISP query and up to five Cortex analyzer runs, some of which have API rate limits (Maltiverse, AbuseIPDB, TeamCymru, CirclHash, VirusTotal).
 
-**Window: 10 minutes**, fixed from the first occurrence (not sliding).
-- Why: short enough that a recurring problem is reported again soon, long enough
-  to absorb bursts of the same event.
-- Trade-off: a continuous flood yields one alert per 10 minutes, not one in total.
+The Dedup stage was added to the `SOC - n8n E2E Skeleton` workflow directly after Normalize, as early as possible, so a duplicate is stopped before any enrichment. It depends on the `dedup_key` produced by the Normalize stage.
 
-**Key** (built in Normalize):
+#### Decision
+
+Two nodes are added after Normalize:
+
+1. A JavaScript Code node, **Dedup**, in **Run Once for All Items** mode. It keeps a map of `dedup_key -> {first_seen, count}` in n8n workflow static data. If the key is already in the map and younger than the window, the alert is marked `is_duplicate: true` and its `duplicate_count` is increased. Otherwise the key is stored and the alert is marked `is_duplicate: false`. Entries older than the window are removed on every run.
+2. An If node, **New Alert?**, which tests `{{ $json.is_duplicate }}` is false. The true branch continues to the MISP lookup and to Split Cortex Observables. The false branch is empty, so the execution ends there.
+
+**Window.** 3 minutes, counted from the first occurrence (a fixed window, not a sliding one).
+
+**Key.** Normalize builds the key as:
+
 `soc:dedup:<rule.id>:<signature_id>:<agent.id>:<source_ip>:<primary_observable>`
-- Private source IPs are kept in the key, so two internal attackers are not merged.
-- For web rules (groups `web`, `accesslog`, `web_scan`) the last element is `*`:
-  the path is ignored, so a scan from one IP on one agent is one key.
-  Without a source IP, the default key is used.
 
-**Why static data and not Remove Duplicates:** the built-in node has no time window.
+- The source IP is taken from `data.srcip`, `data.src_ip`, `data.win.eventdata.sourceIp` or `data.win.eventdata.ipAddress`. Private addresses are kept, so two internal attackers do not share a key.
+- For web rules (rule groups `web`, `accesslog` or `web_scan`) that have a source IP, the last element is `*` instead of the primary observable. The path is ignored, so a scan from one IP against one agent is one key. Without a source IP the default key is used.
+- Normalize also outputs `source_ip` and `dedup_mode` (`default` or `web-source`).
 
-**Known limitations**
-- Alerts with no observables and no source IP differ only by rule/agent, so
-  different events from the same rule and agent merge within the window.
-- Web rules ignore the path, so one interesting hit inside a scan can be
-  dropped as a duplicate of the first alert.
-- Duplicates are dropped silently (false branch is empty); nothing is updated in TheHive.
-- The window runs on processing time, not alert `timestamp`, so replaying
-  baseline alerts through the pipeline dedups by replay speed.
-- Static data is only persisted by active workflows, not manual runs.
+#### Rationale
 
-**Considered, not implemented:** HTTP status code in the key, never deduplicating
-high-level alerts, updating the existing TheHive alert on duplicates.
+**Early position.** A duplicate that is stopped right after Normalize never reaches MISP or Cortex, which protects the rate-limited APIs. Putting the stage later would only save work on the nodes after it.
 
+**Code node and static data instead of Remove Duplicates.** The built-in Remove Duplicates node compares against earlier executions and has no time window, so it cannot express "the same alert within a short time". Static data with a timestamp can.
 
+**Short fixed window.** A short window absorbs bursts of the same event, while a problem that keeps recurring is reported again after the window ends. The cost is that a continuous flood produces one alert per window, not one in total. A fixed window was chosen over a sliding one because a sliding window would suppress a never-ending flood forever.
 
+**Source IP in the key.** Without it, two different internal attackers triggering the same rule on the same agent, with no public IOC, would share one key and the second would be dropped.
+
+**Path ignored for web rules.** Tools such as gobuster try hundreds of paths. If the path were part of the key, every path would be a new alert and the flood would not be reduced. The price is that one interesting hit inside a scan can be dropped as a duplicate of the first alert.
+
+**Considered, not implemented.**
+- Adding the HTTP status code to the key for web rules, so that 404 and 200 responses from one IP stay separate.
+- Never deduplicating alerts above a chosen rule level.
+- Updating the existing TheHive alert with the repeat count when a duplicate arrives.
+
+#### Verification
+
+The stage was tested on 2026-11-08 with seven synthetic alerts pinned in the Webhook node and executed once:
+
+| Test | Scenario | Verified result |
+|---|---|---|
+| 1 | New alert, public source IP | `is_duplicate: false`, `dedup_mode: default` |
+| 2 | Same alert again | `is_duplicate: true`, `duplicate_count: 2` |
+| 3 | Web rule, private source IP, path `/dvwa/admin` | `is_duplicate: false`, `dedup_mode: web-source` |
+| 4 | Same web rule, same source IP, other path `/dvwa/backup` | `is_duplicate: true`, same key as test 3 |
+| 5 | Same web rule, different source IP | `is_duplicate: false`, different key |
+| 6 | No observables, no source IP | `is_duplicate: false`, `primary_observable: "-"` |
+| 7 | Same alert as test 6 again | `is_duplicate: true` (known limitation below) |
+
+New Alert? sent 4 items to the true branch and 3 items to the false branch, as expected.
+
+Normal alerts with a public IOC continued through Split Cortex Observables, Dedupe Cortex Observables and Cortex Eligibility. The synthetic public IP in test 1 is in a documentation range, so Cortex Eligibility correctly rejected it and no analyzer was started.
+
+These tests do not cover: expiry of the window, because static data is not persisted on manual runs; delivery through the live Webhook; or real web-scan alerts, whose `rule.groups` and `data.url` fields were assumed from the synthetic data.
+
+Build and test instructions are in the [n8n triage runbook](../runbooks/n8n-triage.md#3-dedup).
+
+#### Follow-up
+
+- Verify window expiry on the active workflow: send the same alert, wait longer than the window and send it again. It should pass as new.
+- Check a real gobuster alert against the DVWA host to confirm that its `rule.groups` contain a web group and that `source_ip` is filled.
+- Known limitations: alerts with no observables and no source IP differ only by rule and agent, so different events from one rule and agent merge within the window; duplicates are dropped silently and nothing is updated in TheHive; the window uses processing time, not the alert `timestamp`, so replaying baseline alerts through the pipeline deduplicates by replay speed; the entry is stored before enrichment, so if a later stage fails the key stays blocked until the window ends.
+- The Counters stage can use `duplicate_count`. Updating the existing TheHive alert on duplicates, with a `sourceRef` that includes `first_seen` so a new window can create a new alert, is a possible follow-up.
+- The `dedup_key` format changed after Normalize v1.2 (the source IP was added). The Normalize section and `normalize-v1.2.js` need to be updated by their owner to match.
 ### 4. MISP and Cortex
 
 **Owner:** @MKonrad-afk
