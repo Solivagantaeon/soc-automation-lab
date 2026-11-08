@@ -246,6 +246,24 @@ Only include screenshots that have actually been captured and checked into the r
 
 **Owner:** @arturesturemkuros
 
+Position: `Webhook -> Normalize Alert -> Dedup -> New Alert? -> (true) -> MISP lookup + Split Cortex Observables`
+
+| Node | Type | What it does |
+|---|---|---|
+| Dedup | Code (all items) | Looks up `dedup_key` in static data, adds `is_duplicate`, `duplicate_count`, and `first_seen` for duplicates; expires entries older than 3 min |
+| New Alert? | If | `{{ $json.is_duplicate }}` is false -> true branch continues; false branch ends |
+
+**Testing.** Static data is not persisted on manual runs, so put all test alerts in
+one pinned Webhook output and execute once. Sample set: 7 alerts, expected
+4 on true and 3 on false (see screenshots).
+
+**Screenshots** (`docs/images/n8n/`):
+![The workflow with the new nodes](../images/n8n/68-dedup-workflow.png)
+![Dedup output with `is_duplicate: true`, `duplicate_count: 2`](../images/n8n/68-dedup-workflow.png)
+- `dedup-output.png` – Dedup output with `is_duplicate: true`, `duplicate_count: 2`
+- `dedup-if.png` – New Alert? showing 4 true / 3 false
+
+
 ## 4. MISP and Cortex
 
 **Owner:** @MKonrad-afk
