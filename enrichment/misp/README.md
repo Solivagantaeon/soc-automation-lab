@@ -104,7 +104,15 @@ The corresponding TheHive alert was created with HTTP 201. Its summary reported 
 
 The prior multi-IP evidence is in [`../../samples/results/misp/multi-ip-wazuh-test.json`](../../samples/results/misp/multi-ip-wazuh-test.json); the malicious/warninglist IP evidence is in [`../../samples/results/misp/malicious-and-warninglist-ip-test.json`](../../samples/results/misp/malicious-and-warninglist-ip-test.json). Those captures established that searches include `to_ids: false` records and warninglist comments. The latest all-observable test supersedes their earlier limitation about domain/hash lookup coverage.
 
+## n8n lab context — Issue #69
 
+This section documents the MISP branch of the n8n triage workflow. The branch searches normalized alert observables and returns matching attributes in `misp.unique_indicators`, together with `misp.attribute_count`. It runs alongside the Cortex enrichment branch.
+
+In the Issue #69 all-routes test, MISP returned two attributes for `1.1.1.1`. Both had `to_ids: false`; one carried a warninglist comment identifying the address as a known public DNS resolver. Review the attribute comments, `to_ids`, `disable_correlation`, event context, and warninglist information together. A MISP match or `to_ids` value alone does not establish a malicious or benign verdict.
+
+![n8n MISP Attribute Search and lab results](../../docs/images/n8n/69-misp-search-and-results.png)
+
+The workflow configuration and end-to-end test are documented in the [n8n triage runbook](../../docs/runbooks/n8n-triage.md#4-misp-and-cortex).
 ## TheHive import filter
 
 The TheHive MISP integration is configured to import MISP events carrying the tag `soc-lab:thehive`.

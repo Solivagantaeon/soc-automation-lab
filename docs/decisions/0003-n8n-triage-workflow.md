@@ -210,6 +210,51 @@ Build and test instructions are in the [n8n triage runbook](../runbooks/n8n-tria
 
 **Owner:** @MKonrad-afk
 
+#### Context
+
+The workflow checks Wazuh alert observables against MISP and Cortex. MISP looks for matching attributes in local threat-intelligence data. Cortex runs analyzers for supported observables.
+
+#### Decision
+
+MISP searches the normalized observables and returns matching attributes with their event context.
+
+Before sending observables to Cortex, the workflow splits them into individual items, removes duplicates, and checks whether each item can be analyzed. Eligible items go to the matching analyzer. Skipped items are kept with a reason.
+
+| Observable | Cortex analyzer |
+|---|---|
+| Public IP | AbuseIPDB |
+| Domain | Maltiverse |
+| Hash | Team Cymru MHR and CIRCL Hashlookup |
+| URL | VirusTotal GetReport |
+
+The workflow does not send file contents or filenames to Cortex. It can send a file hash.
+
+Each analyzer starts once and returns an ID for its analysis. `Get a report` uses that same ID to check the result. If the analysis is still running, n8n waits two seconds and checks again. It tries up to five times. If no result is ready, the summary marks the analysis as pending.
+
+`Summary Enrichments` combines the MISP matches, Cortex results, skipped observables, and job status.
+
+#### Rationale
+
+MISP and Cortex provide different information. MISP shows whether an observable matches a local attribute. Cortex returns results from external analyzers.
+
+The eligibility check keeps internal or unsupported observables out of the analyzer branches. Removing duplicates avoids starting the same analysis more than once for an observable in the same alert. Reusing the analysis ID lets n8n check for a result without starting another analysis.
+
+#### Verification
+
+The raw Wazuh test alert for rule `100723` exercised all four Cortex routes and returned five results:
+
+| Observable | Result |
+|---|---|
+| `soc-lab-postdns.example.org` | Maltiverse returned `neutral` |
+| `1.1.1.1` | AbuseIPDB returned `whitelisted: true` and confidence score `0` |
+| Test SHA-256 | Team Cymru returned `No record found`. CIRCL Hashlookup returned `Non existing SHA-256` |
+| Test URL | VirusTotal completed the lookup but returned `NotFoundError` |
+
+The workflow finished with no pending or failed jobs. VirusTotal did not find that URL. This does not confirm that the URL is safe. The internal source IP, agent IP, and hostname were kept in `skipped_by_filter`.
+
+MISP returned two attributes for `1.1.1.1`. Both had `to_ids: false`. One included a warninglist comment identifying it as a known public DNS resolver. These attributes provide context, not a standalone verdict.
+
+The [n8n triage runbook](../runbooks/n8n-triage.md#4-misp-and-cortex) documents the node settings and test steps. The [MISP README](../../enrichment/misp/README.md#n8n-lab-context--issue-69) and [Cortex README](../../enrichment/cortex/README.md#n8n-cortex-workflow--issue-69) describe the lab context.
 
 
 ### 5. Score

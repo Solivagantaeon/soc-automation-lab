@@ -192,6 +192,29 @@ The collector tests cover one alert object containing distinct observables, dupl
 
 Sanitized individual normalizer examples are available for [AbuseIPDB](../../samples/normalized/abuseipdb-normalized-example.json), [DShield](../../samples/normalized/dshield-normalized-example.json), [Team Cymru](../../samples/normalized/teamcymru-normalized-example.json), [VirusTotal](../../samples/normalized/virustotal-normalized-example.json), [Google DNS](../../samples/normalized/googledns-normalized-example.json), and [Maltiverse](../../samples/normalized/maltiverse-normalized-example.json).
 
+## n8n Cortex workflow — Issue #69
+
+This section documents the Cortex branch of the n8n triage workflow. After splitting and deduplicating the alert observables, one shared eligibility check runs before `router of types`. Eligible observables go to the analyzer for their type. Ineligible observables are preserved through `Mark Cortex skipped` with their source field, internal flag, and skip reason.
+
+| Observable type | Analyzer |
+|---|---|
+| `ip` | `AbuseIPDB_2_0` |
+| `domain` | `Maltiverse_Report_1_0` |
+| `hash` | `TeamCymruMHR_1_0` and `CIRCLHashlookup_1_1` |
+| `url` | `VirusTotal_GetReport_3_1` |
+
+Each analyzer is submitted once. The workflow polls its report using the job ID returned by the corresponding Execute node. Pending jobs wait two seconds before the next report check, with up to five polling attempts.
+
+![Issue #69 Cortex eligibility and type routing](../../docs/images/n8n/69-normalize-dedup-routing.png)
+
+![Issue #69 Cortex analyzer and polling branches](../../docs/images/n8n/69-analyzer-polling-branches.png)
+
+The rule `100723` lab test exercised all four observable routes and returned five Cortex results. Maltiverse classified `soc-lab-postdns.example.org` as `neutral`; AbuseIPDB returned a whitelist indication and confidence score `0` for `1.1.1.1`; Team Cymru and CIRCL Hashlookup returned no known record for the test hash. VirusTotal completed its lookup but returned `NotFoundError` for the exact test URL. This is a completed lookup with no record, not a clean verdict.
+
+The workflow summary reported `processing.status: complete`, with no pending or failed jobs. The internal source IP, agent IP, and hostname were retained under `skipped_by_filter`.
+
+For the node configuration, eligibility rules, and complete test evidence, see the [n8n triage runbook](../../docs/runbooks/n8n-triage.md#4-misp-and-cortex).
+
 ## Alert deduplication and TheHive updates
 
 The Wazuh alert deduplication flow fingerprints the incoming event and keeps three separate cache values: `soc_dedup_test` records the fingerprint, `soc_thehive_ids_test` maps that fingerprint to one TheHive alert ID, and `soc_duplicate_counts_test` stores the occurrence count under a `dupcount_`-prefixed fingerprint.

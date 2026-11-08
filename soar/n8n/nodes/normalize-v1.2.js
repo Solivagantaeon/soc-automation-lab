@@ -1,4 +1,3 @@
-
 /**
  * SOC - Wazuh Alert Normalization
  * Stage: Normalize (#67)
@@ -252,6 +251,7 @@ function normalizeAlert(root) {
   // ==========================================================
 
   const domainFields = [
+    'data.domain',
     'data.win.eventdata.queryName',
     'data.dns.rrname',
     'data.http.hostname',
@@ -288,6 +288,21 @@ function normalizeAlert(root) {
 
     if (/^https?:\/\//i.test(value)) {
       add('url', value, field);
+
+      try {
+        const hostname = new URL(value)
+          .hostname
+          .toLowerCase()
+          .replace(/\.$/, '');
+
+        if (isDomain(hostname)) {
+          add('domain', hostname, `${field}#hostname`, {
+            internal: /\.(lab|local|lan|internal|localdomain)$/.test(hostname)
+          });
+        }
+      } catch {
+        // Keep the URL observable if hostname parsing fails.
+      }
 
     } else if (
       field === 'data.http.url' &&
@@ -350,7 +365,10 @@ function normalizeAlert(root) {
   for (const [field, algorithm] of [
     ['syscheck.sha256_after', 'SHA256'],
     ['syscheck.sha1_after', 'SHA1'],
-    ['syscheck.md5_after', 'MD5']
+    ['syscheck.md5_after', 'MD5'],
+    ['syscheck.sha256_before', 'SHA256'],
+    ['syscheck.sha1_before', 'SHA1'],
+    ['syscheck.md5_before', 'MD5']
   ]) {
     const value = get(alert, field);
 
