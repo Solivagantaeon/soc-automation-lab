@@ -150,7 +150,7 @@ Two nodes are added after Normalize:
 1. A JavaScript Code node, **Dedup**, in **Run Once for All Items** mode. It keeps a map of `dedup_key -> {first_seen, count}` in n8n workflow static data. If the key is already in the map and younger than the window, the alert is marked `is_duplicate: true` and its `duplicate_count` is increased. Otherwise the key is stored and the alert is marked `is_duplicate: false`. Entries older than the window are removed on every run.
 2. An If node, **New Alert?**, which tests `{{ $json.is_duplicate }}` is false. The true branch continues to the MISP lookup and to Split Cortex Observables. The false branch is empty, so the execution ends there.
 
-**Window.** 3 minutes, counted from the first occurrence (a fixed window, not a sliding one).
+**Window.** 7 minutes, counted from the first occurrence (a fixed window, not a sliding one).
 
 **Key.** Normalize builds the key as:
 
