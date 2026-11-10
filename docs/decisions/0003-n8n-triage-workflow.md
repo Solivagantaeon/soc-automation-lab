@@ -33,9 +33,9 @@ flowchart LR
 | 3 | Dedup | Recognises the same alert sent again within a short time | @arturesturemkuros |
 | 4 | MISP and Cortex | Checks the observables against threat intelligence | @MKonrad-afk |
 | 5 | Score | Gives the alert points and keeps the reason for each one | @arturesturemkuros |
-| 6 | Decision | Picks one of three outcomes: close, review, malicious | @arturesturemkuros |
+| 6 | Decision | Picks one of three outcomes: close, review, malicious | @MKonrad-afk |
 | 7 | Failure handling | Makes sure a broken service does not stop the workflow or hide an alert | @p4chatek |
-| 8 | TheHive | Creates the alert the analyst works on | @Solivagantaeon |
+| 8 | TheHive | Creates the alert the analyst works on | @MKonrad-afk |
 | 9 | Audit | Keeps the reason for every alert closed automatically | @Maartini22 |
 | 10 | Counters | Counts alerts at every stage, so we can show the reduction | @arturesturemkuros |
 
@@ -345,9 +345,57 @@ The [n8n triage runbook](../runbooks/n8n-triage.md#5-score) documents the node s
 
 ### 6. Decision
 
-**Owner:** @arturesturemkuros
+**Owner:** @MKonrad-afk
 
+#### Context
 
+The Score stage returns a score, verdict, coverage, and enrichment results. A low score alone does not prove that an alert is safe to close: enrichment can be incomplete, the asset can be critical, or the inventory can lack a reliable match. Decision combines the analysis with an explicit asset policy.
+
+#### Decision
+
+The `soc_asset_inventory` Data Table contains one row per known Wazuh agent. `Lookup Asset` queries it using both `agent_id` and `agent_name`. The Decision code validates the returned rows again and accepts only one matching ID and normalized name. A missing or ambiguous match cannot authorize automatic closure.
+
+The JavaScript Code node reads the scored item from `Scoring` and inventory rows from its input. It adds `asset_inventory` and `decision` objects.
+
+| Outcome | Rule |
+|---|---|
+| `closed` | Analysis is complete; an eligible external observable exists; there is no conflicting evidence or malicious signal; verdict is `likely_false_positive`; exactly one asset matches; the asset is not critical; and `auto_close_allowed` is true. |
+| `analyst_review` | Default when data is missing, incomplete, ambiguous, or conflicting, or when the safe-close conditions are not met. |
+| `malicious` | Analysis is complete and a configured malicious signal exists, or the verdict is `high`. This is automated routing, not analyst confirmation. |
+
+`analysis_complete` requires valid scoring, coverage exactly 1, `processing.status` equal to `complete`, no failed or pending jobs, no partial or failed sources, no scoring input problems or config warnings, and no unclear VirusTotal result.
+
+An eligible observable is a non-empty external IP, domain, URL, or hash. A `soc-lab:benign` tag combined with a malicious signal or score of 40 or higher is conflicting evidence and goes to review.
+
+Malicious signals are: MISP tag `soc-lab:malicious`; Maltiverse classification `malicious`; Team Cymru MHR detection at least 50%; or VirusTotal with at least 10 detections.
+
+An asset with `critical` criticality is never auto-closed, even if `auto_close_allowed` is true. The current inventory marks SOC-DC01 and OPNsense as critical; the list can grow as the lab changes.
+
+The implementation is kept in [`decision-v0.1.js`](../../soar/n8n/nodes/decision-v0.1.js). Build steps and test results are in the [n8n triage runbook](../runbooks/n8n-triage.md#6-decision).
+
+Decision returns an outcome in the workflow item. It does not change Wazuh alert status.
+
+#### Rationale
+
+A failed or incomplete source means the workflow does not know enough to call an alert safe. Such alerts go to `analyst_review`, with any collected malicious signals preserved. The editable inventory keeps closure policy visible and prevents unknown, ambiguous, or critical assets from being auto-closed.
+
+#### Verification
+
+The stage was exercised in n8n with these lab alerts:
+
+| Test alert | Verified result |
+|---|---|
+| `decision71-20261110-critical-lookup-004` | SOC-DC01 matched as `008` / `server` / `critical`. Analysis complete; score 7, verdict `likely_false_positive`. Outcome `analyst_review`, reason `critical_asset`. |
+| `decision71-20261110-closed-retry-007` | SOC-WIN10-01 matched as `007` / `workstation` / `standard`; auto-close allowed. Analysis complete; score 7, verdict `likely_false_positive`. AbuseIPDB was whitelisted; MISP returned two attributes with `to_ids: false` and no `soc-lab:benign` tag. Outcome `closed`, reason `complete_low_risk_analysis`. |
+| `decision71-20261110-malicious-wicar-008` | Maltiverse classified `wicar.org` as malicious. Analysis complete; score 22 and verdict `low`. Outcome `malicious`, reason `malicious_evidence`. |
+| `decision71-20261110-malicious-003` | MISP failed, coverage was 0.8, and Maltiverse/Team Cymru signals remained in output. Outcome `analyst_review`, reason `incomplete_analysis`; `analysis_complete` was false. |
+
+These lab results verify all three outcomes and the incomplete-analysis fallback. 
+
+#### Follow-up
+
+- Keep inventory rows and `last_reviewed` current as agents change.
+- The Audit stage must retain a durable record of a `closed` outcome and its reason.
 
 ### 7. Failure handling
 
@@ -421,7 +469,7 @@ The stage was tested on 2026-11-10 with one synthetic alert, `100002`. It contai
 | `cortex.results` | Empty, because no analyzer answered |
 | `cortex.skipped_by_filter` | Only observables that were deliberately not sent to Cortex: the two documentation-range IPs (`Non-public IPv4 address`) and the internal agent IP and hostname (`Marked internal by normalization`). No failed observable was listed there |
 
-This test does not cover: a failure in a `Get a report …` node, because no job was created; AbuseIPDB, because the documentation-range IPs are correctly filtered out before it; a real outage, because an invalid URL fails immediately instead of timing out; and the Score stage output for a failed run.
+This test does not cover: a failure in a `Get a report …` node, because no job was created. AbuseIPDB, because the documentation-range IPs are correctly filtered out before it; a real outage, because an invalid URL fails immediately instead of timing out, and the Score stage output for a failed run.
 
 Build and test instructions, screenshots and the test alert are in the [n8n triage runbook](../runbooks/n8n-triage.md#7-failure-handling).
 
