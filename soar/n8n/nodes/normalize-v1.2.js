@@ -500,6 +500,8 @@ function normalizeAlert(root) {
   // 14. DEDUPLICATION KEY
   // ==========================================================
 
+  const WEB_GROUPS = ['web', 'accesslog', 'web_scan'];
+
   const ruleId = String(alert.rule.id);
 
   const agentId = String(
@@ -509,12 +511,38 @@ function normalizeAlert(root) {
   const signatureId =
     get(alert, 'data.alert.signature_id') ?? '';
 
+  // Source IP: private addresses are kept on purpose,
+  // only source-like fields are used (not dstip, not agent.ip)
+  let srcIp = '';
+
+  for (const field of [
+    'data.srcip',
+    'data.src_ip',
+    'data.win.eventdata.sourceIp',
+    'data.win.eventdata.ipAddress'
+  ]) {
+    const value = get(alert, field);
+
+    if (typeof value === 'string' && isIP(value.trim())) {
+      srcIp = value.trim().toLowerCase();
+      break;
+    }
+  }
+
+  // Web rules: key = rule + agent + source IP (path is ignored).
+  // Only when a source IP exists, otherwise fall back to the default key.
+  const isWebRule = (alert.rule.groups ?? [])
+    .some(group => WEB_GROUPS.includes(group));
+
+  const webMode = isWebRule && srcIp !== '';
+
   const dedupKey = [
     'soc:dedup',
     ruleId,
     signatureId,
     agentId,
-    primary
+    srcIp || '-',
+    webMode ? '*' : primary
   ].join(':').slice(0, 300);
 
   // ==========================================================
@@ -581,9 +609,13 @@ function normalizeAlert(root) {
 
     primary_observable: primary,
 
-    dedup_key: dedupKey
+    dedup_key: dedupKey,
+    source_ip: srcIp || null,
+
+    dedup_mode: webMode ? 'web-source' : 'default'
   };
 }
+
 
 // ============================================================
 // 16. PROCESS ALL INPUT ITEMS
