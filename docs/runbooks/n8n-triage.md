@@ -602,6 +602,190 @@ The workflow returned five Cortex result entries, `processing.status: complete`,
 
 **Owner:** @arturesturemkuros
 
+**What it does:** Gives each enriched alert a score from 0 to 100, a verdict, a coverage value, and a list of reasons, one for every point added or removed.
+
+```mermaid
+flowchart TD
+    S["Summary Enrichments"] --> C["Scoring Config"]
+    C --> P["Scoring"]
+    P --> R["Rule level points"]
+    P --> E["Points from each source"]
+    R --> T["Sum, limited to 0-100"]
+    E --> T
+    P --> V["Coverage"]
+    T --> D["Verdict"]
+    V --> D
+    D --> N["Next stage"]
+```
+
+*Figure. Score flow. The score and the coverage are calculated separately, then combined into the verdict.*
+
+![Scoring stage in the n8n workflow](../images/n8n/70-scoring-workflow.png)
+
+*Figure. Scoring Config and Scoring follow Summary Enrichments; the downstream Create an alert node is deactivated in this workflow view.*
+
+### Score nodes
+
+#### Node: Scoring Config
+
+**What it does:** Adds the scoring rules (weights, thresholds, on/off switches) to the alert item as `scoring_config`, so they can be changed without editing code.
+
+**How to build it:**
+
+1. Add an **Edit Fields (Set)** node after `Summary Enrichments`.
+2. Name the node `Scoring Config`.
+3. Set the mode to JSON and paste the contents of [`score-config.json`](../../soar/n8n/nodes/score-config.json).
+4. Keep the other input fields, so the alert data from `Summary Enrichments` passes through. The option is called **Include Other Input Fields** or **Include in Output: All Input Fields**, depending on the n8n version.
+5. Connect the node output to `Scoring`.
+
+| Setting | Value |
+|---|---|
+| Node type | `Edit Fields (Set)` |
+| Mode | JSON |
+| Added field | `scoring_config` |
+| Keep other input fields | On |
+| Implementation | [`score-config.json`](../../soar/n8n/nodes/score-config.json) |
+
+![Scoring Config node showing the JSON mode and Include Other Input Fields enabled](../images/n8n/70-scoring-config.png)
+
+*Figure. Scoring Config holds the JSON rules and passes the existing alert fields through to Scoring.*
+
+**Settings in `scoring_config`:**
+
+| Setting | Meaning | Default |
+|---|---|---|
+| `rule_level_multiplier` | Points per Wazuh rule level (levels 0-15 give 0-30 points) | `2` |
+| `bands.high`, `bands.medium`, `bands.low` | Lowest score for each verdict | `70`, `40`, `20` |
+| `min_coverage_for_fp` | Lowest coverage at which a low score may be called a false positive | `0.6` |
+| `sources.<name>.enabled` | Turns a source on or off. A disabled source gives no points and does not count in coverage | `true` |
+| `sources.misp.to_ids`, `sources.misp.match` | Points for a MISP attribute with `to_ids: true`, and for any other match | `30`, `15` |
+| `sources.abuseipdb.tiers`, `sources.abuseipdb.whitelisted` | Points by abuse confidence score, and points for a whitelisted IP | `>=75: 25`, `>=25: 12`, `-10` |
+| `sources.maltiverse.malicious`, `suspicious`, `historical_only`, `whitelist` | Points by classification | `20`, `10`, `5`, `-5` |
+| `sources.virustotal.tiers` | Points by number of detecting engines | `>=10: 25`, `>=3: 15`, `>=1: 8` |
+| `sources.teamcymru.tiers` | Points by MHR detection percentage | `>=50: 15`, `>=20: 8` |
+| `sources.teamcymru.ignore_when_circl_known` | Ignore MHR detections for a hash that CIRCL lists as known, unless the detection is strong (see `known_good_unless_mhr_pct`) | `true` |
+| `sources.circl.known_good` | Points for a hash known in CIRCL Hashlookup | `-10` |
+| `sources.circl.known_good_unless_mhr_pct` | A hash known in CIRCL keeps its known-good status only while its MHR detection is below this percentage. A value above 100 turns the exception off | `50` |
+
+The `Scoring` node checks the config before using it. An unknown key, a value of the wrong type, `bands` that are not in the order high > medium > low, or a `min_coverage_for_fp` outside 0-1 does not stop the workflow. The default value is used instead and the problem is listed in `scoring.config_warnings`. Tiers are sorted automatically, and numbers written as text (`"3"`) are accepted. If the `scoring_config` field is missing, the defaults built into the code are used and no warning is written.
+
+**How to test it:** Run the workflow with any alert. Open the `Scoring Config` output and confirm that `scoring_config` is present next to `alert`, `misp`, `cortex`, and `processing`.
+
+#### Node: Scoring
+
+**What it does:** Reads the `Summary Enrichments` output and the scoring config, adds the `scoring` object to the item, and removes `scoring_config` from it.
+
+**How to build it:**
+
+1. Add a **Code** node after `Scoring Config`.
+2. Name the node `Scoring`.
+3. Set **Mode** to `Run Once for All Items`.
+4. Set **Language** to `JavaScript`.
+5. Copy the contents of [`score-v0.2.js`](../../soar/n8n/nodes/score-v0.2.js) into the Code node editor.
+6. Connect the node output to the next workflow stage.
+7. Save the workflow.
+
+| Setting | Value |
+|---|---|
+| Node type | `Code` |
+| Mode | `Run Once for All Items` |
+| Language | `JavaScript` |
+| Implementation | [`score-v0.2.js`](../../soar/n8n/nodes/score-v0.2.js) |
+
+**Input fields used:**
+
+| Field | Used for |
+|---|---|
+| `alert.rule.level` | Rule level points |
+| `cortex.results[]` (`analyzer`, `observable`, `status`, `summary`) | Points from AbuseIPDB, Maltiverse, VirusTotal, Team Cymru MHR, and CIRCL. Only results with status `complete` give points |
+| `misp.unique_indicators[].attributes[].to_ids` | MISP points |
+| `processing.failed[]`, `processing.pending[]` | Coverage |
+
+**Points (default values):**
+
+| Source | What is read | Points |
+|---|---|---|
+| Rule level | `alert.rule.level` | Level x 2, at most 30 |
+| MISP | `to_ids` of the matched attributes | 30 if any attribute has `to_ids: true`, otherwise 15 for any match |
+| AbuseIPDB | Abuse confidence score, `whitelisted` | 25 from score 75, 12 from score 25, -10 if whitelisted |
+| Maltiverse | Classification, historical matches | `malicious` 20, `suspicious` 10, `whitelist` -5; other classifications with historical matches 5 |
+| VirusTotal | `GetReport` value `detections/engines` | 25 from 10 detections, 15 from 3, 8 from 1 |
+| Team Cymru MHR | `detection_pct` | 15 from 50%, 8 from 20%. Ignored when CIRCL lists the same hash as known and the detection is below 50% |
+| CIRCL Hashlookup | `Result` equal to `known` | -10. Not applied to a hash whose MHR detection is 50% or more |
+
+Each source gives one entry. When a source returned results for several observables, the entry with the most points is used. The total is rounded and limited to 0-100.
+
+**Verdicts:**
+
+| Verdict | Condition |
+|---|---|
+| `high` | Score 70 or more |
+| `medium` | Score 40-69 |
+| `low` | Score 20-39 |
+| `likely_false_positive` | Score below 20 |
+| `needs_review` | The score would give `low` or `likely_false_positive`, but coverage is below 0.6. Also used when the item has no enrichment data to score (see `input_problems`) |
+
+A verdict is not a decision. The Decision stage chooses what happens to the alert.
+
+**Coverage:** The share of enrichment sources that answered. A source with both a result and an error counts as half, an analyzer that is still pending counts as not answered, and a disabled source is left out. MISP counts as answered when no MISP error was recorded, also when it found nothing.
+
+**Output:** The `scoring` object contains:
+
+| Field | Purpose |
+|---|---|
+| `score` | Total points, 0-100 |
+| `verdict` | One of the verdicts above |
+| `coverage` | Coverage value, 0-1 |
+| `sources` | Sources grouped as `ok`, `partial`, and `failed` |
+| `breakdown` | One entry per point source: `source`, `points`, `reason`, and `observable` when it applies. The first entry is always the rule level |
+| `config_version` | Version of the config that was used |
+| `config_warnings` | Present only when the config had problems |
+| `input_problems` | Present only when the item is missing `alert.rule.level`, `cortex.results`, or `processing`. The verdict is then `needs_review` and coverage is 0 |
+
+**How to test it:**
+
+The scoring logic was run on the `Summary Enrichments` output of two lab test alerts and on synthetic cases. Use pinned data or the `Summary Enrichments` output of a test run, then compare with the expected results:
+
+| Test | Input scenario | Expected result |
+|---|---|---|
+| 1 | Rule `5710`, level 5. Hash known in CIRCL, MHR 37%. AbuseIPDB and MISP failed | Score 0, `needs_review`, coverage 0.5. MHR ignored |
+| 2 | Rule `92213`, level 12. Maltiverse `malicious`, VirusTotal 2/91. Team Cymru, CIRCL, and MISP failed | Score 52, `medium`, coverage 0.4 |
+| 3 | Test 1 with AbuseIPDB (confidence 0) and MISP answering | Score 0, `likely_false_positive`, coverage 1 |
+| 4 | Level 12, MISP match with `to_ids: true`, AbuseIPDB confidence 100 | Score 79, `high`, coverage 1 |
+| 5 | MHR 80%, no CIRCL record | Score 25, `low`, coverage 1 |
+| 6 | Item that contains only `scoring_config`, without alert data | Score 0, `needs_review`, coverage 0, `input_problems` lists the three missing parts |
+| 7 | Level 12, Maltiverse `malicious`, VirusTotal 2/91, two hashes known in CIRCL with MHR 93% (the EICAR test file in the lab), MISP failed | Score 67, `medium`, coverage 0.8. The CIRCL discount is not applied and the MHR detection counts |
+
+Config tests:
+
+| Change in `scoring_config` | Expected result |
+|---|---|
+| `sources.maltiverse.malicious` set to `40` | Test 2 gives score 72, `high` |
+| `sources.virustotal.enabled` set to `false` | Test 2 gives score 44 and coverage 0.25 |
+| `sources.teamcymru.ignore_when_circl_known` set to `false` | Test 1 gives score 8 |
+| `sources.circl.known_good_unless_mhr_pct` set to `101` | Test 7 gives score 42, because the exception is off |
+| Key `sources.maltivers` (typo) | Score unchanged, warning `unknown setting ignored` |
+| `rule_level_multiplier` set to `"abc"` | Default used, warning in `config_warnings` |
+
+All seven tests gave the expected results on v0.2.2. In addition, 34 automated checks passed, including a check that the shipped `score-config.json` gives the same results as the built-in defaults.
+
+**Observed n8n output:** In the captured run for rule `92213`, Scoring returned `67` (`medium`) with coverage `0.8`; MISP was listed as failed. Both MD5 and SHA-256 were present in the alert, but the supplied `cortex.results` contained results only for the MD5. This screenshot shows the Scoring result for the enrichment data that arrived; it does not verify Cortex results for both hashes in Test 7.
+
+![Scoring node showing the v0.2.2 output for the rule 92213 test alert](../images/n8n/70-scoring-result.png)
+
+*Figure. Scoring returned 67 (`medium`) with coverage 0.8; the captured output records the MISP failure.*
+
+**If it does not work:**
+
+| What you see | Cause | Fix |
+|---|---|---|
+| Almost every alert gets `needs_review` | One or more sources failed, so coverage is below 0.6 | Check `scoring.sources.failed` and `processing.failed`, then fix the failing node. A source that is permanently unavailable can be switched off with `enabled: false` |
+| `scoring.config_warnings` appears | The config contains an unknown key, a value of the wrong type, or wrong `bands` or `tiers` | Read the warning, correct the JSON in `Scoring Config`. The default value is used in the meantime |
+| Changing the config has no effect | `Scoring Config` is not connected before `Scoring`, or it does not keep the input fields, so `scoring_config` is missing and the built-in defaults are used without a warning | Check the connection and the **Include Other Input Fields** option. Confirm that `scoring_config` appears in the `Scoring` input |
+| Every alert gets score 0, rule level 0, verdict `needs_review`, and `input_problems` is listed | `Scoring Config` does not pass the input fields on, so `Scoring` receives only `scoring_config` | In `Scoring Config` turn on **Include Other Input Fields** (or **Include in Output: All Input Fields**). The output of `Scoring Config` must show `alert`, `misp`, `cortex`, and `processing` next to `scoring_config` |
+| A hash has MHR detections but gives 0 points | CIRCL lists the hash as known, the MHR detection is below `known_good_unless_mhr_pct` (50%), and `ignore_when_circl_known` is `true` | This is expected for weak detections. Lower `known_good_unless_mhr_pct`, or set `ignore_when_circl_known` to `false`, to count the MHR detections anyway |
+| Code node reports an error when using `$input.all()` | The node is not configured to process all input items | Set Mode to `Run Once for All Items` |
+
 ## 6. Decision
 
 **Owner:** @arturesturemkuros
