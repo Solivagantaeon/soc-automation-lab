@@ -1,0 +1,55 @@
+{
+  "scoring_config": {
+    "version": "0.2",
+    "rule_level_multiplier": 2,
+    "min_coverage_for_fp": 0.6,
+    "bands": {
+      "high": 70,
+      "medium": 40,
+      "low": 20
+    },
+    "sources": {
+      "misp": {
+        "enabled": true,
+        "to_ids": 30,
+        "match": 15
+      },
+      "abuseipdb": {
+        "enabled": true,
+        "whitelisted": -10,
+        "tiers": [
+          { "min": 75, "points": 25 },
+          { "min": 25, "points": 12 }
+        ]
+      },
+      "maltiverse": {
+        "enabled": true,
+        "malicious": 20,
+        "suspicious": 10,
+        "historical_only": 5,
+        "whitelist": -5
+      },
+      "virustotal": {
+        "enabled": true,
+        "tiers": [
+          { "min": 10, "points": 25 },
+          { "min": 3, "points": 15 },
+          { "min": 1, "points": 8 }
+        ]
+      },
+      "teamcymru": {
+        "enabled": true,
+        "ignore_when_circl_known": true,
+        "tiers": [
+          { "min": 50, "points": 15 },
+          { "min": 20, "points": 8 }
+        ]
+      },
+      "circl": {
+        "enabled": true,
+        "known_good": -10,
+        "known_good_unless_mhr_pct": 50
+      }
+    }
+  }
+}
