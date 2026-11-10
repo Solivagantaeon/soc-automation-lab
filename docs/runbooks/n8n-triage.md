@@ -618,7 +618,11 @@ flowchart TD
     D --> N["Next stage"]
 ```
 
-**Figure:** Score flow. The score and the coverage are calculated separately, then combined into the verdict.
+*Figure. Score flow. The score and the coverage are calculated separately, then combined into the verdict.*
+
+![Scoring stage in the n8n workflow](../images/n8n/70-scoring-workflow.png)
+
+*Figure. Scoring Config and Scoring follow Summary Enrichments; the downstream Create an alert node is deactivated in this workflow view.*
 
 ### Score nodes
 
@@ -641,6 +645,10 @@ flowchart TD
 | Added field | `scoring_config` |
 | Keep other input fields | On |
 | Implementation | [`score-config.json`](../../soar/n8n/nodes/score-config.json) |
+
+![Scoring Config node showing the JSON mode and Include Other Input Fields enabled](../images/n8n/70-scoring-config.png)
+
+*Figure. Scoring Config holds the JSON rules and passes the existing alert fields through to Scoring.*
 
 **Settings in `scoring_config`:**
 
@@ -760,6 +768,12 @@ Config tests:
 | `rule_level_multiplier` set to `"abc"` | Default used, warning in `config_warnings` |
 
 All seven tests gave the expected results on v0.2.2. In addition, 34 automated checks passed, including a check that the shipped `score-config.json` gives the same results as the built-in defaults.
+
+**Observed n8n output:** In the captured run for rule `92213`, Scoring returned `67` (`medium`) with coverage `0.8`; MISP was listed as failed. Both MD5 and SHA-256 were present in the alert, but the supplied `cortex.results` contained results only for the MD5. This screenshot shows the Scoring result for the enrichment data that arrived; it does not verify Cortex results for both hashes in Test 7.
+
+![Scoring node showing the v0.2.2 output for the rule 92213 test alert](../images/n8n/70-scoring-result.png)
+
+*Figure. Scoring returned 67 (`medium`) with coverage 0.8; the captured output records the MISP failure.*
 
 **If it does not work:**
 
