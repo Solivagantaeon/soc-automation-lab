@@ -151,7 +151,9 @@ The node produces one normalized alert object per input item. Main fields includ
 | `syscheck`, `signature`, `command_line`, `full_log` | Additional event context when available; `full_log` is limited to 2,000 characters |
 | `observables` | Observable list. Each entry includes `dataType`, `data`, `field`, and `internal`; optional fields include `kind`, `algorithm`, or `path` |
 | `primary_observable` | Selected primary observable, or `-` when none is eligible |
-| `dedup_key` | Key generated for the separate Dedup stage; generating it does not detect duplicate alerts |
+| `source_ip` | Source IP extracted from the supported Wazuh fields, or null if unavailable |
+| `dedup_mode` | `web-source` for a web rule with a `source IP`, otherwise default |
+| `dedup_key` | Key built from the rule, signature, agent, source IP, and primary observable; web rules with a source IP use * as the final component |
 
 **Observable types:**
 
@@ -217,7 +219,7 @@ Example expected output for the no-IOC scenario:
     }
   ],
   "primary_observable": "-",
-  "dedup_key": "soc:dedup:100506::004:-"
+  "dedup_key": "soc:dedup:100506::004:-:-"
 }
 ```
 
