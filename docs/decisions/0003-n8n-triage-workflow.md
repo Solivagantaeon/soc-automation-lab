@@ -436,8 +436,49 @@ Build and test instructions, screenshots and the test alert are in the [n8n tria
 
 ### 8. TheHive
 
-**Owner:** @Solivagantaeon
+**Owner:** @MKonrad-afk
 
+#### Context
+
+The [Decision stage](https://github.com/Solivagantaeon/soc-automation-lab/issues/71) returns `closed`, `analyst_review`, or `malicious`. An alert that needs analyst attention must provide the decision, reason, source event, asset context, evidence, enrichment status, and eligible observables in TheHive. A `closed` result bypasses TheHive and continues to Audit/Counters.
+
+#### Decision
+
+The final branch is:
+
+| Node | Responsibility |
+|---|---|
+| `If` | The true output represents `closed` and bypasses TheHive. The false output continues to alert creation. |
+| [`Apply TheHive Handling Policy`](../../soar/n8n/nodes/thehive-handling-policy-v0.1.js) | Adds TheHive TLP/PAP markings. It reads the original Wazuh payload from `Webhook` because `Normalize Alert` does not retain `rule.groups`. |
+| [`Build TheHive Alert`](../../soar/n8n/nodes/thehive-alert-v0.3.js) | Builds top-level TheHive alert fields and a separate `thehive_observables` array from Decision, the normalized event, MISP, Cortex, processing status, and asset inventory. |
+| `Create an alert`| Uses TheHive 5 `Alert → Create` with the saved credential and automatic field mapping. |
+| `Prepare TheHive Observables` | Adds the created alert ID to each eligible observable and emits one n8n item per observable. |
+| [`Create an observable`](https://docs.n8n.io/integrations/builtin/app-nodes/n8n-nodes-base.thehive5/) | Uses TheHive 5 `Observable → Create in Alert` to attach each item to the created alert. |
+
+The `If` node condition is `{{ $json.decision.outcome === 'closed' }}`. Its true output bypasses TheHive. Its false output reaches `Apply TheHive Handling Policy` and the builder. The builder accepts only `analyst_review` and `malicious` and fails visibly for other outcomes.
+
+The policy selects the most restrictive explicit TLP and PAP markings found on the source alert or its observables. With no source markings, the exact Wazuh rule group `soc-lab-test` receives TLP `0` (CLEAR). Other or unclassified alerts receive TLP `2` (AMBER). PAP defaults independently to `2` (AMBER) in the current implementation. The SOC owner must approve this default for the intended environment. Neither value is derived from severity. The policy is applied after enrichment and only sets the markings recorded in TheHive. It does not gate Cortex requests already performed earlier in the execution.
+
+The builder uses the original Wazuh alert ID as `sourceRef`, with type `external` and source `Wazuh`. It validates that `sourceRef` is present and no longer than 128 characters. TheHive rejects a repeated `(type, source, sourceRef)` combination in the same organization, so a rerun must use a fresh source alert ID or handle the existing alert explicitly.
+
+The alert description includes the Decision outcome and rationale, score, verdict, coverage, analysis status, asset and user context, source alert and rule details, MITRE ATT&CK data, IOC verdicts, MISP references, Cortex summaries, and unavailable or pending sources. Only eligible external IP, domain, URL, and hash observables are attached. Internal addresses and hostnames are excluded. Each observable carries its own IOC verdict, evidence message, and the alert's TLP/PAP markings.
+
+TheHive severity is calculated after Decision by `Build TheHive Alert`:
+
+| Value | Label | Rule |
+|---:|---|---|
+| 4 | Critical | Malicious outcome on a critical asset, or complete malicious analysis with score at least 90 |
+| 3 | High | Other malicious outcomes, analyst-review outcome on a critical asset, or complete high verdict/score at least 70 |
+| 2 | Medium | Incomplete analysis, missing score, medium verdict/score 40–69, or an unmapped result |
+| 1 | Low | Complete non-critical low/likely-false-positive verdict with score below 40 |
+
+#### Rationale
+
+Incomplete or ambiguous enrichment remains `analyst_review`. An unavailable or unclear result is not treated as benign. The alert is created before its observables so the response ID can be used to attach each observable to the correct alert. Closed outcomes remain outside the analyst alert queue and continue to Audit/Counters.
+
+#### Verification
+
+The live synthetic run completed successfully. TheHive displayed four observables, TLP CLEAR, PAP AMBER, and severity MEDIUM. The Decision output was `analyst_review`, reason `incomplete_analysis`, score `39`, verdict `low`, coverage `1`, and `analysis_complete=false`. This verifies the analyst-review route, alert creation, observable creation, and synthetic-data markings.
 
 
 ### 9. Audit
