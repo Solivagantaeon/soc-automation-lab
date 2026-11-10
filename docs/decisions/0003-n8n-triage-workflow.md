@@ -207,50 +207,84 @@ The [n8n triage runbook](../runbooks/n8n-triage.md#4-misp-and-cortex) documents 
 
 #### Context
 
-External services (Cortex analyzers, MISP, TheHive) can be temporarily unavailable. Without error handling, a single failed node stops the entire workflow and the alert disappears without trace. The enrichment result looks complete even when a service was down.
+The MISP and Cortex stage calls six external services: MISP and five Cortex analyzers (Maltiverse, AbuseIPDB, Team Cymru MHR, CIRCL Hashlookup and VirusTotal). Any of them can be down, slow or misconfigured. By default, a failed n8n node stops the whole execution, so one broken service would stop the alert from reaching the analyst.
+
+Simply skipping the failed node is not enough either. The summary would then contain fewer results, with nothing saying why, and an alert whose lookups failed would look the same as an alert whose lookups found nothing.
+
+The stage was added to the `SOC - n8n E2E Skeleton` workflow on top of the MISP and Cortex branches from stage 4.
 
 #### Decision
 
-**Retry On Fail** is enabled on all nodes that call external services.
+**Retry before failing.** Every node that calls MISP or Cortex has **Retry On Fail** enabled:
 
-| Node | Max Tries | Wait Between Tries |
+| Node | Max. Tries | Wait Between Tries |
 |---|---|---|
-| Execute Maltiverse | 3 | 2 000 ms |
-| Get a report Maltiverse | 3 | 3 000 ms |
-| Execute AbuseIPDB | 3 | 2 000 ms |
-| Get a report AbuseIPDB | 3 | 3 000 ms |
-| Execute TeamCymru | 3 | 2 000 ms |
-| Get a report TeamCymru | 3 | 3 000 ms |
-| Execute CirclHash | 3 | 2 000 ms |
-| Get a report CirclHash | 3 | 3 000 ms |
-| Execute VirusTotal | 3 | 2 000 ms |
-| Get a report UnshortenLink | 3 | 3 000 ms |
+| Execute Maltiverse, Execute AbuseIPDB, Execute TeamCymru, Execute CirclHash, Execute VirusTotal | 3 | 2 000 ms |
+| Get a report Maltiverse, Get a report AbuseIPDB, Get a report TeamCymru, Get a report CirclHash, Get a report UnshortenLink | 3 | 3 000 ms |
 | Get a filtered list of attributes (MISP) | 5 | 2 000 ms |
-| Create an alert (TheHive) | 5 | 5 000 ms |
 
-![Workflow overview](../images/n8n/72-workflow-overview.png)
+**A failure goes to an error output.** The same nodes use **On Error → Continue (using error output)**. When the last retry fails, the failed items leave through the error output instead of stopping the workflow. The other services keep running and the alert still reaches the summary.
 
-**On Error → Continue (using error output)** is enabled on all Cortex and MISP nodes. When all retries are exhausted, the error port routes to an **Error Formatter** Code node instead of stopping the workflow. Each Error Formatter produces `{service, node, observable, error, timestamp}` and sends it to the final Merge node.
+**One Error Formatter per service.** The error outputs of the `Execute …` and `Get a report …` nodes of one service go to one Code node, `Error Formatter - <service>`, in **Run Once for All Items** mode. It writes one record per failed observable:
 
-![Retry On Fail and On Error settings](../images/n8n/72-execute-node-settings-retry-on-error.png)
+```json
+{ "service": "CirclHash", "node": "Execute CirclHash", "observable": "44d88612fea8a8f36de82e1278abb02f", "error": "Invalid URL", "timestamp": "2026-11-10T10:00:00.000Z" }
+```
 
-![Error Formatter code](../images/n8n/72-error-formatter-code.png)
+An error output item contains only the error message, not the observable. The formatter therefore works out which observables failed by comparing values:
 
-`Summary Enrichments` reads all items arriving at the main Merge. Items that contain a `service` and `error` field are appended to `processing.failed`. The `processing.status` field is set to `complete_with_errors` when at least one service failed.
+- an error from `Execute …`: the observables of the service's type that were sent to it, minus the observables for which Cortex created a job;
+- an error from `Get a report …`: the jobs created by `Execute …`, minus the jobs whose report was already finished or that are still in the current polling round;
+- MISP searches all observables of an alert in one query, so its single record lists all of them.
 
-**TheHive** (`Create an alert`) uses Retry On Fail (5×, 5 000 ms) and **Stop and Error**. A retry queue was considered and rejected - it would hide failures from the n8n execution dashboard.
+The formatter reads the sent observables from `Normalize Alert` and `Dedupe Cortex Observables`. For AbuseIPDB it reads `Filter Cortex-Eligible IPs`, because only IPs that pass that filter are sent. The code is in [`error-formatter-cortex.js`](../../soar/n8n/nodes/error-formatter-cortex.js) and [`error-formatter-misp.js`](../../soar/n8n/nodes/error-formatter-misp.js).
+
+**Get a report reads the job ID from the incoming item.** The Job ID field of every `Get a report …` node is `{{ $json._id ?? $json.id }}` instead of `{{ $('Execute …').item.json._id }}`.
+
+**The summary records the failure.** `Summary Enrichments` adds every Error Formatter record to `processing.failed` and sets `processing.status` to `complete_with_errors`. An observable whose lookup failed is not listed in `cortex.skipped_by_filter`. The code is in [`summary-enrichments.js`](../../soar/n8n/nodes/summary-enrichments.js).
+
+**Score treats a failure as missing data.** The Score stage counts every service in `processing.failed` as a service that did not answer. This lowers `scoring.coverage`, and below `min_coverage_for_fp` a low score becomes `needs_review` instead of a likely false positive. The scoring rules are recorded in stage 5.
 
 #### Rationale
 
-Routing errors to Merge instead of stopping the workflow ensures that a broken service produces a visible record rather than a silent gap. `processing.failed` gives downstream stages (Score, Decision) the information they need to avoid closing an alert as benign when enrichment was incomplete.
+**Retry first.** Short outages, such as a restarting container or a single timeout, are common and usually clear within seconds. A few short retries fix them without creating a failure record. The waits are kept short so that a service that is really down does not hold the alert for long.
 
-Stop and Error for TheHive was chosen over a retry queue because every undelivered alert must be visible in the n8n execution log. A queue would make the workflow appear healthy while alerts were lost.
+**Error output instead of Stop Workflow.** A failed analyzer does not make the results of the other services useless. Continuing keeps the alert moving and records the gap in the alert itself, where the analyst and the Score stage can see it.
+
+**One record per observable.** An alert can carry several observables of the same type, and one of them can fail while another succeeds. The analyst and the Score stage need to know exactly which indicator was not checked.
+
+**Comparing values instead of n8n item linking.** n8n's item linking (`$('node').item`, `itemMatching()`) could not find the original observable. The Cortex node does not keep item links when it processes more than one item, and the polling loop through the Wait node loses them as well. With one observable the lookup worked by chance. With two hashes it returned `unknown`, or the wrong observable. Comparing sent observables with created and finished jobs works for any number of observables and any number of polling rounds.
+
+**Job ID from `$json`.** The `.item` lookup failed for the same reason. On the second polling round, or with more than one observable, `Get a report` stopped with `Paired item data for item from node 'Get a report …' is unavailable`. The incoming item is always a Cortex job object that contains its `_id`, on the first round and on every later one.
+
+**A failed lookup is never listed as skipped.** Before this change, an IP whose AbuseIPDB lookup failed was also listed in `skipped_by_filter` with the reason `No Cortex result for this IP`. That reads as "checked, nothing found", which is exactly the false impression this stage has to prevent.
+
+**One formatter per service instead of one shared node.** Each formatter needs its own node names and observable types. Separate nodes also keep every error path visible on the canvas next to the service it belongs to.
 
 #### Verification
 
-Tested with dedicated broken credentials (`TEST FAILED`) on AbuseIPDB and MISP simultaneously. Both services failed, the workflow completed, and `processing.failed` contained two records - one for AbuseIPDB (`Invalid URL`) and one for MISP (`Unsupported protocol`). `processing.status` was `complete_with_errors`. The workflow did not stop.
+The stage was tested on 2026-11-10 with one synthetic alert, `100002`. It contains two documentation-range IPs, two domains, one URL and two hashes. All Cortex `Execute …` nodes and the MISP node used a test credential, `TEST FAILED`, with an invalid URL, so every lookup failed.
 
-![Summary Enrichments output with failed services](../images/n8n/72-summary-enrichments-output-failed.png)
+| Check | Verified result |
+|---|---|
+| Workflow | The execution completed and did not stop at any failed node |
+| `processing.failed` | Eight records, one per failed observable: Maltiverse for both domains, Team Cymru and CIRCL for both hashes, VirusTotal for the URL, and one MISP record listing all seven external observables. Each record had the correct observable value |
+| `processing.status` | `complete_with_errors` |
+| `cortex.results` | Empty, because no analyzer answered |
+| `cortex.skipped_by_filter` | Only observables that were deliberately not sent to Cortex: the two documentation-range IPs (`Non-public IPv4 address`) and the internal agent IP and hostname (`Marked internal by normalization`). No failed observable was listed there |
+
+This test does not cover: a failure in a `Get a report …` node, because no job was created; AbuseIPDB, because the documentation-range IPs are correctly filtered out before it; a real outage, because an invalid URL fails immediately instead of timing out; and the Score stage output for a failed run.
+
+Build and test instructions, screenshots and the test alert are in the [n8n triage runbook](../runbooks/n8n-triage.md#7-failure-handling).
+
+#### Follow-up
+
+- **Real outage:** repeat the test with a credential that points to an address where nothing listens, for example `http://127.0.0.1:9999`. The error should be a refused connection or a timeout, and the retries should add the configured delay before the record appears.
+- **Report step:** run the test with the real credential on `Execute TeamCymru` and `TEST FAILED` on `Get a report TeamCymru`. Expect two records with node `Get a report TeamCymru`, one for each hash.
+- **AbuseIPDB:** run the test with two real public IPs and `TEST FAILED` on `Execute AbuseIPDB`. Expect one record per IP, and neither IP in `skipped_by_filter`. Redact the IPs in any screenshot.
+- **Score:** run the test alert through the Score stage and confirm that every failed service is listed under `scoring.sources.failed`, `coverage` is below `min_coverage_for_fp` and the verdict is `needs_review`.
+- **Known issue, slow reports:** in one run, the Team Cymru result for one of two hashes appeared in neither `cortex.results` nor `processing.failed`. The likely cause is that its report needed another polling round and the final `Merge` had already passed its data on. This has to be investigated, because a lost result also makes an alert look cleaner than it is.
+- **Node names:** the Error Formatters find their nodes by name, so renaming a node requires updating the constants in the formatter. The VirusTotal report node is still named `Get a report UnshortenLink`. Renaming it to `Get a report VirusTotal` would match the analyzer it polls.
 
 ### 8. TheHive
 
