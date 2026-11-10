@@ -250,7 +250,7 @@ Only include screenshots that have actually been captured and checked into the r
 
 **Owner:** @arturesturemkuros
 
-**What it does:** Detects an alert that was already seen within the last 3 minutes and stops it before MISP and Cortex, so a repeated alert is not processed twice.
+**What it does:** Detects an alert that was already seen within the last 7 minutes and stops it before MISP and Cortex, so a repeated alert is not processed twice.
 
 **How to build it:**
 
@@ -264,7 +264,7 @@ Only include screenshots that have actually been captured and checked into the r
 8. Save and publish the workflow.
 
 ```javascript
-const WINDOW_MS = 3 * 60 * 1000; // dedup window, 3 minutes
+const WINDOW_MS = 7 * 60 * 1000; // dedup window, 7 minutes
 
 const now = Date.now();
 const store = $getWorkflowStaticData('global');
