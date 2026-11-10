@@ -963,7 +963,170 @@ The documentation-range IPs are correctly filtered out as `Non-public IPv4 addre
 
 ## 8. TheHive
 
-**Owner:** @Solivagantaeon
+**Owner:** @MKonrad-afk
+
+**Purpose:** Create a TheHive alert for `analyst_review` and `malicious` decisions, then attach each eligible external IOC as a TheHive observable. A `closed` decision bypasses TheHive and continues to Audit/Counters.
+
+### Workflow path
+
+```mermaid
+flowchart TD
+    D[Decision] --> I[If]
+    I -->|true: closed| A[Audit / Counters]
+    I -->|false: review or malicious| P[Apply TheHive Handling Policy]
+    P --> B[Build TheHive Alert]
+    B --> C[Create an alert]
+    C --> O[Prepare TheHive Observables]
+    O --> V[Create an observable]
+```
+
+### Node: If
+
+**Purpose:** Keep automatically closed alerts out of TheHive and route decisions that need analyst attention to the alert branch.
+
+Configure the Boolean condition:
+
+```text
+{{ $json.decision.outcome === 'closed' }}
+```
+
+| Output | Connect to | Expected outcomes |
+|---|---|---|
+| True | Audit/Counters | `closed` only |
+| False | `Apply TheHive Handling Policy` | `analyst_review` or `malicious` |
+
+The builder validates the outcome and fails visibly if the false route receives an unsupported value.
+
+![Decision If node with the closed bypass and TheHive route](../images/n8n/73-if-closed-bypass.png)
+
+*Figure. The If node sends closed outcomes to Audit/Counters through the true output and routes other outcomes toward TheHive.*
+
+### Node: Apply TheHive Handling Policy
+
+**Purpose:** Add independent TLP and PAP values to the alert data before it is sent to TheHive.
+
+1. Add a **Code** node to the false output of `If`, before `Build TheHive Alert`.
+2. Name it exactly `Apply TheHive Handling Policy`.
+3. Set **Mode** to **Run Once for All Items** and **Language** to **JavaScript**.
+4. Paste [`thehive-handling-policy-v0.1.js`](../../soar/n8n/nodes/thehive-handling-policy-v0.1.js).
+5. Keep the upstream node named exactly `Webhook`. the policy reads the original `rule.groups` and source markings there because `Normalize Alert` does not preserve `rule.groups`.
+
+The policy uses the most restrictive explicit source marking. If no source markings are available, the exact rule group `soc-lab-test` gets TLP CLEAR (`0`). other or unclassified alerts default to TLP AMBER (`2`). PAP defaults independently to AMBER (`2`) in the current implementation. The SOC owner must approve this default for the intended environment. Neither value is derived from severity.
+
+This node runs after MISP/Cortex enrichment. It sets the markings that TheHive records but does not block external Cortex requests that already ran earlier in the execution. Production policy enforcement for external submissions needs a separate gate before the Cortex route.
+
+![The handling policy node with its input and output](../images/n8n/73-apply-thehive-handling-policy.png)
+
+*Figure. The policy Code node reads the upstream event and prepares TLP and PAP markings for the alert.*
+
+### Node: Build TheHive Alert
+
+**Purpose:** Convert Decision, asset, and enrichment results into TheHive alert fields and a separate list of eligible observables.
+
+1. Add a **Code** node after `Apply TheHive Handling Policy` and name it `Build TheHive Alert`.
+2. Set **Mode** to **Run Once for All Items** and **Language** to **JavaScript**.
+3. Paste [`thehive-alert-v0.3.js`](../../soar/n8n/nodes/thehive-alert-v0.3.js).
+4. Keep the node names `Normalize Alert`, `Dedup`, and `Apply TheHive Handling Policy` unchanged. The code reads data from those nodes by name.
+5. Confirm the output has top-level alert fields and `thehive_observables` before connecting the TheHive node.
+
+| Output | Purpose |
+|---|---|
+| Top-level `type`, `source`, `sourceRef`, `title`, `description`, `severity`, `tlp`, `pap`, `tags`, `date`, and related fields | Mapped automatically by the native TheHive Alert node |
+| `thehive_observables` | Eligible external IP, domain, URL, and hash values. sent to a separate observable creation path |
+
+The alert description records the Decision outcome, reason, score, verdict, coverage, analysis status, asset and source event context, IOC verdicts, enrichment summaries, and unavailable or pending sources. Internal IPs and hostnames are excluded from TheHive observables. The severity mapping is documented in ADR 0003, section 8.
+
+The builder uses the Wazuh alert ID as `sourceRef`. it fails if the ID is missing or longer than 128 characters. TheHive rejects another alert with the same `(type, source, sourceRef)` tuple in the same organization, so use a fresh source alert ID for each test run.
+
+![The alert builder node and generated output](../images/n8n/73-build-thehive-alert.png)
+
+*Figure. The builder Code node assembles the TheHive alert fields and the eligible observable list.*
+
+### Node: Create an alert
+
+**Purpose:** Create the alert using the native TheHive 5 integration node.
+
+1. Add a **TheHive 5** node after `Build TheHive Alert` and name it `Create an alert`.
+2. Select the saved **The Hive 5 account** credential.
+3. Set **Resource** to **Alert**, **Operation** to **Create**, and **Mapping Column Mode** to **Map Automatically**.
+4. Do not configure static observables here. the following nodes add the dynamic observable list after alert creation.
+5. Execute the node and confirm its response contains the created alert ID (`_id`).
+
+![The Create an alert node settings](../images/n8n/73-create-thehive-alert.png)
+
+*Figure. The native TheHive 5 node is configured to create an alert with automatic field mapping.*
+
+### Node: Prepare TheHive Observables
+
+**Purpose:** Take `thehive_observables` from the builder, attach the `_id` returned by `Create an alert`, and emit one item per observable.
+
+The output item must include `alertId`, `dataType`, and `data`. Preserve `message`, `tags`, `tlp`, `pap`, and `ioc` so the native observable node can map the evidence and markings. For the verified synthetic sample this node emitted four items.
+
+![The Prepare TheHive Observables node with four output items](../images/n8n/73-prepare-thehive-observables.png)
+
+*Figure. The Code node emits four separate observable items with their data and evidence fields.*
+
+### Node: Create an observable
+
+**Purpose:** Attach each prepared IOC to the alert identified by `alertId`.
+
+Configure the native **TheHive 5** node:
+
+| Setting | Value |
+|---|---|
+| Credential | The Hive 5 account |
+| Resource | Observable |
+| Operation | Create |
+| Create in | Alert |
+| Alert selection | By ID: `{{ $json.alertId }}` |
+| Data Type | `{{ $json.dataType }}` |
+| Data | `{{ $json.data }}` |
+| Mapping Column Mode | Map Automatically |
+
+Confirm that the output contains one created observable per input item and that TheHive shows them under **Observables** on the created alert.
+
+![The Create an observable node settings and output](../images/n8n/73-create-thehive-observable.png)
+
+*Figure. The native TheHive 5 node maps each observable to the created alert by ID, data type, and value.*
+
+### Live verification
+
+The synthetic run `soc-hive73-fasttest-20261110-05` completed successfully. Decision returned `analyst_review` / `incomplete_analysis`, score `39`, verdict `low`, coverage `1`, and `analysis_complete=false`. TheHive created an alert with severity **Medium**, TLP **CLEAR**, PAP **AMBER**, and four observables.
+
+![The created alert with severity, markings, and four observables](../images/n8n/73-thehive-alert-result.png)
+
+*Figure. The created alert shows Medium severity, TLP CLEAR, PAP AMBER, and four observables.*
+
+| Scenario | Expected result | Live status |
+|---|---|---|
+| Synthetic `soc-lab-test`, incomplete analysis | Alert with TLP CLEAR, PAP AMBER, Medium severity, and eligible observables | Verified in the live lab |
+| WICAR / malicious decision | Alert route with actual Decision and evidence recorded | Pending live run |
+| `closed` decision | True output bypasses all TheHive nodes | Pending live run |
+
+The synthetic test used a new Wazuh alert ID, rule ID, and agent ID. The existing `sourceRef` must not be reused for another Create Alert test.
+
+### Troubleshooting
+
+| Symptom | Check |
+|---|---|
+| `Build TheHive Alert` rejects the outcome | Confirm only the false output of `If` reaches the policy and builder nodes. |
+| Policy reports `client_or_unclassified` for a synthetic test | Confirm `Webhook` retains `rule.groups` and includes the exact `soc-lab-test` group. preserve the node name `Webhook`. |
+| Alert has no observables | Inspect `thehive_observables` in the builder, the alert `_id`, and the items emitted by `Prepare TheHive Observables`. |
+| TheHive rejects a duplicate | Use a fresh Wazuh alert ID for testing. the current stage does not update an existing alert. |
+| Observable cannot be attached | Confirm `alertId` is the `_id` from `Create an alert`, and that `Create in` is set to `Alert`. |
+
+### Production boundary
+
+This runbook documents the tested lab behavior. TLP/PAP are assigned after enrichment and do not control earlier Cortex requests. Before production use, the SOC owner must approve the default markings, severity thresholds, and which data may be submitted to external enrichment services. A policy that must prevent those submissions needs a gate before Cortex.
+
+
+### References
+
+- [TheHive 5 API documentation](https://docs.strangebee.com/thehive/api-docs/) for alert and observable fields.
+- [Change case or alert classification settings](https://docs.strangebee.com/thehive/user-guides/analyst-corner/cases/change-case-alert-classification-settings/) for severity, TLP, and PAP meanings.
+- [Add an observable](https://docs.strangebee.com/thehive/user-guides/analyst-corner/cases/observables/add-an-observable/) for observable fields and markings.
+- [Run analyzers on an observable](https://docs.strangebee.com/thehive/user-guides/analyst-corner/cases/observables/run-analyzers-on-an-observable/) for analyzer compatibility with observable type, TLP, and PAP.
+
 
 ## 9. Audit
 
