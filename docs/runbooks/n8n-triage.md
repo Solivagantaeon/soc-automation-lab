@@ -151,7 +151,9 @@ The node produces one normalized alert object per input item. Main fields includ
 | `syscheck`, `signature`, `command_line`, `full_log` | Additional event context when available; `full_log` is limited to 2,000 characters |
 | `observables` | Observable list. Each entry includes `dataType`, `data`, `field`, and `internal`; optional fields include `kind`, `algorithm`, or `path` |
 | `primary_observable` | Selected primary observable, or `-` when none is eligible |
-| `dedup_key` | Key generated for the separate Dedup stage; generating it does not detect duplicate alerts |
+| `source_ip` | Source IP extracted from the supported Wazuh fields, or null if unavailable |
+| `dedup_mode` | `web-source` for a web rule with a `source IP`, otherwise default |
+| `dedup_key` | Key built from the rule, signature, agent, source IP, and primary observable; web rules with a source IP use * as the final component |
 
 **Observable types:**
 
@@ -217,7 +219,7 @@ Example expected output for the no-IOC scenario:
     }
   ],
   "primary_observable": "-",
-  "dedup_key": "soc:dedup:100506::004:-"
+  "dedup_key": "soc:dedup:100506::004:-:-"
 }
 ```
 
@@ -249,6 +251,122 @@ Only include screenshots that have actually been captured and checked into the r
 ## 3. Dedup
 
 **Owner:** @arturesturemkuros
+
+**What it does:** Detects an alert that was already seen within the last 7 minutes and stops it before MISP and Cortex, so a repeated alert is not processed twice.
+
+**How to build it:**
+
+1. Open the workflow and remove the connections that leave the Normalize node (to the MISP search node and to Split Cortex Observables).
+2. Add a **Code** node after Normalize and name it `Dedup`.
+3. Set **Mode** to `Run Once for All Items` and **Language** to `JavaScript`.
+4. Paste the code below into the editor.
+5. Add an **If** node after Dedup and name it `New Alert?`.
+6. In the condition, set the value to `{{ $json.is_duplicate }}` and the operator to **Boolean -> is false**.
+7. Connect the **true** output to both the MISP search node and Split Cortex Observables. Leave the **false** output empty.
+8. Save and publish the workflow.
+
+```javascript
+const WINDOW_MS = 7 * 60 * 1000; // dedup window, 7 minutes
+
+const now = Date.now();
+const store = $getWorkflowStaticData('global');
+store.dedup = store.dedup ?? {};
+
+// entries older than the window are removed
+for (const [k, v] of Object.entries(store.dedup)) {
+  if (now - v.first_seen > WINDOW_MS) delete store.dedup[k];
+}
+
+return $input.all().map(item => {
+  const key = item.json.dedup_key;
+  const hit = store.dedup[key]; // undefined when the key was not seen
+
+  if (hit) {
+    hit.count++;
+    return { json: { ...item.json, is_duplicate: true,
+      duplicate_count: hit.count, first_seen: hit.first_seen } };
+  }
+
+  store.dedup[key] = { first_seen: now, count: 1 };
+  return { json: { ...item.json, is_duplicate: false, duplicate_count: 1 } };
+});
+```
+
+**Dedup node settings:**
+
+| Setting | Value |
+|---|---|
+| Node type | `Code` |
+| Mode | `Run Once for All Items` |
+| Language | `JavaScript` |
+| Window (`WINDOW_MS`) | `7 * 60 * 1000` (7 minutes) |
+| State | `$getWorkflowStaticData('global')`, key `dedup` |
+| Input | `dedup_key` from Normalize |
+| Output fields added | `is_duplicate`, `duplicate_count`, `first_seen` (duplicates only) |
+
+**New Alert? node settings:**
+
+| Setting | Value |
+|---|---|
+| Node type | `If` |
+| Condition | `{{ $json.is_duplicate }}` -> Boolean -> is false |
+| true output | MISP search node and Split Cortex Observables |
+| false output | Not connected (duplicate, execution ends) |
+
+**The key:**
+
+Normalize builds the key as `soc:dedup:<rule.id>:<signature_id>:<agent.id>:<source_ip>:<primary_observable>`. The source IP includes private addresses. For web rules (groups `web`, `accesslog`, `web_scan`) with a source IP, the last element is `*`, so the path is not part of the key. Normalize also outputs `source_ip` and `dedup_mode` (`default` or `web-source`) to show which form was used.
+
+**How to test it:**
+
+Static data is not saved when the workflow is run manually, so a duplicate is only recognised inside one execution. Put all test alerts into one pinned Webhook output and run the workflow once.
+
+1. Open the Webhook node, choose **Edit Output** and paste the seven test alerts (see the table).
+2. Click **Execute workflow**.
+3. Open the Dedup output and check `is_duplicate` and `duplicate_count` for every item.
+4. Open New Alert? and check how many items went to each branch.
+
+| Test | Input scenario | Expected result |
+|---|---|---|
+| 1 | New alert, public source IP | `is_duplicate: false`, `dedup_mode: default` |
+| 2 | Same alert again | `is_duplicate: true`, `duplicate_count: 2` |
+| 3 | Web rule, private source IP, path `/dvwa/admin` | `is_duplicate: false`, `dedup_mode: web-source` |
+| 4 | Same web rule and source IP, other path | `is_duplicate: true`, same key as test 3 |
+| 5 | Same web rule, different source IP | `is_duplicate: false`, different key |
+| 6 | No observables, no source IP | `is_duplicate: false`, `primary_observable: "-"` |
+| 7 | Same alert as test 6 again | `is_duplicate: true` |
+
+Expected: **4 items on the true branch and 3 items on the false branch.**
+
+The test was run on 2026-11-08 and gave this result. Window expiry was not tested, because it needs the active workflow. To test it, send the same alert twice to the production Webhook URL, wait longer than 3 minutes and send it again; the last one should pass as new.
+
+**Evidence:**
+
+The screenshots show the workflow with the new nodes, the Dedup output for a duplicate, and the New Alert? split.
+
+![The n8n workflow with the Dedup and New Alert? nodes after Normalize](../images/n8n/68-dedup-workflow.png)
+
+*Figure. Dedup and New Alert? placed between Normalize Alert and the MISP and Cortex branches.*
+
+![Dedup output showing is_duplicate true and duplicate_count 2](../images/n8n/68-dedup-output.png)
+
+*Figure. Dedup output for a repeated alert, with `is_duplicate: true` and `duplicate_count: 2`.*
+
+![New Alert? output showing 4 items on true and 3 items on false](../images/n8n/68-dedup-if.png)
+
+*Figure. New Alert? result for the seven test alerts: 4 items continue (true), 3 duplicates stop (false).*
+
+**If it does not work:**
+
+| What you see | Cause | Fix |
+|---|---|---|
+| Every alert is new, even an identical one sent in a separate run | Static data is not saved on manual runs | Put all test alerts into one pinned output and execute once, or test on the active workflow with the production Webhook URL |
+| Duplicates are not recognised on the active workflow | The workflow is not published, or alerts are sent to the test URL | Publish the workflow and send to the production Webhook URL |
+| New Alert? reports a type error | `is_duplicate` is missing, because the If node is not connected to the Dedup output | Connect Dedup to New Alert? and check the Dedup output |
+| Web alerts are not merged and `dedup_mode` is `default` | The alert has no web group in `rule.groups`, or no source IP | Check `rule.groups` and `source_ip` in the Normalize output and add the group to `WEB_GROUPS` in Normalize |
+| Dedup fails with a missing `dedup_key` | The node is not connected after Normalize, or Normalize failed | Check the connection and the Normalize output |
+| Different events from one rule and agent are dropped | The alerts have no observables and no source IP, so they share one key | Known limitation; check the original alerts and consider adding a field to the key |
+| An alert is dropped as a duplicate, but its first copy failed in a later stage | The key is stored before enrichment | Wait until the window ends and resend |
 
 ## 4. MISP and Cortex
 
@@ -661,6 +779,173 @@ All seven tests gave the expected results on v0.2.2. In addition, 34 automated c
 ## 7. Failure handling
 
 **Owner:** @p4chatek
+
+**What it does:** Makes sure that a MISP or Cortex service that is down does not stop the workflow, and that every lookup that failed is recorded in the alert, so the alert never looks cleaner than it is.
+
+![Workflow overview with Error Formatters](../images/n8n/72-workflow-overview.png)
+
+*Figure. The workflow with one Error Formatter per service, connected to the error outputs of the MISP and Cortex nodes.*
+
+#### Node: Retry On Fail and On Error (all MISP and Cortex nodes)
+
+**What it does:** Retries a failed request a few times. If the last try also fails, sends the failed items to the error output instead of stopping the workflow.
+
+**How to build it:**
+
+1. Open each node listed in the table below.
+2. Go to the **Settings** tab.
+3. Turn on **Retry On Fail** and set **Max. Tries** and **Wait Between Tries** as shown in the table.
+4. Set **On Error** to **Continue (using error output)**. A second, red output appears on the node.
+
+![Retry On Fail and On Error settings](../images/n8n/72-execute-node-settings-retry-on-error.png)
+
+*Figure. Retry On Fail and On Error settings on an Execute node.*
+
+| Node | Max. Tries | Wait Between Tries | On Error |
+|---|---|---|---|
+| Execute Maltiverse | 3 | 2 000 ms | Continue (using error output) |
+| Get a report Maltiverse | 3 | 3 000 ms | Continue (using error output) |
+| Execute AbuseIPDB | 3 | 2 000 ms | Continue (using error output) |
+| Get a report AbuseIPDB | 3 | 3 000 ms | Continue (using error output) |
+| Execute TeamCymru | 3 | 2 000 ms | Continue (using error output) |
+| Get a report TeamCymru | 3 | 3 000 ms | Continue (using error output) |
+| Execute CirclHash | 3 | 2 000 ms | Continue (using error output) |
+| Get a report CirclHash | 3 | 3 000 ms | Continue (using error output) |
+| Execute VirusTotal | 3 | 2 000 ms | Continue (using error output) |
+| Get a report UnshortenLink | 3 | 3 000 ms | Continue (using error output) |
+| Get a filtered list of attributes (MISP) | 5 | 2 000 ms | Continue (using error output) |
+
+**How to test it:** Run the test in [How to test the stage](#how-to-test-the-stage). The execution must finish, and the failed node must show items on its red error output.
+
+#### Node: Get a report … (Job ID)
+
+**What it does:** Reads the Cortex job ID from the item that arrives at the node, so polling works for any number of observables and any number of polling rounds.
+
+**How to build it:**
+
+1. Open each `Get a report …` node.
+2. Set **Job ID** to `{{ $json._id ?? $json.id }}`.
+3. Do not use `{{ $('Execute …').item.json._id }}`. That lookup fails when a service gets more than one observable, or on the second polling round.
+
+| Setting | Value |
+|---|---|
+| Job ID | `{{ $json._id ?? $json.id }}` |
+
+**How to test it:** Not covered by the stage test, because in that test no Cortex job is created. With working credentials, an alert with two hashes must return a Team Cymru and a CIRCL result for both, without a `Paired item data … is unavailable` error.
+
+#### Node: Error Formatter - \<service\> (one per service)
+
+**What it does:** Receives the failed items of one service and turns each of them into one record: `{service, node, observable, error, timestamp}`. The records go to the main Merge and from there to `Summary Enrichments`.
+
+**How to build it:**
+
+1. Add a **Code** node for each service and name it `Error Formatter - <service>`, for example `Error Formatter - CirclHash`.
+2. Set **Mode** to **Run Once for All Items** and **Language** to **JavaScript**.
+3. Connect the red error output of the service's `Execute …` node **and** of its `Get a report …` node to this one formatter.
+4. Paste the code:
+   - Cortex services: [`error-formatter-cortex.js`](../../soar/n8n/nodes/error-formatter-cortex.js). Change only the five constants at the top, using the table below.
+   - MISP: [`error-formatter-misp.js`](../../soar/n8n/nodes/error-formatter-misp.js). No changes are needed.
+5. Connect the formatter output to the service's Merge node as an extra input (`Append` mode). For MISP, connect it to the main `Merge` before `Summary Enrichments`.
+
+![Error Formatter code](../images/n8n/72-error-formatter-code.png)
+
+*Figure. Error Formatter - CirclHash with its constants and the Run Once for All Items mode.*
+
+| Formatter | `SERVICE_NAME` | `EXECUTE_NODE` | `REPORT_NODE` | `SOURCE_NODES` | `TYPES` |
+|---|---|---|---|---|---|
+| Error Formatter - Maltiverse | `Maltiverse` | `Execute Maltiverse` | `Get a report Maltiverse` | `Normalize Alert`, `Dedupe Cortex Observables` | `domain` |
+| Error Formatter - AbuseIPDB | `AbuseIPDB` | `Execute AbuseIPDB` | `Get a report AbuseIPDB` | `Filter Cortex-Eligible IPs` | `ip` |
+| Error Formatter - TeamCymru | `TeamCymru` | `Execute TeamCymru` | `Get a report TeamCymru` | `Normalize Alert`, `Dedupe Cortex Observables` | `hash` |
+| Error Formatter - CirclHash | `CirclHash` | `Execute CirclHash` | `Get a report CirclHash` | `Normalize Alert`, `Dedupe Cortex Observables` | `hash` |
+| Error Formatter - VirusTotal | `VirusTotal` | `Execute VirusTotal` | `Get a report UnshortenLink` | `Normalize Alert`, `Dedupe Cortex Observables` | `url` |
+| Error Formatter - MISP | `MISP` | - | - | `Normalize Alert`, `Dedupe Cortex Observables` | all types |
+
+`TYPES` must match the `router of types` rule that sends observables to that branch. `SERVICE_NAME` must contain the name the Score stage uses for the service (`abuseipdb`, `maltiverse`, `teamcymru`, `circl`, `virustotal`, `misp`, case-insensitive).
+
+**How it finds the observable:** an error item contains only the error message. The formatter compares values instead:
+
+- error from `Execute …`: observables of `TYPES` read from `SOURCE_NODES`, minus those for which a job was created;
+- error from `Get a report …`: jobs created by `Execute …`, minus jobs that already finished or are still in the current polling round;
+- MISP: one record that lists every observable of the alert.
+
+**How to test it:** Run the test in [How to test the stage](#how-to-test-the-stage). Each failed observable must appear as its own record with the correct value. `observable` must never be `unknown`.
+
+#### Node: Summary Enrichments (failure records)
+
+**What it does:** Adds every Error Formatter record to `processing.failed` and sets `processing.status` to `complete_with_errors` when at least one lookup failed. An observable whose lookup failed is not listed in `cortex.skipped_by_filter`, so it cannot look like "checked, nothing found".
+
+**How to build it:** Use the current implementation in [`summary-enrichments.js`](../../soar/n8n/nodes/summary-enrichments.js). The relevant parts are:
+
+- `errorRows`: every merged item with a `service` and an `error` field;
+- `failedValues`: the observables of failed Cortex lookups, used to keep them out of `skipped_by_filter`;
+- `failed`: failed Cortex jobs plus all `errorRows`.
+
+| Setting | Value |
+|---|---|
+| Mode | `Run Once for All Items` |
+| Implementation | [`summary-enrichments.js`](../../soar/n8n/nodes/summary-enrichments.js) |
+| Output used by Score | `processing.failed`, `processing.pending`, `processing.status` |
+
+**How to test it:** See [How to test the stage](#how-to-test-the-stage).
+
+#### How to test the stage
+
+1. Create a Cortex credential and a MISP credential, both named `TEST FAILED`, with an invalid URL (for example `localhost:9999`, without `http://`) and any API key.
+2. Pin this test alert in the Webhook node. All values are safe to publish: the IPs are documentation ranges (RFC 5737), the domains are reserved (RFC 2606) and the hashes belong to the EICAR test file.
+
+   ```json
+   [
+     {
+       "timestamp": "2026-11-10T10:00:00.000Z",
+       "rule": { "level": 12, "description": "Test alert IP + hash + domain + url", "id": "100002" },
+       "agent": { "id": "001", "name": "test-agent", "ip": "10.0.0.1" },
+       "manager": { "name": "wazuh-manager" },
+       "data": {
+         "srcip": "203.0.113.10",
+         "dstip": "198.51.100.20",
+         "url": "http://example.com/download/payload.exe",
+         "domain": "example.org",
+         "win": {
+           "eventdata": {
+             "hashes": "MD5=44d88612fea8a8f36de82e1278abb02f,SHA256=275a021bbfb6489e54d471899f7db9d1663fc695ec2fe2a2c4538aabf651fd0f",
+             "queryName": "test-c2.example.net"
+           }
+         }
+       }
+     }
+   ]
+   ```
+
+3. Set the `TEST FAILED` credential on every Cortex `Execute …` node and on `Get a filtered list of attributes` (MISP).
+4. Run the workflow and open the output of `Summary Enrichments`.
+5. Put the original credentials back.
+
+| Check | Expected result |
+|---|---|
+| Workflow | The execution finishes. No node stops it |
+| `processing.failed` | 8 records, one per observable: Maltiverse ×2 (both domains), TeamCymru ×2 and CirclHash ×2 (both hashes), VirusTotal ×1 (the URL) and MISP ×1 (all seven external observables). No `observable` is `unknown` |
+| `processing.status` | `complete_with_errors` |
+| `cortex.skipped_by_filter` | Only the two documentation-range IPs (`Non-public IPv4 address`) and the internal agent IP and hostname |
+
+The documentation-range IPs are correctly filtered out as `Non-public IPv4 address`, so this test does not reach AbuseIPDB.
+
+![Summary Enrichments output with failed services](../images/n8n/72-summary-enrichments-output-failed.png)
+
+*Figure. Test result: eight records in `processing.failed` and `processing.status: complete_with_errors`.*
+
+**If it does not work:**
+
+| What you see | Cause | Fix |
+|---|---|---|
+| The workflow stops at a failed node | **On Error** is still `Stop Workflow` | Set **On Error** to **Continue (using error output)** on that node |
+| `processing.failed` is empty although a service failed | The Error Formatter is not connected to a Merge input, or the red error output is not connected to the formatter | Check both connections |
+| `Paired item data for item from node 'Get a report …' is unavailable` | The Job ID uses `$('Execute …').item`, which loses track with more than one observable or on a second polling round | Set Job ID to `{{ $json._id ?? $json.id }}` |
+| `observable` is `unknown` | A name in the formatter constants does not match the node name exactly, or `TYPES` does not match the router rule | Compare the constants with the node names, including spaces. A node named `Get a report  Maltiverse` (two spaces) is not found |
+| The MISP record shows `unknown` | The MISP formatter runs before `Dedupe Cortex Observables`, and the observables in `Normalize Alert` use `dataType` and `data` | Use the current [`error-formatter-misp.js`](../../soar/n8n/nodes/error-formatter-misp.js), which reads both formats |
+| Two different hashes get the same observable, usually the alert IP | An old formatter version reads `primary_observable`, which every item inherits from the alert | Use the current [`error-formatter-cortex.js`](../../soar/n8n/nodes/error-formatter-cortex.js) |
+| Cortex receives the text `json.data` instead of the observable | **Observable Type** and **Observable Value** contain the literal text `json.data` | Set them to `{{ $json.observables.dataType }}` and `{{ $json.observables.data }}` |
+| A failed IP is also listed in `skipped_by_filter` as `No Cortex result for this IP` | Old `Summary Enrichments` code | Use the current [`summary-enrichments.js`](../../soar/n8n/nodes/summary-enrichments.js) |
+| Python syntax error in the formatter | The Code node language is Python | Set **Language** to **JavaScript** |
 
 ## 8. TheHive
 

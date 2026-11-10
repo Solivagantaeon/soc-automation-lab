@@ -1,4 +1,5 @@
 const rows = $input.all().map(item => item.json ?? {});
+const errorRows = rows.filter(item => item.service && item.error !== undefined);
 
 let alert = {};
 try {
@@ -301,10 +302,17 @@ const enrichedIpValues = new Set(
     .map(item => String(item.data ?? ''))
 );
 
+const failedValues = new Set(
+  errorRows
+    .filter(item => item.service !== 'MISP')
+    .map(item => String(item.observable ?? ''))
+);
+
 const ipWithoutCortexResult = observables.filter(item =>
   String(item.type ?? '').toLowerCase().includes('ip') &&
   item.value !== undefined &&
-  !enrichedIpValues.has(String(item.value))
+  !enrichedIpValues.has(String(item.value)) &&
+  !failedValues.has(String(item.value))
 );
 
 const skippedByFilterMap = new Map();
@@ -397,13 +405,21 @@ const pending = cortexResults
     status: result.status,
   }));
 
-const failed = cortexResults
-  .filter(result => result.status === 'failed')
-  .map(result => ({
-    analyzer: result.analyzer,
-    observable: result.observable,
-    status: result.status,
-  }));
+const failed = [
+  ...cortexResults
+    .filter(result => result.status === 'failed')
+    .map(result => ({
+      analyzer: result.analyzer,
+      observable: result.observable,
+      status: result.status,
+    })),
+  ...errorRows.map(item => ({
+    service: item.service,
+    node: item.node,
+    observable: item.observable,
+    error: item.error,
+  })),
+];
 
 const rule = alert.rule ?? {};
 const agent = alert.agent ?? {};

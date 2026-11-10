@@ -99,7 +99,7 @@ The observable extraction covers IP addresses, domains, URLs, URI paths, MD5/SHA
 
 An agent's internal IP is retained as context and marked `internal: true`; it is not automatically selected as the primary IOC. If no eligible primary observable is present, `primary_observable` is set to `-`.
 
-The node generates a `dedup_key` from the rule, signature, agent, and primary observable fields. This stage only creates the key; actual duplicate detection is handled by the separate Dedup stage.
+The node generates `dedup_key` from the `rule ID`, `signature ID`, `agent ID`, `source IP`, and `primary observable`. If no source IP is available, the key uses `-`. For web rules in the web, accesslog, or web_scan groups with a `source IP`, the final key component is `*`, so different paths from the same `source IP` to the same agent share a key. The output also includes `source_ip` and `dedup_mode` (web-source or default). This stage only creates the key, duplicate detection is handled by the separate Dedup stage.
 
 #### Rationale
 
@@ -137,7 +137,75 @@ The generated `dedup_key` must be consumed and tested by the Dedup stage.
 
 **Owner:** @arturesturemkuros
 
+#### Context
 
+Wazuh can send the same alert many times in a short period, for example when a scan or a repeated login attempt keeps triggering one rule. Every copy that reaches the enrichment stages costs a MISP query and up to five Cortex analyzer runs, some of which have API rate limits (Maltiverse, AbuseIPDB, TeamCymru, CirclHash, VirusTotal).
+
+The Dedup stage was added to the `SOC - n8n E2E Skeleton` workflow directly after Normalize, as early as possible, so a duplicate is stopped before any enrichment. It depends on the `dedup_key` produced by the Normalize stage.
+
+#### Decision
+
+Two nodes are added after Normalize:
+
+1. A JavaScript Code node, **Dedup**, in **Run Once for All Items** mode. It keeps a map of `dedup_key -> {first_seen, count}` in n8n workflow static data. If the key is already in the map and younger than the window, the alert is marked `is_duplicate: true` and its `duplicate_count` is increased. Otherwise the key is stored and the alert is marked `is_duplicate: false`. Entries older than the window are removed on every run.
+2. An If node, **New Alert?**, which tests `{{ $json.is_duplicate }}` is false. The true branch continues to the MISP lookup and to Split Cortex Observables. The false branch is empty, so the execution ends there.
+
+**Window.** 7 minutes, counted from the first occurrence (a fixed window, not a sliding one).
+
+**Key.** Normalize builds the key as:
+
+`soc:dedup:<rule.id>:<signature_id>:<agent.id>:<source_ip>:<primary_observable>`
+
+- The source IP is taken from `data.srcip`, `data.src_ip`, `data.win.eventdata.sourceIp` or `data.win.eventdata.ipAddress`. Private addresses are kept, so two internal attackers do not share a key.
+- For web rules (rule groups `web`, `accesslog` or `web_scan`) that have a source IP, the last element is `*` instead of the primary observable. The path is ignored, so a scan from one IP against one agent is one key. Without a source IP the default key is used.
+- Normalize also outputs `source_ip` and `dedup_mode` (`default` or `web-source`).
+
+#### Rationale
+
+**Early position.** A duplicate that is stopped right after Normalize never reaches MISP or Cortex, which protects the rate-limited APIs. Putting the stage later would only save work on the nodes after it.
+
+**Code node and static data instead of Remove Duplicates.** The built-in Remove Duplicates node compares against earlier executions and has no time window, so it cannot express "the same alert within a short time". Static data with a timestamp can.
+
+**Short fixed window.** A short window absorbs bursts of the same event, while a problem that keeps recurring is reported again after the window ends. The cost is that a continuous flood produces one alert per window, not one in total. A fixed window was chosen over a sliding one because a sliding window would suppress a never-ending flood forever.
+
+**Source IP in the key.** Without it, two different internal attackers triggering the same rule on the same agent, with no public IOC, would share one key and the second would be dropped.
+
+**Path ignored for web rules.** Tools such as gobuster try hundreds of paths. If the path were part of the key, every path would be a new alert and the flood would not be reduced. The price is that one interesting hit inside a scan can be dropped as a duplicate of the first alert.
+
+**Considered, not implemented.**
+- Adding the HTTP status code to the key for web rules, so that 404 and 200 responses from one IP stay separate.
+- Never deduplicating alerts above a chosen rule level.
+- Updating the existing TheHive alert with the repeat count when a duplicate arrives.
+
+#### Verification
+
+The stage was tested on 2026-11-08 with seven synthetic alerts pinned in the Webhook node and executed once:
+
+| Test | Scenario | Verified result |
+|---|---|---|
+| 1 | New alert, public source IP | `is_duplicate: false`, `dedup_mode: default` |
+| 2 | Same alert again | `is_duplicate: true`, `duplicate_count: 2` |
+| 3 | Web rule, private source IP, path `/dvwa/admin` | `is_duplicate: false`, `dedup_mode: web-source` |
+| 4 | Same web rule, same source IP, other path `/dvwa/backup` | `is_duplicate: true`, same key as test 3 |
+| 5 | Same web rule, different source IP | `is_duplicate: false`, different key |
+| 6 | No observables, no source IP | `is_duplicate: false`, `primary_observable: "-"` |
+| 7 | Same alert as test 6 again | `is_duplicate: true` (known limitation below) |
+
+New Alert? sent 4 items to the true branch and 3 items to the false branch, as expected.
+
+Normal alerts with a public IOC continued through Split Cortex Observables, Dedupe Cortex Observables and Cortex Eligibility. The synthetic public IP in test 1 is in a documentation range, so Cortex Eligibility correctly rejected it and no analyzer was started.
+
+These tests do not cover: expiry of the window, because static data is not persisted on manual runs; delivery through the live Webhook; or real web-scan alerts, whose `rule.groups` and `data.url` fields were assumed from the synthetic data.
+
+Build and test instructions are in the [n8n triage runbook](../runbooks/n8n-triage.md#3-dedup).
+
+#### Follow-up
+
+- Verify window expiry on the active workflow: send the same alert, wait longer than the window and send it again. It should pass as new.
+- Check a real gobuster alert against the DVWA host to confirm that its `rule.groups` contain a web group and that `source_ip` is filled.
+- Known limitations: alerts with no observables and no source IP differ only by rule and agent, so different events from one rule and agent merge within the window; duplicates are dropped silently and nothing is updated in TheHive; the window uses processing time, not the alert `timestamp`, so replaying baseline alerts through the pipeline deduplicates by replay speed; the entry is stored before enrichment, so if a later stage fails the key stays blocked until the window ends.
+- The Counters stage can use `duplicate_count`. Updating the existing TheHive alert on duplicates, with a `sourceRef` that includes `first_seen` so a new window can create a new alert, is a possible follow-up.
+  
 ### 4. MISP and Cortex
 
 **Owner:** @MKonrad-afk
@@ -285,7 +353,86 @@ The [n8n triage runbook](../runbooks/n8n-triage.md#5-score) documents the node s
 
 **Owner:** @p4chatek
 
+#### Context
 
+The MISP and Cortex stage calls six external services: MISP and five Cortex analyzers (Maltiverse, AbuseIPDB, Team Cymru MHR, CIRCL Hashlookup and VirusTotal). Any of them can be down, slow or misconfigured. By default, a failed n8n node stops the whole execution, so one broken service would stop the alert from reaching the analyst.
+
+Simply skipping the failed node is not enough either. The summary would then contain fewer results, with nothing saying why, and an alert whose lookups failed would look the same as an alert whose lookups found nothing.
+
+The stage was added to the `SOC - n8n E2E Skeleton` workflow on top of the MISP and Cortex branches from stage 4.
+
+#### Decision
+
+**Retry before failing.** Every node that calls MISP or Cortex has **Retry On Fail** enabled:
+
+| Node | Max. Tries | Wait Between Tries |
+|---|---|---|
+| Execute Maltiverse, Execute AbuseIPDB, Execute TeamCymru, Execute CirclHash, Execute VirusTotal | 3 | 2 000 ms |
+| Get a report Maltiverse, Get a report AbuseIPDB, Get a report TeamCymru, Get a report CirclHash, Get a report UnshortenLink | 3 | 3 000 ms |
+| Get a filtered list of attributes (MISP) | 5 | 2 000 ms |
+
+**A failure goes to an error output.** The same nodes use **On Error → Continue (using error output)**. When the last retry fails, the failed items leave through the error output instead of stopping the workflow. The other services keep running and the alert still reaches the summary.
+
+**One Error Formatter per service.** The error outputs of the `Execute …` and `Get a report …` nodes of one service go to one Code node, `Error Formatter - <service>`, in **Run Once for All Items** mode. It writes one record per failed observable:
+
+```json
+{ "service": "CirclHash", "node": "Execute CirclHash", "observable": "44d88612fea8a8f36de82e1278abb02f", "error": "Invalid URL", "timestamp": "2026-11-10T10:00:00.000Z" }
+```
+
+An error output item contains only the error message, not the observable. The formatter therefore works out which observables failed by comparing values:
+
+- an error from `Execute …`: the observables of the service's type that were sent to it, minus the observables for which Cortex created a job;
+- an error from `Get a report …`: the jobs created by `Execute …`, minus the jobs whose report was already finished or that are still in the current polling round;
+- MISP searches all observables of an alert in one query, so its single record lists all of them.
+
+The formatter reads the sent observables from `Normalize Alert` and `Dedupe Cortex Observables`. For AbuseIPDB it reads `Filter Cortex-Eligible IPs`, because only IPs that pass that filter are sent. The code is in [`error-formatter-cortex.js`](../../soar/n8n/nodes/error-formatter-cortex.js) and [`error-formatter-misp.js`](../../soar/n8n/nodes/error-formatter-misp.js).
+
+**Get a report reads the job ID from the incoming item.** The Job ID field of every `Get a report …` node is `{{ $json._id ?? $json.id }}` instead of `{{ $('Execute …').item.json._id }}`.
+
+**The summary records the failure.** `Summary Enrichments` adds every Error Formatter record to `processing.failed` and sets `processing.status` to `complete_with_errors`. An observable whose lookup failed is not listed in `cortex.skipped_by_filter`. The code is in [`summary-enrichments.js`](../../soar/n8n/nodes/summary-enrichments.js).
+
+**Score treats a failure as missing data.** The Score stage counts every service in `processing.failed` as a service that did not answer. This lowers `scoring.coverage`, and below `min_coverage_for_fp` a low score becomes `needs_review` instead of a likely false positive. The scoring rules are recorded in stage 5.
+
+#### Rationale
+
+**Retry first.** Short outages, such as a restarting container or a single timeout, are common and usually clear within seconds. A few short retries fix them without creating a failure record. The waits are kept short so that a service that is really down does not hold the alert for long.
+
+**Error output instead of Stop Workflow.** A failed analyzer does not make the results of the other services useless. Continuing keeps the alert moving and records the gap in the alert itself, where the analyst and the Score stage can see it.
+
+**One record per observable.** An alert can carry several observables of the same type, and one of them can fail while another succeeds. The analyst and the Score stage need to know exactly which indicator was not checked.
+
+**Comparing values instead of n8n item linking.** n8n's item linking (`$('node').item`, `itemMatching()`) could not find the original observable. The Cortex node does not keep item links when it processes more than one item, and the polling loop through the Wait node loses them as well. With one observable the lookup worked by chance. With two hashes it returned `unknown`, or the wrong observable. Comparing sent observables with created and finished jobs works for any number of observables and any number of polling rounds.
+
+**Job ID from `$json`.** The `.item` lookup failed for the same reason. On the second polling round, or with more than one observable, `Get a report` stopped with `Paired item data for item from node 'Get a report …' is unavailable`. The incoming item is always a Cortex job object that contains its `_id`, on the first round and on every later one.
+
+**A failed lookup is never listed as skipped.** Before this change, an IP whose AbuseIPDB lookup failed was also listed in `skipped_by_filter` with the reason `No Cortex result for this IP`. That reads as "checked, nothing found", which is exactly the false impression this stage has to prevent.
+
+**One formatter per service instead of one shared node.** Each formatter needs its own node names and observable types. Separate nodes also keep every error path visible on the canvas next to the service it belongs to.
+
+#### Verification
+
+The stage was tested on 2026-11-10 with one synthetic alert, `100002`. It contains two documentation-range IPs, two domains, one URL and two hashes. All Cortex `Execute …` nodes and the MISP node used a test credential, `TEST FAILED`, with an invalid URL, so every lookup failed.
+
+| Check | Verified result |
+|---|---|
+| Workflow | The execution completed and did not stop at any failed node |
+| `processing.failed` | Eight records, one per failed observable: Maltiverse for both domains, Team Cymru and CIRCL for both hashes, VirusTotal for the URL, and one MISP record listing all seven external observables. Each record had the correct observable value |
+| `processing.status` | `complete_with_errors` |
+| `cortex.results` | Empty, because no analyzer answered |
+| `cortex.skipped_by_filter` | Only observables that were deliberately not sent to Cortex: the two documentation-range IPs (`Non-public IPv4 address`) and the internal agent IP and hostname (`Marked internal by normalization`). No failed observable was listed there |
+
+This test does not cover: a failure in a `Get a report …` node, because no job was created; AbuseIPDB, because the documentation-range IPs are correctly filtered out before it; a real outage, because an invalid URL fails immediately instead of timing out; and the Score stage output for a failed run.
+
+Build and test instructions, screenshots and the test alert are in the [n8n triage runbook](../runbooks/n8n-triage.md#7-failure-handling).
+
+#### Follow-up
+
+- **Real outage:** repeat the test with a credential that points to an address where nothing listens, for example `http://127.0.0.1:9999`. The error should be a refused connection or a timeout, and the retries should add the configured delay before the record appears.
+- **Report step:** run the test with the real credential on `Execute TeamCymru` and `TEST FAILED` on `Get a report TeamCymru`. Expect two records with node `Get a report TeamCymru`, one for each hash.
+- **AbuseIPDB:** run the test with two real public IPs and `TEST FAILED` on `Execute AbuseIPDB`. Expect one record per IP, and neither IP in `skipped_by_filter`. Redact the IPs in any screenshot.
+- **Score:** run the test alert through the Score stage and confirm that every failed service is listed under `scoring.sources.failed`, `coverage` is below `min_coverage_for_fp` and the verdict is `needs_review`.
+- **Known issue, slow reports:** in one run, the Team Cymru result for one of two hashes appeared in neither `cortex.results` nor `processing.failed`. The likely cause is that its report needed another polling round and the final `Merge` had already passed its data on. This has to be investigated, because a lost result also makes an alert look cleaner than it is.
+- **Node names:** the Error Formatters find their nodes by name, so renaming a node requires updating the constants in the formatter. The VirusTotal report node is still named `Get a report UnshortenLink`. Renaming it to `Get a report VirusTotal` would match the analyzer it polls.
 
 ### 8. TheHive
 
