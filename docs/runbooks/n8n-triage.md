@@ -1025,7 +1025,7 @@ This node runs after MISP/Cortex enrichment. It sets the markings that TheHive r
 
 1. Add a **Code** node after `Apply TheHive Handling Policy` and name it `Build TheHive Alert`.
 2. Set **Mode** to **Run Once for All Items** and **Language** to **JavaScript**.
-3. Paste [`thehive-alert-v0.2.js`](../../soar/n8n/nodes/thehive-alert-v0.2.js).
+3. Paste [`score-v0.2.js`](../../soar/n8n/nodes/score-v0.2.js).
 4. Keep the node names `Normalize Alert`, `Dedup`, and `Apply TheHive Handling Policy` unchanged. The code reads data from those nodes by name.
 5. Confirm the output has top-level alert fields and `thehive_observables` before connecting the TheHive node.
 
