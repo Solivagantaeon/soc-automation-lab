@@ -610,6 +610,173 @@ The workflow returned five Cortex result entries, `processing.status: complete`,
 
 **Owner:** @p4chatek
 
+**What it does:** Makes sure that a MISP or Cortex service that is down does not stop the workflow, and that every lookup that failed is recorded in the alert, so the alert never looks cleaner than it is.
+
+![Workflow overview with Error Formatters](../images/n8n/72-workflow-overview.png)
+
+*Figure. The workflow with one Error Formatter per service, connected to the error outputs of the MISP and Cortex nodes.*
+
+#### Node: Retry On Fail and On Error (all MISP and Cortex nodes)
+
+**What it does:** Retries a failed request a few times. If the last try also fails, sends the failed items to the error output instead of stopping the workflow.
+
+**How to build it:**
+
+1. Open each node listed in the table below.
+2. Go to the **Settings** tab.
+3. Turn on **Retry On Fail** and set **Max. Tries** and **Wait Between Tries** as shown in the table.
+4. Set **On Error** to **Continue (using error output)**. A second, red output appears on the node.
+
+![Retry On Fail and On Error settings](../images/n8n/72-execute-node-settings-retry-on-error.png)
+
+*Figure. Retry On Fail and On Error settings on an Execute node.*
+
+| Node | Max. Tries | Wait Between Tries | On Error |
+|---|---|---|---|
+| Execute Maltiverse | 3 | 2 000 ms | Continue (using error output) |
+| Get a report Maltiverse | 3 | 3 000 ms | Continue (using error output) |
+| Execute AbuseIPDB | 3 | 2 000 ms | Continue (using error output) |
+| Get a report AbuseIPDB | 3 | 3 000 ms | Continue (using error output) |
+| Execute TeamCymru | 3 | 2 000 ms | Continue (using error output) |
+| Get a report TeamCymru | 3 | 3 000 ms | Continue (using error output) |
+| Execute CirclHash | 3 | 2 000 ms | Continue (using error output) |
+| Get a report CirclHash | 3 | 3 000 ms | Continue (using error output) |
+| Execute VirusTotal | 3 | 2 000 ms | Continue (using error output) |
+| Get a report UnshortenLink | 3 | 3 000 ms | Continue (using error output) |
+| Get a filtered list of attributes (MISP) | 5 | 2 000 ms | Continue (using error output) |
+
+**How to test it:** Run the test in [How to test the stage](#how-to-test-the-stage). The execution must finish, and the failed node must show items on its red error output.
+
+#### Node: Get a report … (Job ID)
+
+**What it does:** Reads the Cortex job ID from the item that arrives at the node, so polling works for any number of observables and any number of polling rounds.
+
+**How to build it:**
+
+1. Open each `Get a report …` node.
+2. Set **Job ID** to `{{ $json._id ?? $json.id }}`.
+3. Do not use `{{ $('Execute …').item.json._id }}`. That lookup fails when a service gets more than one observable, or on the second polling round.
+
+| Setting | Value |
+|---|---|
+| Job ID | `{{ $json._id ?? $json.id }}` |
+
+**How to test it:** Not covered by the stage test, because in that test no Cortex job is created. With working credentials, an alert with two hashes must return a Team Cymru and a CIRCL result for both, without a `Paired item data … is unavailable` error.
+
+#### Node: Error Formatter - \<service\> (one per service)
+
+**What it does:** Receives the failed items of one service and turns each of them into one record: `{service, node, observable, error, timestamp}`. The records go to the main Merge and from there to `Summary Enrichments`.
+
+**How to build it:**
+
+1. Add a **Code** node for each service and name it `Error Formatter - <service>`, for example `Error Formatter - CirclHash`.
+2. Set **Mode** to **Run Once for All Items** and **Language** to **JavaScript**.
+3. Connect the red error output of the service's `Execute …` node **and** of its `Get a report …` node to this one formatter.
+4. Paste the code:
+   - Cortex services: [`error-formatter-cortex.js`](../../soar/n8n/nodes/error-formatter-cortex.js). Change only the five constants at the top, using the table below.
+   - MISP: [`error-formatter-misp.js`](../../soar/n8n/nodes/error-formatter-misp.js). No changes are needed.
+5. Connect the formatter output to the service's Merge node as an extra input (`Append` mode). For MISP, connect it to the main `Merge` before `Summary Enrichments`.
+
+![Error Formatter code](../images/n8n/72-error-formatter-code.png)
+
+*Figure. Error Formatter - CirclHash with its constants and the Run Once for All Items mode.*
+
+| Formatter | `SERVICE_NAME` | `EXECUTE_NODE` | `REPORT_NODE` | `SOURCE_NODES` | `TYPES` |
+|---|---|---|---|---|---|
+| Error Formatter - Maltiverse | `Maltiverse` | `Execute Maltiverse` | `Get a report Maltiverse` | `Normalize Alert`, `Dedupe Cortex Observables` | `domain` |
+| Error Formatter - AbuseIPDB | `AbuseIPDB` | `Execute AbuseIPDB` | `Get a report AbuseIPDB` | `Filter Cortex-Eligible IPs` | `ip` |
+| Error Formatter - TeamCymru | `TeamCymru` | `Execute TeamCymru` | `Get a report TeamCymru` | `Normalize Alert`, `Dedupe Cortex Observables` | `hash` |
+| Error Formatter - CirclHash | `CirclHash` | `Execute CirclHash` | `Get a report CirclHash` | `Normalize Alert`, `Dedupe Cortex Observables` | `hash` |
+| Error Formatter - VirusTotal | `VirusTotal` | `Execute VirusTotal` | `Get a report UnshortenLink` | `Normalize Alert`, `Dedupe Cortex Observables` | `url` |
+| Error Formatter - MISP | `MISP` | - | - | `Normalize Alert`, `Dedupe Cortex Observables` | all types |
+
+`TYPES` must match the `router of types` rule that sends observables to that branch. `SERVICE_NAME` must contain the name the Score stage uses for the service (`abuseipdb`, `maltiverse`, `teamcymru`, `circl`, `virustotal`, `misp`, case-insensitive).
+
+**How it finds the observable:** an error item contains only the error message. The formatter compares values instead:
+
+- error from `Execute …`: observables of `TYPES` read from `SOURCE_NODES`, minus those for which a job was created;
+- error from `Get a report …`: jobs created by `Execute …`, minus jobs that already finished or are still in the current polling round;
+- MISP: one record that lists every observable of the alert.
+
+**How to test it:** Run the test in [How to test the stage](#how-to-test-the-stage). Each failed observable must appear as its own record with the correct value. `observable` must never be `unknown`.
+
+#### Node: Summary Enrichments (failure records)
+
+**What it does:** Adds every Error Formatter record to `processing.failed` and sets `processing.status` to `complete_with_errors` when at least one lookup failed. An observable whose lookup failed is not listed in `cortex.skipped_by_filter`, so it cannot look like "checked, nothing found".
+
+**How to build it:** Use the current implementation in [`summary-enrichments.js`](../../soar/n8n/nodes/summary-enrichments.js). The relevant parts are:
+
+- `errorRows`: every merged item with a `service` and an `error` field;
+- `failedValues`: the observables of failed Cortex lookups, used to keep them out of `skipped_by_filter`;
+- `failed`: failed Cortex jobs plus all `errorRows`.
+
+| Setting | Value |
+|---|---|
+| Mode | `Run Once for All Items` |
+| Implementation | [`summary-enrichments.js`](../../soar/n8n/nodes/summary-enrichments.js) |
+| Output used by Score | `processing.failed`, `processing.pending`, `processing.status` |
+
+**How to test it:** See [How to test the stage](#how-to-test-the-stage).
+
+#### How to test the stage
+
+1. Create a Cortex credential and a MISP credential, both named `TEST FAILED`, with an invalid URL (for example `localhost:9999`, without `http://`) and any API key.
+2. Pin this test alert in the Webhook node. All values are safe to publish: the IPs are documentation ranges (RFC 5737), the domains are reserved (RFC 2606) and the hashes belong to the EICAR test file.
+
+   ```json
+   [
+     {
+       "timestamp": "2026-11-10T10:00:00.000Z",
+       "rule": { "level": 12, "description": "Test alert IP + hash + domain + url", "id": "100002" },
+       "agent": { "id": "001", "name": "test-agent", "ip": "10.0.0.1" },
+       "manager": { "name": "wazuh-manager" },
+       "data": {
+         "srcip": "203.0.113.10",
+         "dstip": "198.51.100.20",
+         "url": "http://example.com/download/payload.exe",
+         "domain": "example.org",
+         "win": {
+           "eventdata": {
+             "hashes": "MD5=44d88612fea8a8f36de82e1278abb02f,SHA256=275a021bbfb6489e54d471899f7db9d1663fc695ec2fe2a2c4538aabf651fd0f",
+             "queryName": "test-c2.example.net"
+           }
+         }
+       }
+     }
+   ]
+   ```
+
+3. Set the `TEST FAILED` credential on every Cortex `Execute …` node and on `Get a filtered list of attributes` (MISP).
+4. Run the workflow and open the output of `Summary Enrichments`.
+5. Put the original credentials back.
+
+| Check | Expected result |
+|---|---|
+| Workflow | The execution finishes. No node stops it |
+| `processing.failed` | 8 records, one per observable: Maltiverse ×2 (both domains), TeamCymru ×2 and CirclHash ×2 (both hashes), VirusTotal ×1 (the URL) and MISP ×1 (all seven external observables). No `observable` is `unknown` |
+| `processing.status` | `complete_with_errors` |
+| `cortex.skipped_by_filter` | Only the two documentation-range IPs (`Non-public IPv4 address`) and the internal agent IP and hostname |
+
+The documentation-range IPs are correctly filtered out as `Non-public IPv4 address`, so this test does not reach AbuseIPDB.
+
+![Summary Enrichments output with failed services](../images/n8n/72-summary-enrichments-output-failed.png)
+
+*Figure. Test result: eight records in `processing.failed` and `processing.status: complete_with_errors`.*
+
+**If it does not work:**
+
+| What you see | Cause | Fix |
+|---|---|---|
+| The workflow stops at a failed node | **On Error** is still `Stop Workflow` | Set **On Error** to **Continue (using error output)** on that node |
+| `processing.failed` is empty although a service failed | The Error Formatter is not connected to a Merge input, or the red error output is not connected to the formatter | Check both connections |
+| `Paired item data for item from node 'Get a report …' is unavailable` | The Job ID uses `$('Execute …').item`, which loses track with more than one observable or on a second polling round | Set Job ID to `{{ $json._id ?? $json.id }}` |
+| `observable` is `unknown` | A name in the formatter constants does not match the node name exactly, or `TYPES` does not match the router rule | Compare the constants with the node names, including spaces. A node named `Get a report  Maltiverse` (two spaces) is not found |
+| The MISP record shows `unknown` | The MISP formatter runs before `Dedupe Cortex Observables`, and the observables in `Normalize Alert` use `dataType` and `data` | Use the current [`error-formatter-misp.js`](../../soar/n8n/nodes/error-formatter-misp.js), which reads both formats |
+| Two different hashes get the same observable, usually the alert IP | An old formatter version reads `primary_observable`, which every item inherits from the alert | Use the current [`error-formatter-cortex.js`](../../soar/n8n/nodes/error-formatter-cortex.js) |
+| Cortex receives the text `json.data` instead of the observable | **Observable Type** and **Observable Value** contain the literal text `json.data` | Set them to `{{ $json.observables.dataType }}` and `{{ $json.observables.data }}` |
+| A failed IP is also listed in `skipped_by_filter` as `No Cortex result for this IP` | Old `Summary Enrichments` code | Use the current [`summary-enrichments.js`](../../soar/n8n/nodes/summary-enrichments.js) |
+| Python syntax error in the formatter | The Code node language is Python | Set **Language** to **JavaScript** |
+
 ## 8. TheHive
 
 **Owner:** @Solivagantaeon
