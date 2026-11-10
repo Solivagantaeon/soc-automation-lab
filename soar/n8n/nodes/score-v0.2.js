@@ -1,606 +1,454 @@
 /**
- * SOC - Alert Scoring
- * Stage: Scoring (after "Summary Enrichments", before "Create an alert")
- * Version: 0.2.2
+ * SOC n8n TheHive alert builder
+ * Input: output from the Decision node for analyst_review or malicious.
+ * Reads the detailed normalized event from "Normalize Alert" and the
+ * handling policy from "Apply TheHive Handling Policy".
+ * Output: top-level TheHive alert fields for the native node's auto-map mode,
+ * plus `thehive_observables` for a separate Observable -> Create node.
  *
- * Input:  output of Summary Enrichments (alert, misp, cortex, processing)
- *         optionally with a "scoring_config" field added by an upstream
- *         "Scoring Config" node (Edit Fields / Set node)
- * Output: the same object (without scoring_config) plus a "scoring" field
- *
- * n8n Code node:
- * Mode: Run Once for All Items
- *
- * Principles:
- * - all weights and switches live in the config (DEFAULT_CONFIG below is
- *   the fallback; the upstream node overrides any part of it)
- * - the config is validated: wrong types, unknown keys and inconsistent
- *   bands are reported in scoring.config_warnings and defaults are used
- * - each source contributes one entry (the max over all observables)
- * - missing data (error/pending) is NOT treated as "clean":
- *   it lowers "coverage", and low coverage blocks a false-positive verdict
- * - a disabled source is ignored completely (points and coverage)
- * - an item without the expected enrichment data is never scored as clean:
- *   its verdict is needs_review and input_problems explains why
- * - CIRCL "known" cancels a hash's weak Team Cymru MHR detections and adds
- *   the known-good discount, but a strong MHR detection overrides CIRCL
+ * Closed decisions must bypass this node and the TheHive HTTP Request node.
  */
 
-const DEFAULT_CONFIG = {
-  version: '0.2',
+const items = $input.all();
 
-  rule_level_multiplier: 2, // Wazuh rule level 0-15 -> 0-30 points
-
-  // below this coverage, a low score is not accepted as a false positive
-  min_coverage_for_fp: 0.6,
-
-  // score thresholds for the verdict (high > medium > low)
-  bands: { high: 70, medium: 40, low: 20 },
-
-  sources: {
-    misp: { enabled: true, to_ids: 30, match: 15 },
-
-    abuseipdb: {
-      enabled: true,
-      whitelisted: -10,
-      tiers: [
-        { min: 75, points: 25 },
-        { min: 25, points: 12 },
-      ],
-    },
-
-    maltiverse: {
-      enabled: true,
-      malicious: 20,
-      suspicious: 10,
-      historical_only: 5, // historical matches exist, but classification is not malicious
-      whitelist: -5,
-    },
-
-    virustotal: {
-      enabled: true,
-      tiers: [
-        { min: 10, points: 25 },
-        { min: 3, points: 15 },
-        { min: 1, points: 8 },
-      ],
-    },
-
-    teamcymru: {
-      enabled: true,
-      // MHR detections of a hash known in CIRCL are ignored, unless the
-      // detection is strong (see sources.circl.known_good_unless_mhr_pct)
-      ignore_when_circl_known: true,
-      tiers: [
-        { min: 50, points: 15 },
-        { min: 20, points: 8 },
-      ],
-    },
-
-    circl: {
-      enabled: true,
-      known_good: -10,
-      // a CIRCL-known hash keeps its known-good status only while its MHR
-      // detection is below this percentage (a value above 100 turns the
-      // exception off)
-      known_good_unless_mhr_pct: 50,
-    },
-  },
-};
-
-// ------------------------------------------------------------
-// Config loading and validation
-// ------------------------------------------------------------
-
-function isPlainObject(value) {
-  return value !== null && typeof value === 'object' && !Array.isArray(value);
+let normalized = {};
+try {
+  normalized = $('Normalize Alert').first().json ?? {};
+} catch {
+  normalized = {};
 }
 
-function validTiers(value) {
-  return Array.isArray(value) &&
-    value.length > 0 &&
-    value.every(t =>
-      isPlainObject(t) &&
-      Number.isFinite(Number(t.min)) &&
-      Number.isFinite(Number(t.points))
-    );
+let handlingPolicyFromNode = {};
+try {
+  handlingPolicyFromNode = $('Apply TheHive Handling Policy').first().json?.thehive_policy ?? {};
+} catch {
+  handlingPolicyFromNode = {};
 }
 
-// Merges "override" over "defaults". Every key is checked against the
-// type of its default; invalid values keep the default and add a warning.
-function mergeConfig(defaults, override, path, warnings) {
-  const out = {};
-  const prefix = path ? `${path}.` : '';
-
-  for (const key of Object.keys(defaults)) {
-    const def = defaults[key];
-    const where = `${prefix}${key}`;
-
-    const provided =
-      isPlainObject(override) &&
-      Object.prototype.hasOwnProperty.call(override, key);
-
-    if (!provided) {
-      out[key] = def;
-      continue;
-    }
-
-    const val = override[key];
-
-    if (isPlainObject(def)) {
-      if (isPlainObject(val)) {
-        out[key] = mergeConfig(def, val, where, warnings);
-      } else {
-        warnings.push(`${where}: expected an object, default used`);
-        out[key] = def;
-      }
-    } else if (Array.isArray(def)) {
-      if (validTiers(val)) {
-        out[key] = val.map(t => ({
-          min: Number(t.min),
-          points: Number(t.points),
-        }));
-      } else {
-        warnings.push(`${where}: expected a non-empty list of {min, points}, default used`);
-        out[key] = def;
-      }
-    } else if (typeof def === 'boolean') {
-      if (typeof val === 'boolean') {
-        out[key] = val;
-      } else {
-        warnings.push(`${where}: expected true or false, default used`);
-        out[key] = def;
-      }
-    } else if (typeof def === 'number') {
-      // numeric strings are accepted (expressions in n8n often return text)
-      const n = typeof val === 'string' && val.trim() !== '' ? Number(val) : val;
-
-      if (typeof n === 'number' && Number.isFinite(n)) {
-        out[key] = n;
-      } else {
-        warnings.push(`${where}: expected a number, default used`);
-        out[key] = def;
-      }
-    } else {
-      out[key] = val; // plain string such as "version"
-    }
-  }
-
-  // unknown keys are most likely typos, so they are reported
-  if (isPlainObject(override)) {
-    for (const key of Object.keys(override)) {
-      if (!Object.prototype.hasOwnProperty.call(defaults, key)) {
-        warnings.push(`${prefix}${key}: unknown setting ignored`);
-      }
-    }
-  }
-
-  return out;
+function asArray(value) {
+  return Array.isArray(value) ? value : [];
 }
 
-function buildConfig(override) {
-  const warnings = [];
-
-  if (override !== undefined && override !== null && !isPlainObject(override)) {
-    warnings.push('scoring_config: expected an object, defaults used');
-    override = undefined;
+function text(value, fallback = 'Not provided') {
+  if (value === undefined || value === null || String(value).trim() === '') {
+    return fallback;
   }
-
-  const cfg = mergeConfig(DEFAULT_CONFIG, override, '', warnings);
-
-  const { high, medium, low } = cfg.bands;
-
-  if (!(high > medium && medium > low)) {
-    warnings.push('bands: must satisfy high > medium > low, defaults used');
-    cfg.bands = DEFAULT_CONFIG.bands;
-  }
-
-  if (cfg.min_coverage_for_fp < 0 || cfg.min_coverage_for_fp > 1) {
-    warnings.push('min_coverage_for_fp: must be between 0 and 1, default used');
-    cfg.min_coverage_for_fp = DEFAULT_CONFIG.min_coverage_for_fp;
-  }
-
-  // tiers are evaluated from the highest "min" to the lowest, so the
-  // order in which the user wrote them does not matter
-  for (const name of ['abuseipdb', 'virustotal', 'teamcymru']) {
-    cfg.sources[name] = {
-      ...cfg.sources[name],
-      tiers: [...cfg.sources[name].tiers].sort((a, b) => b.min - a.min),
-    };
-  }
-
-  return { cfg, warnings };
+  return String(value).trim();
 }
 
-// ------------------------------------------------------------
-// Helpers
-// ------------------------------------------------------------
-
-// Maps analyzer names (e.g. "TeamCymruMHR_1_0") and error-row
-// service names (e.g. "TeamCymru") to one common key.
-const SERVICES = [
-  ['abuseipdb', /abuseipdb/i],
-  ['maltiverse', /maltiverse/i],
-  ['virustotal', /virustotal/i],
-  ['teamcymru', /teamcymru/i],
-  ['circl', /circl/i],
-  ['maxmind', /maxmind/i],
-  ['misp', /misp/i],
-];
-
-function serviceKey(name) {
-  const text = String(name ?? '');
-
-  for (const [key, re] of SERVICES) {
-    if (re.test(text)) return key;
-  }
-
-  return text.toLowerCase() || 'unknown';
+function isTrue(value) {
+  return value === true || value === 1 || String(value).toLowerCase() === 'true';
 }
 
-// Tiers must already be sorted from the highest "min" to the lowest
-// (buildConfig takes care of that).
-function tier(value, tiers) {
-  for (const t of tiers) {
-    if (value >= t.min) return t.points;
-  }
-
-  return 0;
+function normalizedValue(value) {
+  return String(value ?? '').trim().toLowerCase();
 }
 
-// Finds a Cortex taxonomy entry by predicate (case-insensitive).
-function taxonomy(summary, predicate) {
-  return (summary?.taxonomies ?? []).find(
-    t => String(t.predicate).toLowerCase() === predicate.toLowerCase()
-  );
+function safeJson(value) {
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return String(value);
+  }
 }
 
-// Checks that the item looks like a Summary Enrichments output.
-// Without these fields a score of 0 would only mean "no data", not "clean".
-function checkInput(data) {
-  const problems = [];
-
-  const level = data.alert?.rule?.level;
-
-  if (level === undefined || level === null || !Number.isFinite(Number(level))) {
-    problems.push('alert.rule.level is missing');
-  }
-
-  if (!Array.isArray(data.cortex?.results)) {
-    problems.push('cortex.results is missing');
-  }
-
-  if (!isPlainObject(data.processing)) {
-    problems.push('processing is missing');
-  }
-
-  return problems;
+function truncate(value, max = 500) {
+  const result = String(value ?? '');
+  return result.length > max ? result.slice(0, max) + '…' : result;
 }
 
-// ------------------------------------------------------------
-// Scoring of a single alert
-// ------------------------------------------------------------
+function dateText(value) {
+  if (value === undefined || value === null || value === '') return 'Not available';
+  const parsed = typeof value === 'number' ? value : Date.parse(value);
+  return Number.isFinite(parsed) ? new Date(parsed).toISOString() : 'Not available';
+}
 
-function scoreAlert(data, cfg, configWarnings, inputProblems) {
-  const alert = data.alert ?? {};
-  const results = data.cortex?.results ?? [];
-  const processing = data.processing ?? {};
-  const src = cfg.sources;
+function formatSummary(summary) {
+  if (!summary || typeof summary !== 'object') return 'No report summary returned';
 
-  // sources without a config entry (e.g. maxmind) are always active
-  const active = key => src[key]?.enabled !== false;
-
-  // point candidates: { source, points, reason, observable }
-  const candidates = [];
-
-  function add(source, points, reason, observable) {
-    candidates.push({ source, points, reason, observable });
-  }
-
-  // --- 1. Wazuh rule level --------------------------------------
-  const level = Number(alert.rule?.level ?? 0);
-
-  const rulePoints = Math.round(
-    Math.min(Math.max(level, 0), 15) * cfg.rule_level_multiplier
-  );
-
-  // --- 2. Known-good hashes (CIRCL) -----------------------------
-  // Team Cymru MHR detection per hash, needed to check CIRCL "known" hashes
-  const mhrPct = new Map();
-
-  if (active('teamcymru')) {
-    for (const r of results) {
-      if (r.status !== 'complete') continue;
-      if (serviceKey(r.analyzer) !== 'teamcymru') continue;
-
-      const pct = Number(taxonomy(r.summary, 'detection_pct')?.value);
-
-      if (Number.isFinite(pct)) {
-        const key = String(r.observable);
-
-        mhrPct.set(key, Math.max(pct, mhrPct.get(key) ?? 0));
-      }
-    }
-  }
-
-  const knownGood = new Set();
-
-  if (active('circl')) {
-    for (const r of results) {
-      if (r.status !== 'complete') continue;
-      if (serviceKey(r.analyzer) !== 'circl') continue;
-
-      const t = taxonomy(r.summary, 'Result');
-
-      if (String(t?.value).toLowerCase() === 'known') {
-        const pct = mhrPct.get(String(r.observable));
-
-        // a strong MHR detection overrides the known-good status
-        if (pct !== undefined && pct >= src.circl.known_good_unless_mhr_pct) {
-          add(
-            'circl',
-            0,
-            `known in CIRCL, but MHR detection ${pct}% overrides known-good`,
-            r.observable
-          );
-          continue;
+  const entries = Object.entries(summary).map(([key, value]) => {
+    if (Array.isArray(value)) {
+      const compact = value.map(item => {
+        if (item && typeof item === 'object') {
+          const label = item.predicate ?? item.name ?? item.type ?? 'item';
+          const detail = item.value ?? item.count ?? item.description ?? item;
+          return `${label}=${safeJson(detail)}`;
         }
-
-        knownGood.add(String(r.observable));
-
-        add(
-          'circl',
-          src.circl.known_good,
-          'hash known in CIRCL hashlookup (known-good)',
-          r.observable
-        );
-      }
+        return String(item);
+      }).join(', ');
+      return `${key}: ${compact || 'none'}`;
     }
-  }
+    if (value && typeof value === 'object') return `${key}: ${safeJson(value)}`;
+    return `${key}: ${String(value)}`;
+  });
 
-  // --- 3. Cortex analyzer results -------------------------------
-  for (const r of results) {
-    if (r.status !== 'complete') continue;
+  return truncate(entries.join('; ') || 'No report summary returned', 900);
+}
 
-    const key = serviceKey(r.analyzer);
+function taxonomyValue(result, predicate) {
+  const taxonomies = asArray(result.summary?.taxonomies);
+  const match = taxonomies.find(item =>
+    String(item.predicate ?? '').toLowerCase() === predicate.toLowerCase()
+  );
+  return match?.value;
+}
 
-    if (!active(key)) continue;
+function isStrongVirusTotalDetection(result) {
+  const raw = String(taxonomyValue(result, 'GetReport') ?? '');
+  const match = /^(\d+)\s*\/\s*(\d+)$/.exec(raw);
+  return Boolean(match) && Number(match[1]) >= 10;
+}
 
-    const s = r.summary ?? {};
-    const obs = r.observable;
+function observableEvidence(value, mispIndicators, cortexResults) {
+  const key = normalizedValue(value);
+  const matchingIndicators = mispIndicators.filter(indicator =>
+    normalizedValue(indicator.value) === key
+  );
+  const attributes = matchingIndicators.flatMap(indicator => asArray(indicator.attributes));
+  const tags = new Set(attributes.flatMap(attribute =>
+    asArray(attribute.tags).map(tag => String(tag).toLowerCase())
+  ));
 
-    if (key === 'abuseipdb') {
-      if (s.whitelisted === true) {
-        add('abuseipdb', src.abuseipdb.whitelisted, 'IP whitelisted in AbuseIPDB', obs);
-      } else {
-        const score = Number(s.abuse_confidence_score ?? 0);
+  const malicious = [];
+  const benign = [];
 
-        add(
-          'abuseipdb',
-          tier(score, src.abuseipdb.tiers),
-          `abuse confidence ${score}`,
-          obs
-        );
-      }
-    }
+  if (tags.has('soc-lab:malicious')) malicious.push('MISP tag soc-lab:malicious');
+  if (tags.has('soc-lab:benign')) benign.push('MISP tag soc-lab:benign');
 
-    if (key === 'maltiverse') {
-      const cls = String(s.classification ?? '').toLowerCase();
-      const hist = Number(s.historical_matches?.count ?? 0);
+  for (const result of cortexResults) {
+    if (normalizedValue(result.observable) !== key || result.status !== 'complete') continue;
 
-      if (cls === 'malicious') {
-        add('maltiverse', src.maltiverse.malicious, 'classification: malicious', obs);
-      } else if (cls === 'suspicious') {
-        add('maltiverse', src.maltiverse.suspicious, 'classification: suspicious', obs);
-      } else if (cls === 'whitelist') {
-        add('maltiverse', src.maltiverse.whitelist, 'classification: whitelist', obs);
-      } else if (hist > 0) {
-        add(
-          'maltiverse',
-          src.maltiverse.historical_only,
-          `historical matches: ${hist}`,
-          obs
-        );
-      } else {
-        add('maltiverse', 0, `classification: ${cls || 'none'}`, obs);
+    const analyzer = String(result.analyzer ?? '').toLowerCase();
+    const summary = result.summary ?? {};
+    const classification = String(summary.classification ?? '').toLowerCase();
+
+    if (analyzer.includes('maltiverse')) {
+      if (classification === 'malicious') malicious.push('Maltiverse classification malicious');
+      if (classification === 'whitelist' || classification === 'benign') {
+        benign.push(`Maltiverse classification ${classification}`);
       }
     }
 
-    if (key === 'virustotal') {
-      // taxonomy value looks like "2/91" (malicious engines / total engines)
-      const t = taxonomy(s, 'GetReport');
-      const m = /^(\d+)\s*\/\s*(\d+)$/.exec(String(t?.value ?? ''));
+    if (analyzer.includes('abuseipdb') && summary.whitelisted === true) {
+      benign.push('AbuseIPDB marked the IP as whitelisted');
+    }
 
-      if (m) {
-        add(
-          'virustotal',
-          tier(Number(m[1]), src.virustotal.tiers),
-          `VirusTotal ${m[1]}/${m[2]} engines`,
-          obs
-        );
-      } else {
-        add('virustotal', 0, 'VirusTotal: no parsable result', obs);
+    if (analyzer.includes('teamcymru')) {
+      const detection = Number(taxonomyValue(result, 'detection_pct'));
+      if (Number.isFinite(detection) && detection >= 50) {
+        malicious.push(`Team Cymru MHR detection ${detection}%`);
       }
     }
 
-    if (key === 'teamcymru') {
-      if (src.teamcymru.ignore_when_circl_known && knownGood.has(String(obs))) {
-        add(
-          'teamcymru',
-          0,
-          'MHR detections ignored: hash is known-good in CIRCL',
-          obs
-        );
-        continue;
-      }
-
-      const pct = Number(taxonomy(s, 'detection_pct')?.value);
-
-      if (Number.isFinite(pct)) {
-        add(
-          'teamcymru',
-          tier(pct, src.teamcymru.tiers),
-          `MHR detection ${pct}%`,
-          obs
-        );
-      } else {
-        add('teamcymru', 0, 'MHR: no record', obs);
-      }
+    if (analyzer.includes('virustotal') && isStrongVirusTotalDetection(result)) {
+      malicious.push(`VirusTotal ${taxonomyValue(result, 'GetReport')} detections`);
     }
   }
 
-  // --- 4. MISP ---------------------------------------------------
-  if (active('misp')) {
-    let mispPoints = 0;
-    let mispReason = null;
+  let verdict = 'unknown';
+  if (malicious.length > 0 && benign.length === 0) verdict = 'malicious';
+  if (benign.length > 0 && malicious.length === 0) verdict = 'benign';
 
-    for (const ind of data.misp?.unique_indicators ?? []) {
-      const attrs = ind.attributes ?? [];
-      const hasToIds = attrs.some(a => a.to_ids === true);
-      const points = hasToIds ? src.misp.to_ids : src.misp.match;
+  const allEvidence = [...malicious, ...benign];
+  const note = allEvidence.length > 0
+    ? allEvidence.join('; ')
+    : 'No decisive source verdict; treat as unknown';
 
-      if (points > mispPoints) {
-        mispPoints = points;
+  return { verdict, note };
+}
 
-        mispReason = hasToIds
-          ? `MISP hit (to_ids) for ${ind.value}`
-          : `MISP hit for ${ind.value}`;
-      }
-    }
+function toTheHiveObservable(observable, mispIndicators, cortexResults, tlp, pap) {
+  const type = String(observable.type ?? observable.dataType ?? '').toLowerCase();
+  const value = text(observable.value ?? observable.data, '');
+  const supportedTypes = new Set(['ip', 'domain', 'url', 'hash']);
+  if (!value || !supportedTypes.has(type) || isTrue(observable.internal)) return null;
 
-    if (mispPoints > 0) {
-      add('misp', mispPoints, mispReason, undefined);
-    }
-  }
-
-  // --- 5. One entry per source (max points) ----------------------
-  const bySource = new Map();
-
-  for (const c of candidates) {
-    const current = bySource.get(c.source);
-
-    if (!current || c.points > current.points) {
-      bySource.set(c.source, c);
-    }
-  }
-
-  const breakdown = [
-    {
-      source: 'rule_level',
-      points: rulePoints,
-      reason: `rule level ${level}`,
-    },
-    ...[...bySource.values()].map(c => ({
-      source: c.source,
-      points: c.points,
-      reason: c.reason,
-      observable: c.observable,
-    })),
-  ];
-
-  const raw = breakdown.reduce((sum, b) => sum + b.points, 0);
-  const score = Math.max(0, Math.min(100, Math.round(raw)));
-
-  // --- 6. Coverage: how many sources actually answered -----------
-  const state = new Map(); // key -> { ok, failed }
-
-  function mark(key, field) {
-    if (!active(key)) return; // disabled sources do not affect coverage
-
-    if (!state.has(key)) state.set(key, { ok: false, failed: false });
-    state.get(key)[field] = true;
-  }
-
-  for (const r of results) {
-    if (r.status === 'complete') mark(serviceKey(r.analyzer), 'ok');
-  }
-
-  for (const f of processing.failed ?? []) {
-    mark(serviceKey(f.service ?? f.analyzer), 'failed');
-  }
-
-  // pending analyzers have no result yet, so they count as not answered
-  for (const p of processing.pending ?? []) {
-    mark(serviceKey(p.analyzer), 'failed');
-  }
-
-  // MISP without an error means the query ran (even with 0 hits)
-  if (!state.has('misp')) mark('misp', 'ok');
-
-  const sources = { ok: [], partial: [], failed: [] };
-
-  for (const [key, st] of state) {
-    if (st.ok && st.failed) sources.partial.push(key);
-    else if (st.ok) sources.ok.push(key);
-    else sources.failed.push(key);
-  }
-
-  const total =
-    sources.ok.length +
-    sources.partial.length +
-    sources.failed.length;
-
-  let coverage = total === 0
-    ? 0
-    : Number(
-        (
-          (sources.ok.length + 0.5 * sources.partial.length) / total
-        ).toFixed(2)
-      );
-
-  // --- 7. Verdict ------------------------------------------------
-  const { high, medium, low } = cfg.bands;
-
-  let verdict =
-    score >= high ? 'high' :
-    score >= medium ? 'medium' :
-    score >= low ? 'low' :
-    'likely_false_positive';
-
-  // missing data never closes an alert as a false positive
-  if (
-    (verdict === 'likely_false_positive' || verdict === 'low') &&
-    coverage < cfg.min_coverage_for_fp
-  ) {
-    verdict = 'needs_review';
-  }
-
-  // an item without enrichment data is never reported as clean
-  if (inputProblems.length > 0) {
-    verdict = 'needs_review';
-    coverage = 0;
-  }
+  const evidence = observableEvidence(value, mispIndicators, cortexResults);
+  const message = [
+    `Source field: ${text(observable.field, 'Not recorded')}`,
+    `IOC verdict: ${evidence.verdict}`,
+    `Evidence: ${evidence.note}`,
+  ].join('\n');
 
   return {
-    score,
-    verdict,
-    coverage,
-    sources,
-    breakdown,
-    config_version: cfg.version,
-    ...(configWarnings.length > 0
-      ? { config_warnings: configWarnings }
-      : {}),
-    ...(inputProblems.length > 0
-      ? { input_problems: inputProblems }
-      : {}),
+    dataType: type,
+    data: value,
+    message,
+    tags: [`ioc-verdict:${evidence.verdict}`],
+    tlp,
+    pap,
+    ioc: true,
   };
 }
 
-// ------------------------------------------------------------
-// Process all input items
-// ------------------------------------------------------------
+function classifySeverity(outcome, decision, asset) {
+  const verdict = String(decision.verdict ?? '').toLowerCase();
+  const score = Number(decision.score);
+  const criticalAsset = String(asset.criticality ?? '').toLowerCase() === 'critical';
+  const complete = decision.analysis_complete === true;
 
-return $input.all().map(item => {
-  // the config travels with the item and is removed from the output
-  const { scoring_config, ...rest } = item.json;
+  if (outcome === 'malicious') {
+    if (criticalAsset) {
+      return { value: 4, label: 'CRITICAL', reason: 'Malicious outcome affects an asset marked critical.' };
+    }
+    if (complete && Number.isFinite(score) && score >= 90) {
+      return { value: 4, label: 'CRITICAL', reason: 'Complete analysis produced a malicious outcome with score 90 or higher.' };
+    }
+    return { value: 3, label: 'HIGH', reason: 'Decision classified the alert as malicious.' };
+  }
 
-  const { cfg, warnings } = buildConfig(scoring_config);
+  if (criticalAsset) {
+    return { value: 3, label: 'HIGH', reason: 'The affected asset is marked critical and the alert requires analyst review.' };
+  }
+  if (!complete || !Number.isFinite(score)) {
+    return { value: 2, label: 'MEDIUM', reason: 'Analysis is incomplete or the score is unavailable; keep the alert for analyst review.' };
+  }
+  if (verdict === 'high' || score >= 70) {
+    return { value: 3, label: 'HIGH', reason: 'Complete analysis produced a high verdict or score of 70 or higher.' };
+  }
+  if (verdict === 'medium' || score >= 40) {
+    return { value: 2, label: 'MEDIUM', reason: 'Complete analysis produced a medium verdict or score from 40 to 69.' };
+  }
+  if ((verdict === 'low' || verdict === 'likely_false_positive') && score < 40) {
+    return { value: 1, label: 'LOW', reason: 'Complete low-risk analysis produced a low or likely-false-positive verdict below 40.' };
+  }
+  return { value: 2, label: 'MEDIUM', reason: 'The decision does not match a defined low, medium, or high severity rule.' };
+}
+
+function buildDescription(item, normalizedAlert, outcome, tlp, pap, observables, policy, severityInfo) {
+  const alert = item.alert ?? {};
+  const decision = item.decision ?? {};
+  const scoring = item.scoring ?? {};
+  const processing = item.processing ?? {};
+  const asset = item.asset_inventory ?? {};
+  const rule = normalizedAlert.rule ?? alert.rule ?? {};
+  const agent = normalizedAlert.agent ?? alert.agent ?? {};
+  const userValues = asArray(normalizedAlert.observables)
+    .filter(observable => observable.kind === 'user')
+    .map(observable => observable.data ?? observable.value)
+    .filter(Boolean);
+  const cortexResults = asArray(item.cortex?.results);
+  const mispIndicators = asArray(item.misp?.unique_indicators);
+  const mitreIds = asArray(rule.mitre_ids ?? alert.mitre?.ids);
+  const mitreTactics = asArray(rule.mitre_tactics ?? alert.mitre?.tactics);
+  const mitreTechniques = asArray(rule.mitre_techniques ?? alert.mitre?.techniques);
+  const failed = asArray(processing.failed);
+  const pending = asArray(processing.pending);
+  let dedup = {};
+  try {
+    dedup = $('Dedup').first().json ?? {};
+  } catch {
+    dedup = {};
+  }
+  const firstSeen = alert.timestamp ?? normalizedAlert.timestamp;
+  const lastSeen = alert.timestamp ?? normalizedAlert.timestamp;
+  const duplicateCount = Number(dedup.duplicate_count);
+  const relatedAlertCount = Number.isInteger(duplicateCount) && duplicateCount > 0
+    ? duplicateCount
+    : 1;
+
+  const nextStep = outcome === 'malicious'
+    ? 'Review the listed evidence and affected host, then determine containment or escalation under the SOC response procedure. This is an automated classification, not analyst confirmation.'
+    : decision.analysis_complete !== true
+      ? 'Review the failed or pending sources before treating any observable as benign. Use the evidence recorded here to continue analyst triage.'
+      : String(asset.criticality ?? '').toLowerCase() === 'critical'
+        ? 'Prioritize this critical asset. Automatic closure is blocked for this asset.'
+        : 'Review the scoring result and source evidence, then record the analyst decision in TheHive.';
+
+  const lines = [
+    'SOC AUTOMATED TRIAGE — WAZUH → N8N → THEHIVE',
+    '',
+    '[AUTOMATED DECISION]',
+    `Outcome: ${text(outcome)}`,
+    `TheHive severity: ${severityInfo.label} (${severityInfo.value})`,
+    `Severity rationale: ${severityInfo.reason}`,
+    `Reason code: ${text(decision.reason_code)}`,
+    `Reason: ${asArray(decision.reasons).map(String).join('; ') || 'Not provided'}`,
+    `Score: ${text(decision.score ?? scoring.score, 'Unknown')}`,
+    `Verdict: ${text(decision.verdict ?? scoring.verdict, 'Unknown')}`,
+    `Coverage: ${text(decision.coverage ?? scoring.coverage, 'Unknown')}`,
+    `Analysis complete: ${decision.analysis_complete === true ? 'yes' : 'no'}`,
+    `Recommended next step: ${nextStep}`,
+    '',
+    '[ASSET]',
+    `Host: ${text(agent.name)}`,
+    `Agent ID: ${text(agent.id)}`,
+    `Agent IP: ${text(agent.ip)}`,
+    `Asset type: ${text(asset.asset_type, 'Unknown')}`,
+    `Criticality: ${text(asset.criticality, 'Unknown')}`,
+    `Auto-close allowed: ${asset.auto_close_allowed === true ? 'yes' : 'no'}`,
+    `Inventory reason: ${text(asset.reason)}`,
+    `User: ${userValues.length > 0 ? [...new Set(userValues.map(String))].join(', ') : 'Not present in the normalized event'}`,
+    '',
+    '[SOURCE ALERT]',
+    `Source: Wazuh (${text(alert.source_format ?? normalizedAlert.source_format)})`,
+    `Source alert ID: ${text(alert.id ?? alert.alert_id ?? normalizedAlert.alert_id)}`,
+    `Timestamp: ${text(alert.timestamp ?? normalizedAlert.timestamp)}`,
+    `Manager: ${text(alert.manager ?? normalizedAlert.manager)}`,
+    `Rule ID: ${text(rule.id)}`,
+    `Wazuh rule level: ${text(rule.level, 'Unknown')}`,
+    `Rule description: ${text(rule.description)}`,
+    `First seen: ${dateText(firstSeen)}`,
+    `Last seen: ${dateText(lastSeen)}`,
+    `Alert count in the current Dedup window: ${relatedAlertCount}`,
+    `Rule groups: ${asArray(rule.groups).join(', ') || 'Not provided'}`,
+    `Wazuh firedtimes: ${text(rule.firedtimes, 'Not provided; this is not a correlated-alert count')}`,
+    `Location: ${text(normalizedAlert.location)}`,
+    `Decoder: ${text(normalizedAlert.decoder)}`,
+    `Signature: ${text(normalizedAlert.signature)}`,
+    `Command line: ${text(normalizedAlert.command_line)}`,
+    `File path: ${text(normalizedAlert.syscheck?.path)}`,
+    `MITRE ATT&CK IDs: ${mitreIds.join(', ') || 'None recorded'}`,
+    `MITRE tactics: ${mitreTactics.join(', ') || 'None recorded'}`,
+    `MITRE techniques: ${mitreTechniques.join(', ') || 'None recorded'}`,
+    '',
+    '[OBSERVABLES]',
+    ...(observables.length > 0
+      ? observables.map(observable =>
+          `${observable.dataType}: ${observable.data} — ${observable.tags[0].replace('ioc-verdict:', '')}; ${observable.message.split('\n').slice(1).join('; ')}`
+        )
+      : ['No eligible external IP, domain, URL, or hash was present.']),
+    '',
+    '[MISP REFERENCES]',
+    ...(mispIndicators.length > 0
+      ? mispIndicators.flatMap(indicator => {
+          const attrs = asArray(indicator.attributes);
+          return attrs.map(attribute => {
+            const event = attribute.event ?? {};
+            return `${text(indicator.type, 'IOC')} ${text(indicator.value)} — event ${text(event.id, 'ID unavailable')} (${text(event.title, 'title unavailable')}); to_ids=${text(attribute.to_ids, 'unknown')}; tags=${asArray(attribute.tags).join(', ') || 'none'}; comment=${text(attribute.comment, 'none')}`;
+          });
+        })
+      : ['No matching MISP attributes.']),
+    '',
+    '[CORTEX RESULTS]',
+    ...(cortexResults.length > 0
+      ? cortexResults.map(result =>
+          `${text(result.analyzer)} for ${text(result.observable)} [${text(result.status)}]: ${formatSummary(result.summary)}`
+        )
+      : ['No Cortex results recorded.']),
+    '',
+    '[UNAVAILABLE OR PENDING SOURCES]',
+    ...(failed.length > 0
+      ? failed.map(entry =>
+          `Failed: ${text(entry.service ?? entry.analyzer)}; observable=${text(entry.observable)}; node=${text(entry.node)}; error=${truncate(text(entry.error, entry.status ?? 'No error detail'), 300)}`
+        )
+      : ['Failed: none']),
+    ...(pending.length > 0
+      ? pending.map(entry => `Pending: ${text(entry.analyzer)}; observable=${text(entry.observable)}`)
+      : ['Pending: none']),
+    '',
+    `[THEHIVE MARKINGS] TLP=${tlp}; PAP=${pap}`,
+    `[HANDLING POLICY] Context=${text(policy.context, 'unspecified')}; applied at=${text(policy.application_stage, 'unspecified')}; earlier Cortex gate enforced=${policy.enrichment_gate_enforced === true ? 'yes' : 'no'}`,
+    ...asArray(policy.reasons).map(reason => `Policy: ${text(reason)}`),
+  ];
+
+  return lines.join('\n');
+}
+
+return items.map(itemData => {
+  const item = itemData.json ?? {};
+  const decision = item.decision ?? {};
+  const outcome = String(decision.outcome ?? '');
+
+  if (!['analyst_review', 'malicious'].includes(outcome)) {
+    throw new Error(`Build TheHive Alert only accepts analyst_review or malicious; received "${outcome || 'missing'}".`);
+  }
+
+  const alert = item.alert ?? {};
+  const rule = normalized.rule ?? alert.rule ?? {};
+  const agent = normalized.agent ?? alert.agent ?? {};
+  const sourceRef = text(alert.id ?? alert.alert_id ?? normalized.alert_id, '');
+
+  if (!sourceRef) throw new Error('Cannot create TheHive alert: Wazuh source alert ID is missing.');
+  if (sourceRef.length > 128) throw new Error('Cannot create TheHive alert: sourceRef exceeds TheHive’s 128-character limit.');
+
+  // Read the pre-enrichment policy by node name. This remains authoritative
+  // even if downstream Merge nodes drop the policy object from their items.
+  const policy = Number.isInteger(Number(handlingPolicyFromNode.tlp))
+    ? handlingPolicyFromNode
+    : item.thehive_policy ?? {};
+  const tlpValue = Number(policy.tlp);
+  const papValue = Number(policy.pap);
+  if (!Number.isInteger(tlpValue) || tlpValue < 0 || tlpValue > 4) {
+    throw new Error(`Missing or invalid TheHive TLP from Apply TheHive Handling Policy: ${policy.tlp}`);
+  }
+  if (!Number.isInteger(papValue) || papValue < 0 || papValue > 3) {
+    throw new Error(`Missing or invalid TheHive PAP from Apply TheHive Handling Policy: ${policy.pap}`);
+  }
+  const tlp = tlpValue;
+  const pap = papValue;
+  const mispIndicators = asArray(item.misp?.unique_indicators);
+  const cortexResults = asArray(item.cortex?.results);
+  const sourceObservables = asArray(alert.observables).length > 0
+    ? alert.observables
+    : asArray(normalized.observables);
+
+  const unique = new Map();
+  for (const observable of sourceObservables) {
+    const thehiveObservable = toTheHiveObservable(observable, mispIndicators, cortexResults, tlp, pap);
+    if (!thehiveObservable) continue;
+    const key = `${thehiveObservable.dataType}\u0000${normalizedValue(thehiveObservable.data)}`;
+    if (!unique.has(key)) unique.set(key, thehiveObservable);
+  }
+  const observables = [...unique.values()];
+
+  const asset = item.asset_inventory ?? {};
+  const score = decision.score ?? item.scoring?.score;
+  const verdict = text(decision.verdict ?? item.scoring?.verdict, 'unknown');
+  const host = text(agent.name, 'unknown-host');
+  const sourceIp = text(normalized.source_ip, '');
+  const sampleIoc = observables.find(observable => observable.dataType === 'ip')?.data;
+  const subject = text(rule.description, 'Wazuh alert');
+  const lead = outcome === 'malicious' ? 'Malicious evidence' : 'Analyst review';
+  const location = sourceIp
+    ? ` from ${sourceIp}`
+    : sampleIoc
+      ? ` (IOC ${sampleIoc})`
+      : '';
+  const title = truncate(`${lead} on ${host}${location}: ${subject}`, 512);
+  const tags = [
+    'auto-triage',
+    'source:wazuh',
+    `decision:${outcome}`,
+    `verdict:${String(verdict).toLowerCase().replace(/[^a-z0-9_-]/g, '_')}`,
+    `severity:${classifySeverity(outcome, decision, asset).label.toLowerCase()}`,
+    decision.analysis_complete === true ? 'analysis:complete' : 'incomplete-analysis',
+  ];
+  if (String(asset.criticality ?? '').toLowerCase() === 'critical') tags.push('asset:critical');
+
+  const timestamp = alert.timestamp ?? normalized.timestamp;
+  const parsedDate = timestamp ? Date.parse(timestamp) : NaN;
+  const severityInfo = classifySeverity(outcome, decision, asset);
+  const description = buildDescription(item, normalized, outcome, tlp, pap, observables, policy, severityInfo);
+  const summary = truncate(
+    `${outcome}; ${text(decision.reason_code)}; score=${text(score, 'unknown')}; verdict=${verdict}; analysis_complete=${decision.analysis_complete === true}`,
+    1000
+  );
+
+  const thehiveFields = {
+    type: 'external',
+    source: 'Wazuh',
+    sourceRef,
+    title,
+    summary,
+    description,
+    severity: severityInfo.value,
+    tlp,
+    pap,
+    tags: [...new Set(tags)],
+    follow: false,
+    flag: outcome === 'malicious',
+  };
+  if (Number.isFinite(parsedDate)) thehiveFields.date = new Date(parsedDate).toISOString();
 
   return {
     json: {
-      ...rest,
-      scoring: scoreAlert(rest, cfg, warnings, checkInput(rest)),
+      ...item,
+      ...thehiveFields,
+      // Keep these out of the Alert node's static Observables collection.
+      // The native Observable/Create node will add one item at a time after
+      // the alert exists, preserving every supported IOC and its own evidence.
+      thehive_observables: observables,
     },
   };
 });
