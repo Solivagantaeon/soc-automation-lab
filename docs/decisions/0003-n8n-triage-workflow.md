@@ -99,7 +99,7 @@ The observable extraction covers IP addresses, domains, URLs, URI paths, MD5/SHA
 
 An agent's internal IP is retained as context and marked `internal: true`; it is not automatically selected as the primary IOC. If no eligible primary observable is present, `primary_observable` is set to `-`.
 
-The node generates a `dedup_key` from the rule, signature, agent, and primary observable fields. This stage only creates the key; actual duplicate detection is handled by the separate Dedup stage.
+The node generates `dedup_key` from the `rule ID`, `signature ID`, `agent ID`, `source IP`, and `primary observable`. If no source IP is available, the key uses `-`. For web rules in the web, accesslog, or web_scan groups with a `source IP`, the final key component is `*`, so different paths from the same `source IP` to the same agent share a key. The output also includes `source_ip` and `dedup_mode` (web-source or default). This stage only creates the key, duplicate detection is handled by the separate Dedup stage.
 
 #### Rationale
 
@@ -205,7 +205,7 @@ Build and test instructions are in the [n8n triage runbook](../runbooks/n8n-tria
 - Check a real gobuster alert against the DVWA host to confirm that its `rule.groups` contain a web group and that `source_ip` is filled.
 - Known limitations: alerts with no observables and no source IP differ only by rule and agent, so different events from one rule and agent merge within the window; duplicates are dropped silently and nothing is updated in TheHive; the window uses processing time, not the alert `timestamp`, so replaying baseline alerts through the pipeline deduplicates by replay speed; the entry is stored before enrichment, so if a later stage fails the key stays blocked until the window ends.
 - The Counters stage can use `duplicate_count`. Updating the existing TheHive alert on duplicates, with a `sourceRef` that includes `first_seen` so a new window can create a new alert, is a possible follow-up.
-- The `dedup_key` format changed after Normalize v1.2 (the source IP was added). The Normalize section and `normalize-v1.2.js` need to be updated by their owner to match.
+  
 ### 4. MISP and Cortex
 
 **Owner:** @MKonrad-afk
