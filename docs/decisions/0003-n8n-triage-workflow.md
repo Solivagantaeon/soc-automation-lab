@@ -36,8 +36,8 @@ flowchart LR
 | 6 | Decision | Picks one of three outcomes: close, review, malicious | @MKonrad-afk |
 | 7 | Failure handling | Makes sure a broken service does not stop the workflow or hide an alert | @p4chatek |
 | 8 | TheHive | Creates the alert the analyst works on | @MKonrad-afk |
-| 9 | Audit | Keeps the reason for every alert closed automatically | @Maartini22 |
-| 10 | Counters | Counts alerts at every stage, so we can show the reduction | @arturesturemkuros |
+| 9 | Audit | Keeps the reason for every alert closed automatically | @84rtek |
+| 10 | Counters | Counts alerts at every stage, so we can show the reduction | @84rtek |
 
 
 
