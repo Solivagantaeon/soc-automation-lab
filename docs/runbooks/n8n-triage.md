@@ -971,12 +971,6 @@ The documentation-range IPs are correctly filtered out as `Non-public IPv4 addre
 
 ## 10. Counters
 
-
-## 10. Counters
-
-
-## 10. Counters
-
 **Owner:** @84rtek
 
 ### What it does
