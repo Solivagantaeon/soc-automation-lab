@@ -1246,8 +1246,6 @@ An end-to-end test with a real alert automatically closed by the live Decision s
 | The main workflow payload is disrupted | Audit Insert was placed in series with the main path | Keep the original `Decision` → `If` connection and use a separate parallel Audit branch |
 
 
-**Owner:** @Maartini22
-
 ## 10. Counters
 
 **Owner:** @Maartini22
