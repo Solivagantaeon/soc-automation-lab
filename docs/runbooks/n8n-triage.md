@@ -974,6 +974,9 @@ The documentation-range IPs are correctly filtered out as `Non-public IPv4 addre
 
 ## 10. Counters
 
+
+## 10. Counters
+
 **Owner:** @84rtek
 
 ### What it does
@@ -981,6 +984,8 @@ The documentation-range IPs are correctly filtered out as `Non-public IPv4 addre
 Records how many alerts reach each selected workflow stage. Counter records can be correlated by execution ID and alert ID to show how alerts progress through the workflow.
 
 The Counters stage only records metrics. It does not change the existing triage, scoring, deduplication, enrichment, or decision logic.
+
+![Counters workflow overview](../images/n8n/75-01%20%E2%80%94%20Counters%20workflow%20overview%20%E2%80%94%20kopia.png)
 
 ### 10.1. Data Table: SOC_Counters
 
@@ -1004,6 +1009,8 @@ All counter Insert nodes use the following settings:
 | Operation | `Insert` |
 | Data table | `SOC_Counters` |
 | Mapping Column Mode | `Map Each Column Manually` |
+
+![SOC_Counters Data Table](../images/n8n/75-02%20%E2%80%94%20SOC_Counters%20table.png)
 
 ### 10.2. Counter-node placement
 
@@ -1036,9 +1043,7 @@ A Data Table Insert node returns the inserted row, which must not replace the al
 
 **Screenshot evidence:**
 
-![Count - Raw Alert node settings](../images/n8n/75-count-raw-alert.png)
-
-![Count - Raw Alert test result](../images/n8n/75-count-raw-alert-test.png)
+![Count - Raw Alert counter](../images/n8n/75-03%20%E2%80%94%20Raw%20Counter.png)
 
 ### 10.4. Node: Count - Normalized Alert
 
@@ -1064,9 +1069,7 @@ A Data Table Insert node returns the inserted row, which must not replace the al
 
 **Screenshot evidence:**
 
-![Count - Normalized Alert node settings](../images/n8n/75-count-normalized-alert.png)
-
-![Count - Normalized Alert test result](../images/n8n/75-count-normalized-alert-test.png)
+![Count - Normalized Alert counter](../images/n8n/75-04%20%E2%80%94%20Normalized%20counter.png)
 
 ### 10.5. Node: Count - Dedup New
 
@@ -1089,10 +1092,6 @@ A Data Table Insert node returns the inserted row, which must not replace the al
 
 **How to test it:** Send a sample alert that is classified as new. Check that the TRUE branch executes and a `deduplication / new` record appears in the table.
 
-**Screenshot evidence:**
-
-![Count - Dedup New node settings](../images/n8n/75-count-dedup-new.png)
-
 ### 10.6. Node: Count - Dedup Duplicate
 
 **What it does:** Records alerts classified as duplicates by the existing `New Alert?` node.
@@ -1114,9 +1113,9 @@ A Data Table Insert node returns the inserted row, which must not replace the al
 
 **How to test it:** Send an alert that is classified as a duplicate. Check that the FALSE branch executes and a `deduplication / duplicate` record appears in the table.
 
-**Screenshot evidence:**
+**Screenshot evidence for both deduplication counters:**
 
-![Count - Dedup Duplicate node settings](../images/n8n/75-count-dedup-duplicate.png)
+![Deduplication counters](../images/n8n/75-05%20%E2%80%94%20Deduplication%20counters.png)
 
 ### 10.7. Node: Count Cortex Results
 
@@ -1125,7 +1124,7 @@ A Data Table Insert node returns the inserted row, which must not replace the al
 **How to build it:**
 
 1. Add a Code node immediately after `Summary Enrichments`.
-2. Name it `Count Cortex Results`.
+2. Name the node `Count Cortex Results`.
 3. Set Mode to `Run Once for All Items`.
 4. Set Language to `JavaScript`.
 5. Use the following code:
@@ -1189,9 +1188,7 @@ Node settings:
 
 **Screenshot evidence:**
 
-![Count Cortex Results node settings](../images/n8n/75-count-cortex-results.png)
-
-![Count Cortex Results output](../images/n8n/75-count-cortex-results-test.png)
+![Count Cortex Results calculation](../images/n8n/75-06%20%E2%80%94%20Cortex%20Results%20calculation.png)
 
 ### 10.8. Node: Count - Cortex Results
 
@@ -1218,9 +1215,7 @@ Cortex outcomes describe analyzer execution status, not whether an observable is
 
 **Screenshot evidence:**
 
-![Count - Cortex Results node settings](../images/n8n/75-count-cortex-results-insert.png)
-
-![Cortex counter record in SOC_Counters](../images/n8n/75-count-cortex-results-test.png)
+![Cortex counter persistence](../images/n8n/75-07%20%E2%80%94%20Cortex%20counter%20persistence.png)
 
 ### 10.9. Node: Count - TheHive Alert Created
 
@@ -1245,12 +1240,6 @@ Cortex outcomes describe analyzer execution status, not whether an observable is
 
 This counter records alert creation. It does not prove that an analyst opened or reviewed the alert.
 
-**Screenshot evidence:**
-
-![Count - TheHive Alert Created node settings](../images/n8n/75-count-thehive-alert-created.png)
-
-![TheHive alert-created counter record](../images/n8n/75-count-thehive-alert-created-test.png)
-
 ### 10.10. Node: Count - TheHive Skipped
 
 **What it does:** Records that the TRUE output of the existing `If` node follows the branch that skips TheHive.
@@ -1274,11 +1263,9 @@ This counter records alert creation. It does not prove that an analyst opened or
 
 This counter records the branch taken. It does not mean that the alert was classified as benign.
 
-**Screenshot evidence:**
+**Screenshot evidence for TheHive counters:**
 
-![Count - TheHive Skipped node settings](../images/n8n/75-count-thehive-skipped.png)
-
-![TheHive-skipped counter record](../images/n8n/75-count-thehive-skipped-test.png)
+![TheHive Alert Created and Skipped counters](../images/n8n/75-08%20%E2%80%94%20TheHive%20Alert%20Created%20and%20Skipped%20(1).png)
 
 ### 10.11. How to verify a complete counter execution
 
@@ -1290,7 +1277,7 @@ This counter records the branch taken. It does not mean that the alert was class
 
 A synthetic test alert was processed:
 
-` soc-n8n-countertest-20261111-08 `
+`soc-n8n-countertest-20261111-08`
 
 The observed execution ID was `13629`.
 
@@ -1303,10 +1290,6 @@ The following records were visible in `SOC_Counters`:
 | `deduplication` | `new` |
 | `cortex` | `completed` |
 | `thehive_alert_created` | `created` |
-
-**Screenshot evidence:**
-
-![SOC_Counters table showing the sample execution](../images/n8n/75-counters-table-test.png)
 
 The duplicate and TheHive-skipped branch tests are treated as PASS for this task based on the assumed test results. Separate captured execution evidence is still required before describing those paths as independently evidenced tests.
 
