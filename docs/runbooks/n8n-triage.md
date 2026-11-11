@@ -1113,7 +1113,138 @@ The documentation-range IPs are correctly filtered out as `Non-public IPv4 addre
 
 **Owner:** @Solivagantaeon
 
+
 ## 9. Audit
+
+**Owner:** @84rtek
+
+**What it does:** Records the reason and supporting context for every alert that the Decision stage closes automatically, so the decision can be reviewed later.
+
+Only decisions with `decision.outcome = closed` are inserted into `SOC_Audit`. Decisions routed to `analyst_review` or `malicious` are not recorded in this table.
+
+### Data Table: `SOC_Audit`
+
+Create a Data Table named `SOC_Audit` with the following columns:
+
+| Column | Type | Purpose |
+|---|---|---|
+| `execution_id` | String | n8n execution identifier |
+| `alert_id` | String | Alert identifier |
+| `decision_outcome` | String | Decision outcome; expected value is `closed` |
+| `reason_code` | String | Machine-readable reason for the decision |
+| `reasons` | String | JSON-serialized explanation list |
+| `score` | Number | Score used by Decision |
+| `verdict` | String | Scoring verdict |
+| `coverage` | Number | Enrichment coverage |
+| `analysis_complete` | Boolean | Whether the analysis was complete |
+| `malicious_signals` | String | JSON-serialized malicious signal list |
+| `asset_inventory` | String | JSON-serialized asset inventory context |
+| `policy_version` | String | Decision policy version |
+| `recorded_at` | Date | Time when the audit record was inserted |
+
+### Node: `IF1`
+
+**What it does:** Filters the Decision output so that only automatically closed alerts reach the Audit insert node.
+
+**How to build it:**
+
+1. Add an **If** node as a parallel branch from the output of `Decision`.
+2. Name the node `IF1`.
+3. Configure the condition:
+   - Value 1: `{{ $json.decision.outcome }}`
+   - Operator: **is equal to**
+   - Value 2: `closed`
+4. Connect the **true** output to `Audit - Record Decision`.
+5. Leave the **false** output unconnected.
+6. Keep the original direct connection from `Decision` to the existing `If` node. The Audit branch must not replace or interrupt the main workflow path.
+
+![Audit branch in the n8n workflow](../images/n8n/74-01-audit-workflow-overview.png)
+
+![Decision parallel branch and original If connection](../images/n8n/74-04-audit-decision-branching.png)
+
+![IF1 filter for closed decisions](../images/n8n/74-05-audit-closed-filter.png)
+
+### Node: `Audit - Record Decision`
+
+**What it does:** Inserts one audit row for each item that passes the true output of `IF1`.
+
+**How to build it:**
+
+1. Add a **Data Table** node to the true output of `IF1`.
+2. Name the node `Audit - Record Decision`.
+3. Set **Resource** to `Row`.
+4. Set **Operation** to `Insert`.
+5. Select the `SOC_Audit` Data Table.
+6. Set **Mapping Column Mode** to **Map Each Column Manually**.
+7. Map the fields as follows:
+
+| Column | Expression |
+|---|---|
+| `execution_id` | `{{ $execution.id }}` |
+| `alert_id` | `{{ $json.alert_id }}` |
+| `decision_outcome` | `{{ $json.decision.outcome }}` |
+| `reason_code` | `{{ $json.decision.reason_code }}` |
+| `reasons` | `{{ JSON.stringify($json.decision.reasons) }}` |
+| `score` | `{{ $json.decision.score }}` |
+| `verdict` | `{{ $json.decision.verdict }}` |
+| `coverage` | `{{ $json.decision.coverage }}` |
+| `analysis_complete` | `{{ $json.decision.analysis_complete }}` |
+| `malicious_signals` | `{{ JSON.stringify($json.decision.malicious_signals) }}` |
+| `asset_inventory` | `{{ JSON.stringify($json.asset_inventory) }}` |
+| `policy_version` | `{{ $json.decision.policy_version }}` |
+| `recorded_at` | `{{ $now.toISO() }}` |
+
+The `reasons`, `malicious_signals`, and `asset_inventory` values are serialized as JSON strings because their Data Table columns use the String type.
+
+![SOC_Audit table with inserted test records](../images/n8n/74-02-audit-soc-audit-table.png)
+
+![Audit Record Decision insert configuration and output](../images/n8n/74-06-audit-record-insert-mapping.png)
+
+### How to test it
+
+The Audit branch was tested using a temporary Code node named `TEST - Audit Data`. It generated a synthetic item with the following values:
+
+| Field | Test value |
+|---|---|
+| `alert_id` | `soc-audit-test-001` |
+| `decision.outcome` | `closed` |
+| `decision.reason_code` | `complete_low_risk_analysis` |
+| `decision.score` | `10` |
+| `decision.verdict` | `likely_false_positive` |
+| `decision.coverage` | `1` |
+| `decision.analysis_complete` | `true` |
+| `asset_inventory.criticality` | `low` |
+| `asset_inventory.auto_close_allowed` | `true` |
+
+The test item passed the true output of `IF1`. The `Audit - Record Decision` node completed successfully and inserted a row into `SOC_Audit`.
+
+![Temporary synthetic Audit test flow](../images/n8n/74-03-audit-synthetic-test-flow.png)
+
+The Data Table view shows three inserted rows with the same synthetic alert ID. These records demonstrate that the filter, field mapping, and Data Table insertion work. They are synthetic test records, not three real alerts automatically closed by the workflow.
+
+The temporary `TEST - Audit Data` node and its test-only connections were removed after testing.
+
+### Verification limits
+
+The synthetic test verifies:
+
+- The `IF1` condition for the `closed` outcome.
+- The connection from the true output to the Insert node.
+- The mapping of Decision and asset inventory fields.
+- Successful persistence of the audit record in `SOC_Audit`.
+
+An end-to-end test with a real alert automatically closed by the live Decision stage has not yet been demonstrated.
+
+### If it does not work
+
+| What you see | Cause | Fix |
+|---|---|---|
+| No row is inserted | The outcome is not `closed`, or the true output is not connected to the Insert node | Inspect `decision.outcome` at `IF1` and check the true connection |
+| A non-closed outcome is inserted | The IF condition is missing or incorrect | Set `{{ $json.decision.outcome }}` to **is equal to** `closed` |
+| `analysis_complete` is empty or incorrect | The field is mapped from the wrong object | Use `{{ $json.decision.analysis_complete }}` |
+| Object or array fields are not stored as readable text | Values are mapped directly to String columns | Use `JSON.stringify(...)` for `reasons`, `malicious_signals`, and `asset_inventory` |
+| The main workflow payload is disrupted | Audit Insert was placed in series with the main path | Keep the original `Decision` → `If` connection and use a separate parallel Audit branch |
+
 
 **Owner:** @Maartini22
 
