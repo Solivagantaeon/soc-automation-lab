@@ -444,158 +444,101 @@ Build and test instructions, screenshots and the test alert are in the [n8n tria
 
 **Owner:** @
 
+
 ### 10. Counters
 
 **Owner:** @84rtek
 
-Context
+#### Context
 
 The SOC workflow needs to record how many alerts reach each processing stage. This makes it possible to understand alert flow and determine how many alerts reach the analyst-facing stage.
 
 The implementation must not change the existing triage, scoring, deduplication, enrichment, or decision logic.
 
-Decision
+#### Decision
 
-Use a dedicated n8n Data Table named SOC_Counters to persist counter events.
+Use a dedicated n8n Data Table named `SOC_Counters` to persist counter events.
 
 Each counter is implemented as a separate Data Table Insert node. Counter nodes use parallel branches so that their output does not replace or modify the data passed through the original workflow.
 
-A Code node named Count Cortex Results calculates aggregate Cortex execution statistics. A separate Data Table node persists the Cortex counter record.
+A Code node named `Count Cortex Results` calculates aggregate Cortex execution statistics. A separate Data Table node persists the Cortex counter record.
 
-Counter schema
+#### Counter schema
 
-The SOC_Counters table contains:
+The `SOC_Counters` table contains:
 
-Column
+| Column | Type | Purpose |
+|:---|:---|:---|
+| `execution_id` | String | Identifies the n8n execution |
+| `alert_id` | String | Identifies the alert |
+| `stage` | String | Identifies the workflow stage |
+| `outcome` | String | Records the stage outcome |
+| `counted_at` | Date | Records when the counter event occurred |
 
-Type
+#### Counter stages
 
-Purpose
+The following stages and outcomes are recorded:
 
-execution_id
-
-String
-
-Identifies the n8n execution
-
-alert_id
-
-String
-
-Identifies the alert
-
-stage
-
-String
-
-Identifies the workflow stage
-
-outcome
-
-String
-
-Records the stage outcome
-
-counted_at
-
-Date
-
-Records when the counter event occurred
-
-Counter stages
-
-Stage
-
-Outcome
-
-raw
-
-received
-
-normalized
-
-success
-
-deduplication
-
-new or duplicate
-
-cortex
-
-completed, partial, failed, pending, or skipped
-
-thehive_alert_created
-
-created
-
-thehive_skipped
-
-skipped
+| Stage | Outcome |
+|:---|:---|
+| `raw` | `received` |
+| `normalized` | `success` |
+| `deduplication` | `new` or `duplicate` |
+| `cortex` | `completed`, `partial`, `failed`, `pending`, or `skipped` |
+| `thehive_alert_created` | `created` |
+| `thehive_skipped` | `skipped` |
 
 Cortex outcomes describe analyzer execution status, not the threat verdict of an observable.
 
-Implementation decisions
+#### Implementation decisions
 
-Use one shared Data Table instead of multiple tables.
+1. Use one shared Data Table instead of multiple tables.
+2. Store one record per counter event.
+3. Use `$execution.id` to associate counter records with an execution.
+4. Use the normalized alert ID wherever available.
+5. Keep counter nodes on parallel branches.
+6. Do not connect counter-node outputs back into the original processing path.
+7. Keep existing workflow decision logic unchanged.
 
-Store one record per counter event.
+#### Consequences
 
-Use $execution.id to associate counter records with an execution.
+**Benefits**
 
-Use the normalized alert ID wherever available.
+- Counter events can be queried centrally.
+- Alert progression can be correlated using `execution_id` and `alert_id`.
+- Counter persistence does not replace the original workflow payload.
+- The implementation is easy to extend with additional stages.
 
-Keep counter nodes on parallel branches.
+**Limitations**
 
-Do not connect counter-node outputs back into the original processing path.
+- A counter record represents a workflow-stage event, not necessarily a completed analyst investigation.
+- `thehive_alert_created` means an alert was created in TheHive; it does not prove that an analyst opened or reviewed it.
+- `thehive_skipped` means the workflow followed the branch that skips TheHive; it does not mean the alert was classified as benign.
+- Cortex completion does not imply that the returned intelligence verdict is malicious or benign.
 
-Keep existing workflow decision logic unchanged.
-
-Consequences
-
-Benefits
-
-Counter events can be queried centrally.
-
-Alert progression can be correlated using execution_id and alert_id.
-
-Counter persistence does not replace the original workflow payload.
-
-The implementation is easy to extend with additional stages.
-
-Limitations
-
-A counter record represents a workflow-stage event, not necessarily a completed analyst investigation.
-
-thehive_alert_created means an alert was created in TheHive; it does not prove that an analyst opened or reviewed it.
-
-thehive_skipped means the workflow followed the branch that skips TheHive; it does not mean the alert was classified as benign.
-
-Cortex completion does not imply that the returned intelligence verdict is malicious or benign.
-
-Testing
+#### Testing
 
 A synthetic alert was processed:
 
-soc-n8n-countertest-20261111-08
+` soc-n8n-countertest-20261111-08 `
 
-The observed execution ID was 13629.
+The observed execution ID was `13629`.
 
-The following records were visible in SOC_Counters:
+The following records were visible in `SOC_Counters`:
 
-raw / received
+| Stage | Outcome |
+|:---|:---|
+| `raw` | `received` |
+| `normalized` | `success` |
+| `deduplication` | `new` |
+| `cortex` | `completed` |
+| `thehive_alert_created` | `created` |
 
-normalized / success
+The duplicate and TheHive-skipped paths are treated as PASS for this task based on the assumed test results. Separate captured execution evidence is still required before describing those paths as independently evidenced tests.
 
-deduplication / new
-
-cortex / completed
-
-thehive_alert_created / created
-
-The duplicate and TheHive-skipped paths are treated as PASS for this task based on the assumed test results.
-
-Scope boundaries
+#### Scope boundaries
 
 This ADR covers only counter instrumentation and its persistence.
 
 It does not authorize changes to scoring, decision rules, enrichment integrations, deduplication behavior, or TheHive handling policy.
+
