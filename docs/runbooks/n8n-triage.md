@@ -971,15 +971,17 @@ The documentation-range IPs are correctly filtered out as `Non-public IPv4 addre
 
 ## 10. Counters
 
-**Owner:** @84rtek
+Owner: @84rtek
 
 What it does: Records how many alerts reach each selected workflow stage. Counter records can be correlated by execution ID and alert ID to show how alerts progress through the workflow.
 
 The Counters stage only records metrics. It does not change the existing triage, scoring, deduplication, enrichment, or decision logic.
 
-Data Table: SOC_Counters
+10.1. Data Table: SOC_Counters
 
 Create one n8n Data Table named SOC_Counters.
+
+The table contains the following columns:
 
 Column
 
@@ -1017,7 +1019,7 @@ Date
 
 Records when the counter event occurred
 
-All counter Insert nodes use:
+All counter Insert nodes use the following settings:
 
 Setting
 
@@ -1039,11 +1041,13 @@ Mapping Column Mode
 
 Map Each Column Manually
 
-Counter-node placement
+10.2. Counter-node placement
 
-Counter nodes use separate parallel branches. Do not connect a counter node's output back into the original workflow path. A Data Table Insert node returns the inserted row, which must not replace the alert data used by downstream nodes.
+Counter nodes use separate parallel branches. Do not connect a counter node's output back into the original workflow path.
 
-Node: Count - Raw Alert
+A Data Table Insert node returns the inserted row, which must not replace the alert data used by downstream nodes.
+
+10.3. Node: Count - Raw Alert
 
 What it does: Records that the Webhook received an alert.
 
@@ -1087,11 +1091,13 @@ counted_at
 
 How to test it: Execute the workflow with a sample Wazuh alert. Check that a new row appears in SOC_Counters with stage = raw and outcome = received.
 
+Screenshot evidence:
 
 
 
 
-Node: Count - Normalized Alert
+
+10.4. Node: Count - Normalized Alert
 
 What it does: Records that an alert successfully reached the output of Normalize Alert.
 
@@ -1133,11 +1139,13 @@ counted_at
 
 How to test it: Execute a sample alert. Check that a row with stage = normalized and outcome = success appears. Its execution_id should match the raw counter record from the same execution.
 
+Screenshot evidence:
 
 
 
 
-Node: Count - Dedup New
+
+10.5. Node: Count - Dedup New
 
 What it does: Records alerts classified as new by the existing New Alert? node.
 
@@ -1177,9 +1185,11 @@ counted_at
 
 How to test it: Send a sample alert that is classified as new. Check that the TRUE branch executes and a deduplication / new record appears in the table.
 
+Screenshot evidence:
 
 
-Node: Count - Dedup Duplicate
+
+10.6. Node: Count - Dedup Duplicate
 
 What it does: Records alerts classified as duplicates by the existing New Alert? node.
 
@@ -1219,9 +1229,11 @@ counted_at
 
 How to test it: Send an alert that is classified as a duplicate. Check that the FALSE branch executes and a deduplication / duplicate record appears in the table.
 
+Screenshot evidence:
 
 
-Node: Count Cortex Results
+
+10.7. Node: Count Cortex Results
 
 What it does: Calculates aggregate Cortex execution statistics and adds a cortex_summary object to the incoming alert data. It does not write to the Data Table.
 
@@ -1282,6 +1294,8 @@ return items.map(item => {
   };
 });
 
+Node settings:
+
 Setting
 
 Value
@@ -1300,11 +1314,13 @@ JavaScript
 
 How to test it: Execute the node using the output of Summary Enrichments. Check that the original alert data is preserved and that cortex_summary contains the expected counts and processing status.
 
+Screenshot evidence:
 
 
 
 
-Node: Count - Cortex Results
+
+10.8. Node: Count - Cortex Results
 
 What it does: Saves a Cortex counter record in SOC_Counters.
 
@@ -1346,11 +1362,13 @@ Cortex outcomes describe analyzer execution status, not whether an observable is
 
 How to test it: Execute the Insert node using the output of Count Cortex Results. Check that a row with stage = cortex and the expected outcome appears in the Data Table.
 
+Screenshot evidence:
 
 
 
 
-Node: Count - TheHive Alert Created
+
+10.9. Node: Count - TheHive Alert Created
 
 What it does: Records successful creation of an alert in TheHive.
 
@@ -1358,7 +1376,7 @@ How to build it:
 
 Add a Data Table Insert node on a separate parallel branch from the successful output of Create an alert.
 
-Name it Count - TheHive Alert Created.
+Name the node Count - TheHive Alert Created.
 
 Select the SOC_Counters table.
 
@@ -1392,11 +1410,13 @@ How to test it: Execute an alert through the TheHive creation path. Check that a
 
 This counter records alert creation. It does not prove that an analyst opened or reviewed the alert.
 
+Screenshot evidence:
 
 
 
 
-Node: Count - TheHive Skipped
+
+10.10. Node: Count - TheHive Skipped
 
 What it does: Records that the TRUE output of the existing If node follows the branch that skips TheHive.
 
@@ -1404,7 +1424,7 @@ How to build it:
 
 Add a Data Table Insert node on a separate parallel branch from the TRUE output of If.
 
-Name it Count - TheHive Skipped.
+Name the node Count - TheHive Skipped.
 
 Select the SOC_Counters table.
 
@@ -1438,11 +1458,13 @@ How to test it: Execute an alert that follows the TRUE branch of If. Check that 
 
 This counter records the branch taken. It does not mean that the alert was classified as benign.
 
+Screenshot evidence:
 
 
 
 
-How to verify a complete counter execution
+
+10.11. How to verify a complete counter execution
 
 Open the SOC_Counters Data Table.
 
@@ -1486,11 +1508,13 @@ thehive_alert_created
 
 created
 
+Screenshot evidence:
+
 
 
 The duplicate and TheHive-skipped branch tests are treated as PASS for this task based on the assumed test results. Separate captured execution evidence is still required before describing those paths as independently evidenced tests.
 
-If it does not work
+10.12. If it does not work
 
 What you see
 
