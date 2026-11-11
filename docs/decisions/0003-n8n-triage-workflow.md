@@ -442,6 +442,10 @@ Build and test instructions, screenshots and the test alert are in the [n8n tria
 
 ### 9. Audit
 
+**Owner:** @
+
+### 10. Counters
+
 **Owner:** @84rtek
 
 Context
@@ -595,8 +599,3 @@ Scope boundaries
 This ADR covers only counter instrumentation and its persistence.
 
 It does not authorize changes to scoring, decision rules, enrichment integrations, deduplication behavior, or TheHive handling policy.
-
-
-### 10. Counters
-
-**Owner:** @arturesturemkuros
