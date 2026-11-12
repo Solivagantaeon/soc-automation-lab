@@ -1288,7 +1288,333 @@ This runbook documents the tested lab behavior. TLP/PAP are assigned after enric
 
 ## 10. Counters
 
-**Owner:** @Maartini22
+**Owner:** @84rtek
+
+### What it does
+
+Records how many alerts reach each selected workflow stage. Counter records can be correlated by execution ID and alert ID to show how alerts progress through the workflow.
+
+The Counters stage only records metrics. It does not change the existing triage, scoring, deduplication, enrichment, or decision logic.
+
+![Counters workflow overview](../images/n8n/75-01%20%E2%80%94%20Counters%20workflow%20overview%20%E2%80%94%20kopia.png)
+
+### 10.1. Data Table: SOC_Counters
+
+Create one n8n Data Table named `SOC_Counters`.
+
+The table contains the following columns:
+
+| Column | Type | Purpose |
+|:---|:---|:---|
+| `execution_id` | String | Identifies the n8n execution |
+| `alert_id` | String | Identifies the alert |
+| `stage` | String | Identifies the workflow stage |
+| `outcome` | String | Records the stage outcome |
+| `counted_at` | Date | Records when the counter event occurred |
+
+All counter Insert nodes use the following settings:
+
+| Setting | Value |
+|:---|:---|
+| Resource | `Row` |
+| Operation | `Insert` |
+| Data table | `SOC_Counters` |
+| Mapping Column Mode | `Map Each Column Manually` |
+
+![SOC_Counters Data Table](../images/n8n/75-02%20%E2%80%94%20SOC_Counters%20table.png)
+
+### 10.2. Counter-node placement
+
+Counter nodes use separate parallel branches. Do not connect a counter node's output back into the original workflow path.
+
+A Data Table Insert node returns the inserted row, which must not replace the alert data used by downstream nodes.
+
+### 10.3. Node: Count - Raw Alert
+
+**What it does:** Records that the Webhook received an alert.
+
+**How to build it:**
+
+1. Add a Data Table node on a separate branch from `Webhook`.
+2. Name the node `Count - Raw Alert`.
+3. Set Resource to `Row` and Operation to `Insert`.
+4. Select the `SOC_Counters` table.
+5. Set Mapping Column Mode to `Map Each Column Manually`.
+6. Map the columns:
+
+| Column | Value |
+|:---|:---|
+| `execution_id` | `{{ $execution.id }}` |
+| `alert_id` | `{{ $json.body?.id ?? $json.id }}` |
+| `stage` | `raw` |
+| `outcome` | `received` |
+| `counted_at` | `{{ $now.toISO() }}` |
+
+**How to test it:** Execute the workflow with a sample Wazuh alert. Check that a new row appears in `SOC_Counters` with `stage = raw` and `outcome = received`.
+
+**Screenshot evidence:**
+
+![Count - Raw Alert counter](../images/n8n/75-03%20%E2%80%94%20Raw%20Counter.png)
+
+### 10.4. Node: Count - Normalized Alert
+
+**What it does:** Records that an alert successfully reached the output of `Normalize Alert`.
+
+**How to build it:**
+
+1. Add a Data Table node on a separate parallel branch from `Normalize Alert`.
+2. Name the node `Count - Normalized Alert`.
+3. Set Resource to `Row` and Operation to `Insert`.
+4. Select the `SOC_Counters` table.
+5. Map the columns:
+
+| Column | Value |
+|:---|:---|
+| `execution_id` | `{{ $execution.id }}` |
+| `alert_id` | `{{ $json.alert_id }}` |
+| `stage` | `normalized` |
+| `outcome` | `success` |
+| `counted_at` | `{{ $now.toISO() }}` |
+
+**How to test it:** Execute a sample alert. Check that a row with `stage = normalized` and `outcome = success` appears. Its `execution_id` should match the raw counter record from the same execution.
+
+**Screenshot evidence:**
+
+![Count - Normalized Alert counter](../images/n8n/75-04%20%E2%80%94%20Normalized%20counter.png)
+
+### 10.5. Node: Count - Dedup New
+
+**What it does:** Records alerts classified as new by the existing `New Alert?` node.
+
+**How to build it:**
+
+1. Add a Data Table Insert node on a separate branch from the TRUE output of `New Alert?`.
+2. Name the node `Count - Dedup New`.
+3. Select the `SOC_Counters` table.
+4. Map the columns:
+
+| Column | Value |
+|:---|:---|
+| `execution_id` | `{{ $execution.id }}` |
+| `alert_id` | `{{ $('Normalize Alert').first().json.alert_id }}` |
+| `stage` | `deduplication` |
+| `outcome` | `new` |
+| `counted_at` | `{{ $now.toISO() }}` |
+
+**How to test it:** Send a sample alert that is classified as new. Check that the TRUE branch executes and a `deduplication / new` record appears in the table.
+
+### 10.6. Node: Count - Dedup Duplicate
+
+**What it does:** Records alerts classified as duplicates by the existing `New Alert?` node.
+
+**How to build it:**
+
+1. Add a Data Table Insert node on a separate branch from the FALSE output of `New Alert?`.
+2. Name the node `Count - Dedup Duplicate`.
+3. Select the `SOC_Counters` table.
+4. Map the columns:
+
+| Column | Value |
+|:---|:---|
+| `execution_id` | `{{ $execution.id }}` |
+| `alert_id` | `{{ $('Normalize Alert').first().json.alert_id }}` |
+| `stage` | `deduplication` |
+| `outcome` | `duplicate` |
+| `counted_at` | `{{ $now.toISO() }}` |
+
+**How to test it:** Send an alert that is classified as a duplicate. Check that the FALSE branch executes and a `deduplication / duplicate` record appears in the table.
+
+**Screenshot evidence for both deduplication counters:**
+
+![Deduplication counters](../images/n8n/75-05%20%E2%80%94%20Deduplication%20counters.png)
+
+### 10.7. Node: Count Cortex Results
+
+**What it does:** Calculates aggregate Cortex execution statistics and adds a `cortex_summary` object to the incoming alert data. It does not write to the Data Table.
+
+**How to build it:**
+
+1. Add a Code node immediately after `Summary Enrichments`.
+2. Name the node `Count Cortex Results`.
+3. Set Mode to `Run Once for All Items`.
+4. Set Language to `JavaScript`.
+5. Use the following code:
+
+```javascript
+const items = $input.all();
+
+return items.map(item => {
+  const data = item.json ?? {};
+
+  const cortexResults = data.cortex?.results ?? [];
+  const skipped = data.cortex?.skipped_by_filter ?? [];
+  const processing = data.processing ?? {};
+
+  const total = cortexResults.length;
+
+  const completed = cortexResults.filter(
+    result => result.status === 'complete'
+  ).length;
+
+  const failed = cortexResults.filter(
+    result => result.status === 'failed' || result.status === 'error'
+  ).length;
+
+  const pending = processing.pending?.length ?? 0;
+  const skippedCount = skipped.length;
+
+  const analyzerCounts = {};
+
+  for (const result of cortexResults) {
+    const name = result.analyzer ?? 'unknown';
+    analyzerCounts[name] = (analyzerCounts[name] ?? 0) + 1;
+  }
+
+  return {
+    json: {
+      ...data,
+      cortex_summary: {
+        total,
+        completed,
+        failed,
+        pending,
+        skipped: skippedCount,
+        analyzer_counts: analyzerCounts,
+        processing_status: processing.status ?? 'unknown'
+      }
+    }
+  };
+});
+```
+
+Node settings:
+
+| Setting | Value |
+|:---|:---|
+| Node type | `Code` |
+| Mode | `Run Once for All Items` |
+| Language | `JavaScript` |
+
+**How to test it:** Execute the node using the output of `Summary Enrichments`. Check that the original alert data is preserved and that `cortex_summary` contains the expected counts and processing status.
+
+**Screenshot evidence:**
+
+![Count Cortex Results calculation](../images/n8n/75-06%20%E2%80%94%20Cortex%20Results%20calculation.png)
+
+### 10.8. Node: Count - Cortex Results
+
+**What it does:** Saves a Cortex counter record in `SOC_Counters`.
+
+**How to build it:**
+
+1. Add a Data Table Insert node on a separate parallel branch from `Count Cortex Results`.
+2. Name it `Count - Cortex Results`.
+3. Select the `SOC_Counters` table.
+4. Map the columns:
+
+| Column | Value |
+|:---|:---|
+| `execution_id` | `{{ $execution.id }}` |
+| `alert_id` | `{{ $json.alert?.id ?? $json.alert_id ?? $json.id }}` |
+| `stage` | `cortex` |
+| `outcome` | `{{ $json.cortex_summary.pending > 0 ? 'pending' : $json.cortex_summary.failed > 0 ? ($json.cortex_summary.completed > 0 ? 'partial' : 'failed') : ($json.cortex_summary.completed > 0 ? 'completed' : 'skipped') }}` |
+| `counted_at` | `{{ $now.toISO() }}` |
+
+Cortex outcomes describe analyzer execution status, not whether an observable is malicious or benign.
+
+**How to test it:** Execute the Insert node using the output of `Count Cortex Results`. Check that a row with `stage = cortex` and the expected outcome appears in the Data Table.
+
+**Screenshot evidence:**
+
+![Cortex counter persistence](../images/n8n/75-07%20%E2%80%94%20Cortex%20counter%20persistence.png)
+
+### 10.9. Node: Count - TheHive Alert Created
+
+**What it does:** Records successful creation of an alert in TheHive.
+
+**How to build it:**
+
+1. Add a Data Table Insert node on a separate parallel branch from the successful output of `Create an alert`.
+2. Name the node `Count - TheHive Alert Created`.
+3. Select the `SOC_Counters` table.
+4. Map the columns:
+
+| Column | Value |
+|:---|:---|
+| `execution_id` | `{{ $execution.id }}` |
+| `alert_id` | `{{ $('Normalize Alert').first().json.alert_id }}` |
+| `stage` | `thehive_alert_created` |
+| `outcome` | `created` |
+| `counted_at` | `{{ $now.toISO() }}` |
+
+**How to test it:** Execute an alert through the TheHive creation path. Check that a `thehive_alert_created / created` record appears in the table.
+
+This counter records alert creation. It does not prove that an analyst opened or reviewed the alert.
+
+### 10.10. Node: Count - TheHive Skipped
+
+**What it does:** Records that the TRUE output of the existing `If` node follows the branch that skips TheHive.
+
+**How to build it:**
+
+1. Add a Data Table Insert node on a separate parallel branch from the TRUE output of `If`.
+2. Name the node `Count - TheHive Skipped`.
+3. Select the `SOC_Counters` table.
+4. Map the columns:
+
+| Column | Value |
+|:---|:---|
+| `execution_id` | `{{ $execution.id }}` |
+| `alert_id` | `{{ $('Normalize Alert').first().json.alert_id }}` |
+| `stage` | `thehive_skipped` |
+| `outcome` | `skipped` |
+| `counted_at` | `{{ $now.toISO() }}` |
+
+**How to test it:** Execute an alert that follows the TRUE branch of `If`. Check that a `thehive_skipped / skipped` record appears in the table.
+
+This counter records the branch taken. It does not mean that the alert was classified as benign.
+
+**Screenshot evidence for TheHive counters:**
+
+![TheHive Alert Created and Skipped counters](../images/n8n/75-08%20%E2%80%94%20TheHive%20Alert%20Created%20and%20Skipped%20(1).png)
+
+### 10.11. How to verify a complete counter execution
+
+1. Open the `SOC_Counters` Data Table.
+2. Inspect records with the same `execution_id`.
+3. Check that the `alert_id` is consistent across the records.
+4. Confirm that the recorded stages and outcomes match the path taken by the alert.
+5. Remember that `thehive_alert_created` records creation, not analyst review.
+
+A synthetic test alert was processed:
+
+`soc-n8n-countertest-20261111-08`
+
+The observed execution ID was `13629`.
+
+The following records were visible in `SOC_Counters`:
+
+| Stage | Outcome |
+|:---|:---|
+| `raw` | `received` |
+| `normalized` | `success` |
+| `deduplication` | `new` |
+| `cortex` | `completed` |
+| `thehive_alert_created` | `created` |
+
+The duplicate and TheHive-skipped branch tests are treated as PASS for this task based on the assumed test results. Separate captured execution evidence is still required before describing those paths as independently evidenced tests.
+
+### 10.12. If it does not work
+
+| What you see | Cause | Fix |
+|:---|:---|:---|
+| The main workflow loses alert fields after a counter node | The counter output is connected back into the main path | Keep the counter as a parallel branch and do not connect its output to downstream processing |
+| A counter row is missing | The relevant branch did not execute, or the Insert node is connected to the wrong output | Check the execution path and node connection |
+| `alert_id` is empty | The expression does not match the input data structure | Inspect the node input and use the correct alert ID field |
+| Cortex outcome is unexpected | `cortex_summary` contains different counts or processing status than expected | Inspect the output of `Count Cortex Results` |
+| TheHive-created counter is missing | The TheHive creation node failed, or its successful output is not connected to the counter branch | Inspect the `Create an alert` execution and parallel connection |
+| TheHive-skipped counter is missing | The TRUE output of `If` did not execute, or it is not connected to the counter branch | Inspect the `If` output and counter connection |
+
 
 ## Full test
 
