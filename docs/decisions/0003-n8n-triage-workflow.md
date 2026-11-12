@@ -484,7 +484,34 @@ Build and test instructions, screenshots and the test alert are in the [n8n tria
 
 ### 8. TheHive
 
-**Owner:** @Solivagantaeon
+**Owner:** @MKonrad-afk
+
+#### Context
+
+The [Decision stage](https://github.com/Solivagantaeon/soc-automation-lab/issues/71) returns `closed`, `analyst_review`, or `malicious`. An alert that needs analyst attention must provide the decision, reason, source event, asset context, evidence, enrichment status, and eligible observables in TheHive. A `closed` result bypasses TheHive and continues to Audit/Counters.
+
+#### Decision
+
+The final branch is:
+
+| Node | Responsibility |
+|---|---|
+| `If` | The true output represents `closed` and bypasses TheHive. The false output continues to alert creation. |
+| [`Apply TheHive Handling Policy`](../../soar/n8n/nodes/thehive-handling-policy-v0.1.js) | Adds TheHive TLP/PAP markings. It reads the original Wazuh payload from `Webhook` because `Normalize Alert` does not retain `rule.groups`. |
+| [`Build TheHive Alert`](../../soar/n8n/nodes/thehive-alert-v0.3.js) | Builds top-level TheHive alert fields and a separate `thehive_observables` array from Decision, the normalized event, MISP, Cortex, processing status, and asset inventory. |
+| `Create an alert`| Uses TheHive 5 `Alert → Create` with the saved credential and automatic field mapping. |
+| [`Prepare TheHive Observables`](../../soar/n8n/nodes/prepare-thehive-observables-v0.1.js) | Reads the created alert ID and the eligible observable list, then emits one item per observable for the TheHive Observable node. |
+| [`Create an observable`](https://docs.n8n.io/integrations/builtin/app-nodes/n8n-nodes-base.thehive5/) | Uses TheHive 5 `Observable → Create in Alert` to attach each item to the created alert. |
+
+The `If` node condition is `{{ $json.decision.outcome === 'closed' }}`. Its true output bypasses TheHive. Its false output reaches `Apply TheHive Handling Policy` and the builder. The builder accepts only `analyst_review` and `malicious` and fails visibly for other outcomes.
+
+The policy selects the most restrictive explicit TLP and PAP markings found on the source alert or its observables. With no source markings, the exact Wazuh rule group `soc-lab-test` receives TLP `0` (CLEAR). Other or unclassified alerts receive TLP `2` (AMBER). PAP defaults independently to `2` (AMBER) in the current implementation. The SOC owner must approve this default for the intended environment. Neither value is derived from severity. The policy is applied after enrichment and only sets the markings recorded in TheHive. It does not gate Cortex requests already performed earlier in the execution.
+
+The builder uses the original Wazuh alert ID as `sourceRef`, with type `external` and source `Wazuh`. It validates that `sourceRef` is present and no longer than 128 characters. TheHive rejects a repeated `(type, source, sourceRef)` combination in the same organization, so a rerun must use a fresh source alert ID or handle the existing alert explicitly.
+
+The alert description includes the Decision outcome and rationale, score, verdict, coverage, analysis status, asset and user context, source alert and rule details, MITRE ATT&CK data, IOC verdicts, MISP references, Cortex summaries, and unavailable or pending sources. Only eligible external IP, domain, URL, and hash observables are attached. Internal addresses and hostnames are excluded. Each observable carries its own IOC verdict, evidence message, and the alert's TLP/PAP markings.
+
+TheHive severity is calculated after Decision by `Build TheHive Alert`:
 
 ### 9. Audit
 
@@ -566,4 +593,98 @@ Detailed build steps and test evidence are recorded in the [n8n triage runbook](
 
 ### 10. Counters
 
-**Owner:** @arturesturemkuros
+**Owner:** @84rtek
+
+#### Context
+
+The SOC workflow needs to record how many alerts reach each processing stage. This makes it possible to understand alert flow and determine how many alerts reach the analyst-facing stage.
+
+The implementation must not change the existing triage, scoring, deduplication, enrichment, or decision logic.
+
+#### Decision
+
+Use a dedicated n8n Data Table named `SOC_Counters` to persist counter events.
+
+Each counter is implemented as a separate Data Table Insert node. Counter nodes use parallel branches so that their output does not replace or modify the data passed through the original workflow.
+
+A Code node named `Count Cortex Results` calculates aggregate Cortex execution statistics. A separate Data Table node persists the Cortex counter record.
+
+#### Counter schema
+
+The `SOC_Counters` table contains:
+
+| Column | Type | Purpose |
+|:---|:---|:---|
+| `execution_id` | String | Identifies the n8n execution |
+| `alert_id` | String | Identifies the alert |
+| `stage` | String | Identifies the workflow stage |
+| `outcome` | String | Records the stage outcome |
+| `counted_at` | Date | Records when the counter event occurred |
+
+#### Counter stages
+
+The following stages and outcomes are recorded:
+
+| Stage | Outcome |
+|:---|:---|
+| `raw` | `received` |
+| `normalized` | `success` |
+| `deduplication` | `new` or `duplicate` |
+| `cortex` | `completed`, `partial`, `failed`, `pending`, or `skipped` |
+| `thehive_alert_created` | `created` |
+| `thehive_skipped` | `skipped` |
+
+Cortex outcomes describe analyzer execution status, not the threat verdict of an observable.
+
+#### Implementation decisions
+
+1. Use one shared Data Table instead of multiple tables.
+2. Store one record per counter event.
+3. Use `$execution.id` to associate counter records with an execution.
+4. Use the normalized alert ID wherever available.
+5. Keep counter nodes on parallel branches.
+6. Do not connect counter-node outputs back into the original processing path.
+7. Keep existing workflow decision logic unchanged.
+
+#### Consequences
+
+**Benefits**
+
+- Counter events can be queried centrally.
+- Alert progression can be correlated using `execution_id` and `alert_id`.
+- Counter persistence does not replace the original workflow payload.
+- The implementation is easy to extend with additional stages.
+
+**Limitations**
+
+- A counter record represents a workflow-stage event, not necessarily a completed analyst investigation.
+- `thehive_alert_created` means an alert was created in TheHive; it does not prove that an analyst opened or reviewed it.
+- `thehive_skipped` means the workflow followed the branch that skips TheHive; it does not mean the alert was classified as benign.
+- Cortex completion does not imply that the returned intelligence verdict is malicious or benign.
+
+#### Testing
+
+A synthetic alert was processed:
+
+` soc-n8n-countertest-20261111-08 `
+
+The observed execution ID was `13629`.
+
+The following records were visible in `SOC_Counters`:
+
+| Stage | Outcome |
+|:---|:---|
+| `raw` | `received` |
+| `normalized` | `success` |
+| `deduplication` | `new` |
+| `cortex` | `completed` |
+| `thehive_alert_created` | `created` |
+
+The duplicate and TheHive-skipped paths are treated as PASS for this task based on the assumed test results. Separate captured execution evidence is still required before describing those paths as independently evidenced tests.
+
+#### Scope boundaries
+
+This ADR covers only counter instrumentation and its persistence.
+
+It does not authorize changes to scoring, decision rules, enrichment integrations, deduplication behavior, or TheHive handling policy.
+
