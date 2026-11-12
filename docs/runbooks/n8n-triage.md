@@ -41,6 +41,8 @@ Node template:
 -->
 
 ## 1. Webhook
+**Owner:** @MKonrad-afk
+
 **What it does:** Receives Wazuh alerts as JSON over an authenticated HTTP POST request and immediately acknowledges receipt.
 
 **How to build it:**
@@ -788,7 +790,153 @@ All seven tests gave the expected results on v0.2.2. In addition, 34 automated c
 
 ## 6. Decision
 
-**Owner:** @arturesturemkuros
+**Owner:** @MKonrad-afk
+**What it does:** Combines the score with the asset inventory and returns `closed`, `analyst_review`, or `malicious` with a reason.
+
+```mermaid
+flowchart TD
+    S["Scoring"] --> L["Lookup Asset"]
+    L --> D["Decision"]
+    D --> C["closed"]
+    D --> R["analyst_review"]
+    D --> M["malicious"]
+```
+
+*Figure. Decision reads the score and matching asset row, then returns one outcome.*
+
+![Decision stage in the n8n workflow](../images/n8n/71-decision-workflow.png)
+
+*Figure. Lookup Asset and Decision follow Scoring. Create an alert is deactivated*
+
+### Decision nodes
+
+#### Data Table: `soc_asset_inventory`
+
+**What it does:** Stores one row per known agent and its closure policy. Create the persistent Data Table once, the workflow queries it through `Lookup Asset`.
+
+| Column | Type | Purpose |
+|---|---|---|
+| `agent_id` | String | Wazuh agent ID, including leading zeroes |
+| `agent_name` | String | Agent name |
+| `asset_type` | String | For example `server`, `workstation`, or `network_infrastructure` |
+| `criticality` | String | `critical` or `standard` |
+| `auto_close_allowed` | Boolean | Whether the asset can be considered for auto-close |
+| `reason` | String | Reason for the classification |
+| `last_reviewed` | String | Review date |
+
+Current lab rows:
+
+| Agent ID | Agent name | Asset type | Criticality | Auto-close |
+|---|---|---|---|---|
+| `008` | `SOC-DC01` | `server` | `critical` | `false` |
+| `005` | `opnsense` | `network_infrastructure` | `critical` | `false` |
+| `004` | `SOC-WIN11-AI` | `workstation` | `standard` | `true` |
+| `006` | `SOC-LIN-01` | `endpoint` | `standard` | `true` |
+| `007` | `SOC-WIN10-01` | `workstation` | `standard` | `true` |
+
+![SOC asset inventory Data Table](../images/n8n/71-asset-inventory.png)
+
+*Figure. The domain controller and firewall are marked critical and not eligible for auto-close.*
+
+#### Node: Lookup Asset
+
+**What it does:** Queries `soc_asset_inventory` by the Wazuh agent ID and name. It returns all matching rows so Decision can reject ambiguous matches.
+
+**How to build it:**
+
+1. Add a **Data Table** node after `Scoring` and name it `Lookup Asset`.
+2. Set **Resource** to **Row**, **Operation** to **Get**, and select `soc_asset_inventory`.
+3. Set **Must Match** to **All Conditions**.
+4. Add these conditions:
+
+| Column | Condition | Value |
+|---|---|---|
+| `agent_id` | Equals | `{{ $json.alert.agent.id }}` |
+| `agent_name` | Equals | `{{ $json.alert.agent.name }}` |
+
+5. Set **Return All** to `true`.
+6. In **Settings**, enable **Always Output Data** so a missing row still reaches `Decision`.
+7. Connect `Lookup Asset` to `Decision`.
+
+![Lookup Asset settings and matched critical row](../images/n8n/71-lookup-asset.png)
+
+*Figure. Both conditions match the `SOC-DC01` inventory row.*
+
+#### Node: Decision
+
+**What it does:** Reads the output from the node named `Scoring` and the rows returned by `Lookup Asset`, applies the policy, and adds `asset_inventory` and `decision` to the item.
+
+**How to build it:**
+
+1. Add a **Code** node after `Lookup Asset` and name it `Decision`.
+2. Set **Mode** to **Run Once for All Items** and **Language** to **JavaScript**.
+3. Copy [`decision-v0.1.js`](../../soar/n8n/nodes/decision-v0.1.js) into the Code editor.
+4. Keep the scoring node named exactly `Scoring`.
+5. Connect the Code node output to the next stage.
+
+| Setting | Value |
+|---|---|
+| Node type | `Code` |
+| Mode | `Run Once for All Items` |
+| Language | `JavaScript` |
+| Implementation | [`decision-v0.1.js`](../../soar/n8n/nodes/decision-v0.1.js) |
+
+**Decision rules:**
+
+| Outcome | Conditions |
+|---|---|
+| `closed` | Complete valid analysis, coverage 1, an external IP/domain/URL/hash, no conflict or malicious signal, verdict `likely_false_positive`, exactly one matching asset, non-critical, auto-close allowed. |
+| `analyst_review` | Missing/invalid data, no eligible observable, conflict, incomplete analysis, missing/ambiguous asset, or any verdict that does not qualify for another outcome. |
+| `malicious` | Complete analysis with a configured malicious signal, or a `high` verdict. |
+
+Incomplete analysis includes invalid scoring, coverage other than 1, processing not complete, failed/pending jobs, partial/failed sources, input/config warnings, or an unclear VirusTotal result. Malicious signals remain in output, but incomplete analysis still routes to review.
+
+`critical` assets are never closed. `closed` is an outcome value only - this Code node does not change Wazuh or TheHive alert status.
+
+**Output fields:**
+
+| Field | Purpose |
+|---|---|
+| `asset_inventory.lookup_status` | `matched`, `not_found`, or `ambiguous` |
+| `asset_inventory.agent_id` / `agent_name` | Matched agent, or alert agent if unmatched |
+| `asset_inventory.asset_type` / `criticality` | Inventory classification |
+| `asset_inventory.auto_close_allowed` | Inventory policy; false without one unique match |
+| `asset_inventory.reason` / `last_reviewed` | Inventory context |
+| `decision.outcome` | `closed`, `analyst_review`, or `malicious` |
+| `decision.reason_code` / `reasons` | Machine-readable reason and explanation |
+| `decision.score` / `verdict` / `coverage` | Scoring values |
+| `decision.analysis_complete` | Whether analysis checks passed |
+| `decision.malicious_signals` | Signals found by the Decision code |
+| `decision.has_benign_misp_tag` | Whether the explicit benign tag was present |
+
+![Decision node with incomplete-analysis result](../images/n8n/71-decision-incomplete-analysis.png)
+
+*Figure. An incomplete run remains in `analyst_review` while retaining Maltiverse and Team Cymru signals.*
+
+#### How to test it
+
+Run the sample alerts and inspect `asset_inventory` and `decision` in the Decision output:
+
+| Test alert | Observed result |
+|---|---|
+| `decision71-20261110-critical-lookup-004` | Complete analysis; `008` matched as critical server; `analyst_review` / `critical_asset`. |
+| `decision71-20261110-closed-retry-007` | Complete analysis; score 7, `likely_false_positive`; `007` matched, standard and allowed; `closed` / `complete_low_risk_analysis`. |
+| `decision71-20261110-malicious-wicar-008` | Maltiverse malicious for `wicar.org`; score 22, verdict low, coverage 1; `malicious` / `malicious_evidence`. |
+| `decision71-20261110-malicious-003` | MISP failure, coverage 0.8, malicious signals retained; `analyst_review` / `incomplete_analysis`. |
+
+These are n8n lab results, not production threshold calibration. TheHive delivery remains in [Issue #73](https://github.com/Solivagantaeon/soc-automation-lab/issues/73).
+
+**If it does not work:**
+
+| What you see | Cause | Fix |
+|---|---|---|
+| `lookup_status: not_found` although the row exists | Whitespace, different row value, or wrong table | Check selected table; compare ID/name exactly, remove whitespace, rerun Lookup Asset |
+| `lookup_status: ambiguous` | Duplicate matching rows | Remove duplicate ID/name rows |
+| `analysis_complete: false` | Coverage below 1, failed/pending/partial data, invalid scoring/config, or unclear VT result | Check `processing.failed`, `processing.pending`, `scoring.sources`, `scoring.input_problems`, and `scoring.config_warnings` |
+| Malicious signals exist but outcome is review | Analysis is incomplete or evidence conflicts with a benign MISP tag | Fix failed/pending sources or review the conflict |
+| A low score does not close | Verdict is not `likely_false_positive`, asset is critical/unmatched, or auto-close is false | Check `decision.verdict` and `asset_inventory` |
+| A high-risk complete alert does not become malicious | Benign MISP tag conflicts with malicious evidence or score >= 40 | Review the conflict; review is the configured result |
+
 
 ## 7. Failure handling
 
