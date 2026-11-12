@@ -513,6 +513,13 @@ The alert description includes the Decision outcome and rationale, score, verdic
 
 TheHive severity is calculated after Decision by `Build TheHive Alert`:
 
+| Value | Label | Rule |
+|---:|---|---|
+| 4 | Critical | Malicious outcome on a critical asset, or complete malicious analysis with score at least 90 |
+| 3 | High | Other malicious outcomes, analyst-review outcome on a critical asset, or complete high verdict/score at least 70 |
+| 2 | Medium | Incomplete analysis, missing score, medium verdict/score 40–69, or an unmapped result |
+| 1 | Low | Complete non-critical low/likely-false-positive verdict with score below 40 |
+
 ### 9. Audit
 
 **Owner:** @84rtek
