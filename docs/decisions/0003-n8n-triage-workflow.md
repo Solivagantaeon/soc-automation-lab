@@ -36,8 +36,8 @@ flowchart LR
 | 6 | Decision | Picks one of three outcomes: close, review, malicious | @MKonrad-afk |
 | 7 | Failure handling | Makes sure a broken service does not stop the workflow or hide an alert | @p4chatek |
 | 8 | TheHive | Creates the alert the analyst works on | @MKonrad-afk |
-| 9 | Audit | Keeps the reason for every alert closed automatically | @Maartini22 |
-| 10 | Counters | Counts alerts at every stage, so we can show the reduction | @arturesturemkuros |
+| 9 | Audit | Keeps the reason for every alert closed automatically | @84rtek |
+| 10 | Counters | Counts alerts at every stage, so we can show the reduction | @84rtek |
 
 
 
@@ -520,19 +520,83 @@ TheHive severity is calculated after Decision by `Build TheHive Alert`:
 | 2 | Medium | Incomplete analysis, missing score, medium verdict/score 40–69, or an unmapped result |
 | 1 | Low | Complete non-critical low/likely-false-positive verdict with score below 40 |
 
+### 9. Audit
+
+**Owner:** @84rtek
+
+#### Context
+
+The Decision stage can automatically close an alert when the analysis is complete and the evidence and asset inventory meet the safe-close policy. The reason for each automatic closure needs to be retained so that the decision can be reviewed later.
+
+#### Decision
+
+A Data Table named `SOC_Audit` stores one record for each alert whose Decision outcome is `closed`.
+
+The Audit branch runs in parallel from the `Decision` node. It does not interrupt or replace the existing connection from `Decision` to the main `If` node.
+
+An `If` node named `IF1` checks:
+
+`{{ $json.decision.outcome }}` is equal to `closed`.
+
+Only the true output is connected to `Audit - Record Decision`. The false output is left unconnected, so outcomes `analyst_review` and `malicious` are not inserted into this table.
+
+`Audit - Record Decision` uses the Data Table resource, `Row` operation, and `Insert` operation. It inserts the following fields into `SOC_Audit`:
+
+| Field | Stored value |
+|---|---|
+| `execution_id` | n8n execution ID |
+| `alert_id` | Alert ID |
+| `decision_outcome` | Decision outcome |
+| `reason_code` | Machine-readable decision reason |
+| `reasons` | JSON-serialized decision reasons |
+| `score` | Score |
+| `verdict` | Scoring verdict |
+| `coverage` | Enrichment coverage |
+| `analysis_complete` | Analysis completion status |
+| `malicious_signals` | JSON-serialized malicious signals |
+| `asset_inventory` | JSON-serialized asset inventory context |
+| `policy_version` | Decision policy version |
+| `recorded_at` | Record insertion timestamp |
+
+The table keeps both the machine-readable `reason_code` and the supporting context used by the Decision stage.
+
+The implementation and field mappings are documented in the [n8n triage runbook](../runbooks/n8n-triage.md#9-audit).
+
 #### Rationale
 
-Incomplete or ambiguous enrichment remains `analyst_review`. An unavailable or unclear result is not treated as benign. The alert is created before its observables so the response ID can be used to attach each observable to the correct alert. Closed outcomes remain outside the analyst alert queue and continue to Audit/Counters.
+Keeping the Audit branch separate from the main workflow path means that recording a decision does not change the routing of the alert.
+
+Filtering on `decision.outcome = closed` limits the table to automatic closures. This keeps the purpose of the table clear: it provides a record of why an alert was closed, rather than duplicating every workflow decision.
+
+Storing the score, verdict, coverage, analysis status, malicious signals, and asset inventory context alongside the reason makes the closure easier to understand later. The execution ID and timestamp help identify when the record was created.
 
 #### Verification
 
-The live synthetic run completed successfully. TheHive displayed four observables, TLP CLEAR, PAP AMBER, and severity MEDIUM. The Decision output was `analyst_review`, reason `incomplete_analysis`, score `39`, verdict `low`, coverage `1`, and `analysis_complete=false`. This verifies the analyst-review route, alert creation, observable creation, and synthetic-data markings.
+The Audit branch was tested in n8n using a temporary Code node named `TEST - Audit Data`. It generated a synthetic item with:
 
+- `alert_id`: `soc-audit-test-001`
+- `decision.outcome`: `closed`
+- `decision.reason_code`: `complete_low_risk_analysis`
+- `decision.score`: `10`
+- `decision.verdict`: `likely_false_positive`
+- `decision.coverage`: `1`
+- `decision.analysis_complete`: `true`
 
-### 9. Audit
+The synthetic item passed the true output of `IF1`. The `Audit - Record Decision` node completed successfully and inserted records into `SOC_Audit`.
 
-**Owner:** @
+Three rows with the same synthetic alert ID were created during repeated test inserts. They are test records, not three separate real alerts.
 
+The test verified the closed-outcome filter, field mappings, and successful insertion into the Data Table. The temporary test Code node and its test-only connections were removed after testing.
+
+This test does not demonstrate an end-to-end run in which a real alert is automatically closed by the live Decision stage.
+
+Detailed build steps and test evidence are recorded in the [n8n triage runbook](../runbooks/n8n-triage.md#9-audit).
+
+#### Follow-up
+
+- Verify the Audit branch with a real alert that receives the `closed` outcome from the live Decision stage.
+- Confirm that the resulting record contains the correct alert ID, reason, policy version, and supporting decision context.
+- Keep the `SOC_Audit` table available so that automatic closure reasons can be reviewed later.
 
 ### 10. Counters
 
