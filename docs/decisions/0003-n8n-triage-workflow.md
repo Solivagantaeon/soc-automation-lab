@@ -33,9 +33,9 @@ flowchart LR
 | 3 | Dedup | Recognises the same alert sent again within a short time | @arturesturemkuros |
 | 4 | MISP and Cortex | Checks the observables against threat intelligence | @MKonrad-afk |
 | 5 | Score | Gives the alert points and keeps the reason for each one | @arturesturemkuros |
-| 6 | Decision | Picks one of three outcomes: close, review, malicious | @arturesturemkuros |
+| 6 | Decision | Picks one of three outcomes: close, review, malicious | @MKonrad-afk |
 | 7 | Failure handling | Makes sure a broken service does not stop the workflow or hide an alert | @p4chatek |
-| 8 | TheHive | Creates the alert the analyst works on | @Solivagantaeon |
+| 8 | TheHive | Creates the alert the analyst works on | @MKonrad-afk |
 | 9 | Audit | Keeps the reason for every alert closed automatically | @Maartini22 |
 | 10 | Counters | Counts alerts at every stage, so we can show the reduction | @arturesturemkuros |
 
@@ -345,9 +345,57 @@ The [n8n triage runbook](../runbooks/n8n-triage.md#5-score) documents the node s
 
 ### 6. Decision
 
-**Owner:** @arturesturemkuros
+**Owner:** @MKonrad-afk
 
+#### Context
 
+The Score stage returns a score, verdict, coverage, and enrichment results. A low score alone does not prove that an alert is safe to close: enrichment can be incomplete, the asset can be critical, or the inventory can lack a reliable match. Decision combines the analysis with an explicit asset policy.
+
+#### Decision
+
+The `soc_asset_inventory` Data Table contains one row per known Wazuh agent. `Lookup Asset` queries it using both `agent_id` and `agent_name`. The Decision code validates the returned rows again and accepts only one matching ID and normalized name. A missing or ambiguous match cannot authorize automatic closure.
+
+The JavaScript Code node reads the scored item from `Scoring` and inventory rows from its input. It adds `asset_inventory` and `decision` objects.
+
+| Outcome | Rule |
+|---|---|
+| `closed` | Analysis is complete; an eligible external observable exists; there is no conflicting evidence or malicious signal; verdict is `likely_false_positive`; exactly one asset matches; the asset is not critical; and `auto_close_allowed` is true. |
+| `analyst_review` | Default when data is missing, incomplete, ambiguous, or conflicting, or when the safe-close conditions are not met. |
+| `malicious` | Analysis is complete and a configured malicious signal exists, or the verdict is `high`. This is automated routing, not analyst confirmation. |
+
+`analysis_complete` requires valid scoring, coverage exactly 1, `processing.status` equal to `complete`, no failed or pending jobs, no partial or failed sources, no scoring input problems or config warnings, and no unclear VirusTotal result.
+
+An eligible observable is a non-empty external IP, domain, URL, or hash. A `soc-lab:benign` tag combined with a malicious signal or score of 40 or higher is conflicting evidence and goes to review.
+
+Malicious signals are: MISP tag `soc-lab:malicious`; Maltiverse classification `malicious`; Team Cymru MHR detection at least 50%; or VirusTotal with at least 10 detections.
+
+An asset with `critical` criticality is never auto-closed, even if `auto_close_allowed` is true. The current inventory marks SOC-DC01 and OPNsense as critical; the list can grow as the lab changes.
+
+The implementation is kept in [`decision-v0.1.js`](../../soar/n8n/nodes/decision-v0.1.js). Build steps and test results are in the [n8n triage runbook](../runbooks/n8n-triage.md#6-decision).
+
+Decision returns an outcome in the workflow item. It does not change Wazuh alert status.
+
+#### Rationale
+
+A failed or incomplete source means the workflow does not know enough to call an alert safe. Such alerts go to `analyst_review`, with any collected malicious signals preserved. The editable inventory keeps closure policy visible and prevents unknown, ambiguous, or critical assets from being auto-closed.
+
+#### Verification
+
+The stage was exercised in n8n with these lab alerts:
+
+| Test alert | Verified result |
+|---|---|
+| `decision71-20261110-critical-lookup-004` | SOC-DC01 matched as `008` / `server` / `critical`. Analysis complete; score 7, verdict `likely_false_positive`. Outcome `analyst_review`, reason `critical_asset`. |
+| `decision71-20261110-closed-retry-007` | SOC-WIN10-01 matched as `007` / `workstation` / `standard`; auto-close allowed. Analysis complete; score 7, verdict `likely_false_positive`. AbuseIPDB was whitelisted; MISP returned two attributes with `to_ids: false` and no `soc-lab:benign` tag. Outcome `closed`, reason `complete_low_risk_analysis`. |
+| `decision71-20261110-malicious-wicar-008` | Maltiverse classified `wicar.org` as malicious. Analysis complete; score 22 and verdict `low`. Outcome `malicious`, reason `malicious_evidence`. |
+| `decision71-20261110-malicious-003` | MISP failed, coverage was 0.8, and Maltiverse/Team Cymru signals remained in output. Outcome `analyst_review`, reason `incomplete_analysis`; `analysis_complete` was false. |
+
+These lab results verify all three outcomes and the incomplete-analysis fallback. 
+
+#### Follow-up
+
+- Keep inventory rows and `last_reviewed` current as agents change.
+- The Audit stage must retain a durable record of a `closed` outcome and its reason.
 
 ### 7. Failure handling
 
@@ -421,7 +469,7 @@ The stage was tested on 2026-11-10 with one synthetic alert, `100002`. It contai
 | `cortex.results` | Empty, because no analyzer answered |
 | `cortex.skipped_by_filter` | Only observables that were deliberately not sent to Cortex: the two documentation-range IPs (`Non-public IPv4 address`) and the internal agent IP and hostname (`Marked internal by normalization`). No failed observable was listed there |
 
-This test does not cover: a failure in a `Get a report …` node, because no job was created; AbuseIPDB, because the documentation-range IPs are correctly filtered out before it; a real outage, because an invalid URL fails immediately instead of timing out; and the Score stage output for a failed run.
+This test does not cover: a failure in a `Get a report …` node, because no job was created. AbuseIPDB, because the documentation-range IPs are correctly filtered out before it; a real outage, because an invalid URL fails immediately instead of timing out, and the Score stage output for a failed run.
 
 Build and test instructions, screenshots and the test alert are in the [n8n triage runbook](../runbooks/n8n-triage.md#7-failure-handling).
 
@@ -436,8 +484,49 @@ Build and test instructions, screenshots and the test alert are in the [n8n tria
 
 ### 8. TheHive
 
-**Owner:** @Solivagantaeon
+**Owner:** @MKonrad-afk
 
+#### Context
+
+The [Decision stage](https://github.com/Solivagantaeon/soc-automation-lab/issues/71) returns `closed`, `analyst_review`, or `malicious`. An alert that needs analyst attention must provide the decision, reason, source event, asset context, evidence, enrichment status, and eligible observables in TheHive. A `closed` result bypasses TheHive and continues to Audit/Counters.
+
+#### Decision
+
+The final branch is:
+
+| Node | Responsibility |
+|---|---|
+| `If` | The true output represents `closed` and bypasses TheHive. The false output continues to alert creation. |
+| [`Apply TheHive Handling Policy`](../../soar/n8n/nodes/thehive-handling-policy-v0.1.js) | Adds TheHive TLP/PAP markings. It reads the original Wazuh payload from `Webhook` because `Normalize Alert` does not retain `rule.groups`. |
+| [`Build TheHive Alert`](../../soar/n8n/nodes/thehive-alert-v0.3.js) | Builds top-level TheHive alert fields and a separate `thehive_observables` array from Decision, the normalized event, MISP, Cortex, processing status, and asset inventory. |
+| `Create an alert`| Uses TheHive 5 `Alert → Create` with the saved credential and automatic field mapping. |
+| [`Prepare TheHive Observables`](../../soar/n8n/nodes/prepare-thehive-observables-v0.1.js) | Reads the created alert ID and the eligible observable list, then emits one item per observable for the TheHive Observable node. |
+| [`Create an observable`](https://docs.n8n.io/integrations/builtin/app-nodes/n8n-nodes-base.thehive5/) | Uses TheHive 5 `Observable → Create in Alert` to attach each item to the created alert. |
+
+The `If` node condition is `{{ $json.decision.outcome === 'closed' }}`. Its true output bypasses TheHive. Its false output reaches `Apply TheHive Handling Policy` and the builder. The builder accepts only `analyst_review` and `malicious` and fails visibly for other outcomes.
+
+The policy selects the most restrictive explicit TLP and PAP markings found on the source alert or its observables. With no source markings, the exact Wazuh rule group `soc-lab-test` receives TLP `0` (CLEAR). Other or unclassified alerts receive TLP `2` (AMBER). PAP defaults independently to `2` (AMBER) in the current implementation. The SOC owner must approve this default for the intended environment. Neither value is derived from severity. The policy is applied after enrichment and only sets the markings recorded in TheHive. It does not gate Cortex requests already performed earlier in the execution.
+
+The builder uses the original Wazuh alert ID as `sourceRef`, with type `external` and source `Wazuh`. It validates that `sourceRef` is present and no longer than 128 characters. TheHive rejects a repeated `(type, source, sourceRef)` combination in the same organization, so a rerun must use a fresh source alert ID or handle the existing alert explicitly.
+
+The alert description includes the Decision outcome and rationale, score, verdict, coverage, analysis status, asset and user context, source alert and rule details, MITRE ATT&CK data, IOC verdicts, MISP references, Cortex summaries, and unavailable or pending sources. Only eligible external IP, domain, URL, and hash observables are attached. Internal addresses and hostnames are excluded. Each observable carries its own IOC verdict, evidence message, and the alert's TLP/PAP markings.
+
+TheHive severity is calculated after Decision by `Build TheHive Alert`:
+
+| Value | Label | Rule |
+|---:|---|---|
+| 4 | Critical | Malicious outcome on a critical asset, or complete malicious analysis with score at least 90 |
+| 3 | High | Other malicious outcomes, analyst-review outcome on a critical asset, or complete high verdict/score at least 70 |
+| 2 | Medium | Incomplete analysis, missing score, medium verdict/score 40–69, or an unmapped result |
+| 1 | Low | Complete non-critical low/likely-false-positive verdict with score below 40 |
+
+#### Rationale
+
+Incomplete or ambiguous enrichment remains `analyst_review`. An unavailable or unclear result is not treated as benign. The alert is created before its observables so the response ID can be used to attach each observable to the correct alert. Closed outcomes remain outside the analyst alert queue and continue to Audit/Counters.
+
+#### Verification
+
+The live synthetic run completed successfully. TheHive displayed four observables, TLP CLEAR, PAP AMBER, and severity MEDIUM. The Decision output was `analyst_review`, reason `incomplete_analysis`, score `39`, verdict `low`, coverage `1`, and `analysis_complete=false`. This verifies the analyst-review route, alert creation, observable creation, and synthetic-data markings.
 
 
 ### 9. Audit
