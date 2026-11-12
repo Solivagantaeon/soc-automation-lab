@@ -500,7 +500,7 @@ The final branch is:
 | [`Apply TheHive Handling Policy`](../../soar/n8n/nodes/thehive-handling-policy-v0.1.js) | Adds TheHive TLP/PAP markings. It reads the original Wazuh payload from `Webhook` because `Normalize Alert` does not retain `rule.groups`. |
 | [`Build TheHive Alert`](../../soar/n8n/nodes/thehive-alert-v0.3.js) | Builds top-level TheHive alert fields and a separate `thehive_observables` array from Decision, the normalized event, MISP, Cortex, processing status, and asset inventory. |
 | `Create an alert`| Uses TheHive 5 `Alert → Create` with the saved credential and automatic field mapping. |
-| `Prepare TheHive Observables` | Adds the created alert ID to each eligible observable and emits one n8n item per observable. |
+| [`Prepare TheHive Observables`](../../soar/n8n/nodes/prepare-thehive-observables-v0.1.js) | Reads the created alert ID and the eligible observable list, then emits one item per observable for the TheHive Observable node. |
 | [`Create an observable`](https://docs.n8n.io/integrations/builtin/app-nodes/n8n-nodes-base.thehive5/) | Uses TheHive 5 `Observable → Create in Alert` to attach each item to the created alert. |
 
 The `If` node condition is `{{ $json.decision.outcome === 'closed' }}`. Its true output bypasses TheHive. Its false output reaches `Apply TheHive Handling Policy` and the builder. The builder accepts only `analyst_review` and `malicious` and fails visibly for other outcomes.
