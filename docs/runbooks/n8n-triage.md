@@ -1025,7 +1025,7 @@ This node runs after MISP/Cortex enrichment. It sets the markings that TheHive r
 
 1. Add a **Code** node after `Apply TheHive Handling Policy` and name it `Build TheHive Alert`.
 2. Set **Mode** to **Run Once for All Items** and **Language** to **JavaScript**.
-3. Paste [`score-v0.2.js`](../../soar/n8n/nodes/score-v0.2.js).
+3. Paste [`thehive-alert-v0.3.js`](../../soar/n8n/nodes/thehive-alert-v0.3.js).
 4. Keep the node names `Normalize Alert`, `Dedup`, and `Apply TheHive Handling Policy` unchanged. The code reads data from those nodes by name.
 5. Confirm the output has top-level alert fields and `thehive_observables` before connecting the TheHive node.
 
@@ -1059,6 +1059,12 @@ The builder uses the Wazuh alert ID as `sourceRef`. it fails if the ID is missin
 ### Node: Prepare TheHive Observables
 
 **Purpose:** Take `thehive_observables` from the builder, attach the `_id` returned by `Create an alert`, and emit one item per observable.
+
+1. Add a **Code** node after `Create an alert` and name it `Prepare TheHive Observables`.
+2. Set **Mode** to **Run Once for All Items** and **Language** to **JavaScript**.
+3. Paste [`prepare-thehive-observables-v0.1.js`](../../soar/n8n/nodes/prepare-thehive-observables-v0.1.js).
+4. Keep the nodes named exactly `Build TheHive Alert` and `Create an alert`. The code reads `thehive_observables` from the builder and the created alert `_id` from `Create an alert`.
+5. Confirm that the node emits one item per eligible observable with `alertId`, `dataType`, `data`, `message`, `tags`, `tlp`, `pap`, and `ioc`.
 
 The output item must include `alertId`, `dataType`, and `data`. Preserve `message`, `tags`, `tlp`, `pap`, and `ioc` so the native observable node can map the evidence and markings. For the verified synthetic sample this node emitted four items.
 
