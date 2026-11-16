@@ -1,16 +1,25 @@
-## What this PR changes
+## What's this about? 
 
-<!-- 1-3 sentences. Link the issue: Closes #12 -->
+<!-- A few sentences, like you'd explain it to someone on Discord.
+     Linking the issue:
+     Closes #12  → done, issue can be closed
+     Part of #12 → just a piece of it, more coming -->
 
-## How I tested it in the lab
+## Did it work? 
 
-<!-- Be concrete: which alert or command, what was visible in Wazuh, Shuffle, TheHive. Screenshots are welcome - without keys, e-mails or public IPs. -->
+<!-- What did you poke and what happened?
+     e.g. "ran X from Kali, alert 31103 showed up in Wazuh, landed in TheHive"
+     Screenshots welcome, just no keys, e-mails or public IPs on them 🙈 -->
 
-## Checklist
+## Touched anything outside the repo? 
 
-- [ ] No passwords, API keys, tokens, cookies or webhook URLs / IDs (exports cleaned with `scripts/sanitize_export.py`)
-- [ ] No personal data: real e-mails, our public IP, real user names in paths
-- [ ] Screenshots checked with `scripts/check_images.py --ocr` **and** looked at by me
-- [ ] Files uploaded through the browser were checked locally first (browser uploads skip the pre-commit hooks)
-- [ ] All CI checks are green
-- [ ] Documentation updated (README / runbook / ADR), if relevant
+<!-- ossec.conf, published an n8n workflow, clicked something in TheHive/Cortex/MISP?
+     Tell us what and where, so nobody gets surprised later.
+     Nothing? Just write "nope". -->
+
+## Quick sanity check 
+
+- [ ] No secrets leaked: passwords, API keys, tokens, webhook URLs
+- [ ] No personal stuff: real e-mails, our public IP, real usernames
+- [ ] Changed config on a server? It's in the repo too, with placeholders
+- [ ] Docs updated (README / runbook / ADR), if it makes sense
