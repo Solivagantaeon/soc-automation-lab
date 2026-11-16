@@ -14,15 +14,16 @@ We ran three alerts, one for each outcome the Decision node can return.
 |---|---|---|---|---|---|
 | 1 | Deployed jQuery from the Ubuntu package to the web root on SOC-LIN-01 | 554, File added to the system (level 5) | `closed`, a row in `SOC_Audit`, nothing in TheHive | `closed` (`complete_low_risk_analysis`, score 0), **two** rows in `SOC_Audit`, nothing in TheHive |  PASS |
 | 2 | Ran a renamed copy of `curl.exe` from the user's Temp folder on SOC-WIN10-01; it connected to 8.8.8.8  | 100921, Executable from user Temp folder connected to 8.8.8.8:443 (level 12, added for the PoC) | `analyst_review`, alert in TheHive | `analyst_review` (`analyst_review_required`, score 44, verdict `medium`), one alert in TheHive with 8.8.8.8 attached | PASS |
-| 3 | TODO | TODO | `malicious`, alert in TheHive with the IOCs attached | TODO | TODO |
+| 3 | Wrote the EICAR test file to the web root on SOC-LIN-01 | 554, File added to the system (level 5) | `malicious`, alert in TheHive with the IOCs attached | `malicious` (`malicious_evidence`, score 25, verdict `low`), one alert in TheHive with three hashes, two marked malicious | PASS (second run, after a workflow fix; see the scenario) |
 
 
+All three runs reached the expected outcome, and each one also showed something to fix.
 
-TODO: two or three sentences on what the table shows. Say it plainly if something did not go as pl (see [Notes](#notes)).anned.
-<!--First scenario summary -->
 Scenario 1 reached the expected outcome: the benign file was closed automatically with a written reason and nothing reached TheHive. The run also showed that enrichment results can reach the decision in separate batches, which recorded the same alert twice in `SOC_Audit` (see [Issues found](#issues-found1)).
 
-Scenario 2 also reached the expected outcome: the threat intelligence disagreed, so the workflow did not decide and sent the alert to an analyst. The default Wazuh rules do not detect a program in a user's Temp folder connecting to the internet, so we added rule `100921` for this behaviour.  The run also exposed two scoring weaknesses  (see [Notes](#notes)).
+Scenario 2 also reached the expected outcome: the threat intelligence disagreed, so the workflow did not decide and sent the alert to an analyst. The default Wazuh rules do not detect a program in a user's Temp folder connecting to the internet, so we added rule `100921` for this behaviour. The run also exposed two scoring weaknesses (see [Notes](#notes)).
+
+Scenario 3 reached the expected outcome on the second run: Team Cymru MHR reported the EICAR test file as 97% malicious, so the workflow escalated it to TheHive with the hashes attached, although the score alone was low and the host allows automatic closure. The first run hit the batch bug from scenario 1 with a visible effect: the TheHive alert lacked part of the evidence and the execution ended with an error. We fixed the bug before the second run (see [Issues found in the first run](#issues-found-in-the-first-run) and [Known issue #NN](known-issues/NN-cortex-polling-batches.md)).
 
 ## What was running
 
@@ -314,90 +315,133 @@ We added rule `100921` to `local_rules.xml` on the Wazuh manager. The default ru
 
 ### What we did
 
-TODO. We used a public test artefact (WICAR / EICAR), not real malware.
+On SOC-LIN-01, we wrote the EICAR antivirus test file to the web root. EICAR is a harmless 68-byte text string that antivirus products detect on purpose; it is not real malware. To the workflow it looks like a known malicious file appearing on a web server, a common sign of a web shell or a dropped payload.
+
+This scenario uses the same path as scenario 1: the same rule (554), the same host and the same asset policy (automatic closure allowed). Only the threat intelligence about the file is different.
+
+We chose EICAR over a WICAR download because, in this workflow, hashes go to Team Cymru MHR and CIRCL Hashlookup, while VirusTotal receives only URLs and Maltiverse only domains. A file alert reaches n8n through the existing `rule_id` block for rule 554, so `ossec.conf` did not need another change.
 
 ~~~bash
-TODO command
+date -Is
+printf '%s' 'X5O!P%@AP[4\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*' | sudo tee /var/www/html/eicar.com >/dev/null
+sha256sum /var/www/html/eicar.com
 ~~~
+
+`sha256sum` printed `275a021bbfb6489e54d471899f7db9d1663fc695ec2fe2a2c4538aabf651fd0f`, the published SHA-256 of the EICAR file.
+
+This section reports the second run, at 15:43. The first run, at 15:19, ended with the expected outcome but exposed a workflow bug that was fixed before the second run (see [Issues found in the first run](#issues-found-in-the-first-run)).
+
+<details>
+<summary>Screenshot: commands run on SOC-LIN-01</summary>
+
+![Trigger command on SOC-LIN-01](images/endpoints/92-s3-trigger-command.png)
+
+*Figure 15. Terminal on SOC-LIN-01: start time recorded with `date -Is` (TODO 15:43:xx), the EICAR file written to the web root, and its SHA-256.*
+
+</details>
 
 ### Wazuh alert
 
 | Field | Value |
 |---|---|
-| Rule | TODO |
-| Level | TODO |
-| Agent | TODO |
-| Alert ID | TODO |
-| Time | TODO |
+| Rule | 554, File added to the system. |
+| Level | 5 |
+| Agent | SOC-LIN-01 (`006`) |
+| Alert ID | 1794753803.37330334 |
+| Time | 2026-11-15T15:43:23.041+01:00 |
 
-<!-- ![Wazuh alert for scenario 3](images/poc/TODO-s3-wazuh-alert.png) -->
+![Wazuh alert for scenario 3](images/wazuh/92-s3-alert-554.png)
+
+*Figure 16. Wazuh Discover: rule 554 on SOC-LIN-01 at 15:43:23 for `/var/www/html/eicar.com`, with the same SHA-256 as in the terminal.*
 
 ### n8n execution
 
-Execution TODO id, started TODO, took TODO s.
+Execution 16670, started 2026-11-15 15:43:24 (+01:00), took 32.7 s. Workflow version `021b562b`, with the 10-second initial wait before the first Cortex report check.
 
-<!-- ![n8n execution for scenario 3](images/poc/TODO-s3-n8n-execution.png) -->
+![n8n execution for scenario 3](images/n8n/92-s3-execution.png)
+
+*Figure 17. n8n execution 16670: the alert is new (1), its three file hashes go to Team Cymru MHR and CIRCL Hashlookup after a 10-second initial wait (2), all results reach `Merge` in one run (3), the decision is `malicious` (4), and one TheHive alert with three observables is created (5).*
 
 ### Enrichment
 
 | Source | Observable | What came back |
 |---|---|---|
-| MISP | TODO | TODO |
-| Cortex: TODO analyzer | TODO | TODO |
+| MISP | three hashes and the file name `eicar.com` | no matching attributes |
+| Cortex: `TeamCymruMHR_1_0` | SHA-256 `275a021b…651fd0f` | `detection_pct` 97, last seen 2026-11-14 19:44:25 |
+| Cortex: `TeamCymruMHR_1_0` | MD5 `44d88612…278abb02f` | `detection_pct` 97 |
+| Cortex: `TeamCymruMHR_1_0` | SHA-1 `3395856c…42f14140` | No record found |
+| Cortex: `CIRCLHashlookup_1_1` | SHA-256, SHA-1, MD5 | all three `known`, level `safe` |
+
+The other analyzers did not run: the alert has no external IP, domain or URL. The agent IP is internal, and the file name is not a Cortex observable type. All six Cortex jobs completed and nothing was pending or failed.
+
+![Team Cymru results for scenario 3](images/n8n/92-s3-enrichment-teamcymru.png)
+
+*Figure 18. Summary Enrichments, Team Cymru MHR part: the SHA-256 (1) and MD5 (3) hashes have a 97% antivirus detection rate, and MHR has no record for SHA-1 (2). All three jobs completed (4).*
+
+![CIRCL Hashlookup results for scenario 3](images/n8n/92-s3-enrichment-circl.png)
+
+*Figure 19. Summary Enrichments, CIRCL Hashlookup part: all three hashes of the EICAR file are "known" with level `safe` (1–3), the same result that closed the jQuery file in scenario 1. Team Cymru MHR reports 97% for the same file (Figure 18); Scoring resolves the conflict (Figure 20).*
 
 ### Score and decision
 
 | Field | Value |
 |---|---|
-| `decision.score` | TODO |
-| `decision.verdict` | TODO |
-| `decision.coverage` | TODO |
-| `decision.analysis_complete` | TODO |
-| `decision.outcome` | TODO |
-| `decision.reason_code` | TODO |
-| `decision.malicious_signals` | TODO |
-| Asset | TODO |
+| `decision.score` | 25 (rule level +10, Team Cymru +15, CIRCL 0) |
+| `decision.verdict` | `low` |
+| `decision.coverage` | 1 |
+| `decision.analysis_complete` | true |
+| `decision.outcome` | `malicious` |
+| `decision.reason_code` | `malicious_evidence` |
+| `decision.malicious_signals` | `Team Cymru MHR detection is at least 50%` |
+| Asset | 006 SOC-LIN-01, `endpoint`, criticality `standard`, auto-close allowed `true` |
 
-<!-- ![Decision output for scenario 3](images/poc/TODO-s3-decision.png) -->
+Reason recorded by the workflow: *"Team Cymru MHR detection is at least 50%"*.
+
+CIRCL would normally subtract 10 points for a known file. Because MHR reports 97% for the same hash, Scoring cancels that discount and records why. The score alone stays `low`, but the Decision node checks malicious signals before the verdict, so a strong detection from one source is enough for `malicious`. The asset would allow automatic closure, as in scenario 1, but that rule is never reached.
+
+![Scoring output for scenario 3](images/n8n/92-s3-scoring.png)
+
+*Figure 20. Scoring output: 25 points, verdict `low`, coverage 1 (1); all three sources answered (2). The rule level adds 10 (3). CIRCL would subtract 10 for a known file, but the 97% MHR detection cancels that discount (4), and Team Cymru adds 15 (5). The score alone stays low; the decision comes from the MHR signal (Figure 21).*
+
+![Decision output for scenario 3](images/n8n/92-s3-decision.png)
+
+*Figure 21. Decision output: the outcome is `malicious` with reason code `malicious_evidence` (1), because Team Cymru MHR reports at least 50% (2). The score is only 25 (`low`) and the analysis is complete (3). The asset inventory allows automatic closure for SOC-LIN-01 (4), the same as in scenario 1, but a malicious signal is checked before the score, so the alert goes to TheHive instead.*
 
 ### Where it ended up
 
-TODO: the TheHive alert (title, severity, observables, which of them are marked as IOC).
 
-<!-- ![TheHive alert for scenario 3](images/poc/TODO-s3-thehive-alert.png) -->
+
+The description gives the analyst the decision, the asset, the source alert, the verdict per observable and all six Cortex results, so the conflict between MHR and CIRCL is visible without opening n8n. Exactly one alert was created, and `SOC_Audit` has no row for this alert, because only closed alerts are audited there.
+
+![TheHive alert for scenario 3](images/thehive/92-s3-thehive-alert.png)
+
+*Figure 22. TheHive alert `~491663488`: title and severity High (1), the reference is the Wazuh alert ID (2). The decision is `malicious` because Team Cymru MHR reports at least 50% (3), although the score alone is only 25 (`low`). The SHA-256 and MD5 hashes are marked malicious, SHA-1 is unknown (4). All six Cortex results are complete; MHR reports 97% while CIRCL lists the file as "known" (5).*
+
+![TheHive observables for scenario 3](images/thehive/92-s3-thehive-observables.png)
+
+*Figure 23. Observables of the TheHive alert: the MD5 (1) and SHA-256 (3) hashes are tagged `ioc-verdict:malicious` from the Team Cymru MHR result, and SHA-1 is `ioc-verdict:unknown` because MHR has no record for it (2). The Cortex reports are not linked to the observables (4); the analyst finds them in the alert description.*
 
 ### Notes
 
-TODO
+**What the run showed:**
 
-## How long it took
+- **The evidence, not the rule, decides.** Scenarios 1 and 3 share the rule, the host and the asset policy. The jQuery file was closed and the EICAR file was escalated, only because of what threat intelligence knew about each file.
+- **"Known" in CIRCL does not mean benign.** CIRCL lists the EICAR file as known with `hashlookup:trust` 100, the same result as for jQuery. The only thing that kept it from automatic closure is the MHR override in Scoring. MHR has no record for the SHA-1 of the file, so an alert that carried only that hash would have been closed. The CIRCL record also contains `KnownMalicious: malshare.com`, which the Cortex analyzer does not pass on. It should block the known-good discount.
+- **One strong source is enough for `malicious`.** The Decision node checks malicious signals before the score. This is intended: a 97% antivirus detection should not wait for other sources to add points.
+- **The Cortex reports are not attached to the observables in TheHive.** The analyzers are run by n8n, not by TheHive, so each observable shows "No report(s) available". The results are only in the alert description.
+- **MISP had nothing about EICAR.** The lab instance has no attribute for these hashes.
 
-Time from the event on the machine to the final effect. Clocks in the lab are not perfectly in sync, so treat differences of a few seconds as noise.
+### Issues found in the first run
 
-| # | Event | Wazuh alert | n8n started | n8n finished | Total |
-|---|---|---|---|---|---|
-| 1 | TODO | TODO | TODO | TODO | TODO |
-| 2 | TODO | TODO | TODO | TODO | TODO |
-| 3 | TODO | TODO | TODO | TODO | TODO |
+The first run (execution 16669, Wazuh alert `1794752368.37304554`, 15:19) on workflow version `5af171b1` reached the expected outcome, but the Cortex results arrived in two batches, the same bug as in scenario 1. The MD5 reports needed one more polling round, so `Merge` ran twice and each batch was scored and decided separately.
 
-## What this does not prove
+- The first batch created TheHive alert `~532709456` without the MD5 results, so MD5 was shown as "unknown".
+- The second batch tried to create the same alert. TheHive rejected the duplicate `sourceRef`, and the execution ended with status `error`.
+- Both batches were `malicious` here. A batch with only the SHA-1 results would have scored 0 and closed the EICAR alert automatically.
 
-<!-- Keep what is true, delete the rest, add your own. -->
+The cause, the evidence and the fix (a 10-second wait before the first report check) are in [Known issue #NN](known-issues/NN-cortex-polling-batches.md). The second run, reported above, used the fixed workflow.
 
-- These are three hand-picked alerts, not a load test. Alert volumes over a full day are in [`metrics/`](../metrics/README.md).
-- The scoring thresholds are lab values and were not calibrated on real traffic.
-- `closed` is recorded in `SOC_Audit` only. The workflow does not change the alert status in Wazuh.
-- TODO
 
-## Run it again
-
-1. Check the list in [Before a run](#before-a-run).
-2. Run the command from the scenario.
-3. In n8n open **Executions** and pick the run that matches the time.
-4. Compare the Decision output with the table in that scenario.
-5. Check TheHive (scenarios 2 and 3) or the `SOC_Audit` table (scenario 1).
-
-If no execution shows up, start with the integration log on the Wazuh manager. The usual suspects are in the troubleshooting tables of the [triage runbook](runbooks/n8n-triage.md).
 
 ## Related
 
