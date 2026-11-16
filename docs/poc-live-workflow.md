@@ -23,8 +23,7 @@ Scenario 1 reached the expected outcome: the benign file was closed automaticall
 
 Scenario 2 also reached the expected outcome: the threat intelligence disagreed, so the workflow did not decide and sent the alert to an analyst. The default Wazuh rules do not detect a program in a user's Temp folder connecting to the internet, so we added rule `100921` for this behaviour. The run also exposed two scoring weaknesses (see [Notes](#notes)).
 
-Scenario 3 reached the expected outcome on the second run: Team Cymru MHR reported the EICAR test file as 97% malicious, so the workflow escalated it to TheHive with the hashes attached, although the score alone was low and the host allows automatic closure. The first run hit the batch bug from scenario 1 with a visible effect: the TheHive alert lacked part of the evidence and the execution ended with an error. We fixed the bug before the second run (see [Issues found in the first run](#issues-found-in-the-first-run) and [Known issue #NN](known-issues/NN-cortex-polling-batches.md)).
-
+Scenario 3 reached the expected outcome on the second run: Team Cymru MHR reported the EICAR test file as 97% malicious, so the workflow escalated it to TheHive with the hashes attached, although the score alone was low and the host allows automatic closure. The first run hit the batch bug from scenario 1 with a visible effect: the TheHive alert lacked part of the evidence and the execution ended with an error.
 ## What was running
 
 | Item | Value |
