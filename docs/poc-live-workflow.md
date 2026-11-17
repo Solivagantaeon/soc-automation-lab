@@ -438,7 +438,7 @@ The first run (execution 16669, Wazuh alert `1794752368.37304554`, 15:19) on wor
 - The second batch tried to create the same alert. TheHive rejected the duplicate `sourceRef`, and the execution ended with status `error`.
 - Both batches were `malicious` here. A batch with only the SHA-1 results would have scored 0 and closed the EICAR alert automatically.
 
-The cause, the evidence and the fix (a 10-second wait before the first report check) are in [Known issue #NN](known-issues/NN-cortex-polling-batches.md). The second run, reported above, used the fixed workflow.
+The cause, the evidence and the fix (a 10-second wait before the first report check) are in. The second run, reported above, used the fixed workflow.
 
 
 
