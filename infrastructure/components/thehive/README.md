@@ -37,5 +37,5 @@ On **17 October 2026**, the TheHive UI displayed numerous test records with the 
 ### 8.4 Evidence and references
 
 - ![TheHive alerts](../../images/thehive/06-thehive-running.png)
-- TheHive configuration notes: [`../case-management/thehive/README.md`](../case-management/thehive/README.md)
+- TheHive configuration notes: [`../../../case-management/thehive/README.md`](../../../case-management/thehive/README.md)
 
