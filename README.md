@@ -52,7 +52,7 @@ flowchart LR
     D -. optional, time-limited .-> AR[Wazuh<br/>Active Response]
 ```
 
-More detail: [`docs/architecture.md`](docs/architecture.md).
+More detail: [`docs/architecture.md`](infrastructure/architecture/architecture.md).
 
 ## Tech stack
 
@@ -84,7 +84,7 @@ _To be filled in at the end of the project:_ alert volume before vs after each p
 
 ## Reproducing the lab
 
-See [`docs/lab-setup.md`](docs/lab-setup.md). The lab runs on a single Proxmox host; all addresses are private lab ranges.
+See [`docs/lab-setup.md`](infrastructure/architecture/lab-setup.md). The lab runs on a single Proxmox host; all addresses are private lab ranges.
 
 
 ## Disclaimer
