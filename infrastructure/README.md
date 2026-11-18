@@ -22,14 +22,14 @@ This document describes the deployed components of the isolated SOC Automation L
 | ATTACK | `10.10.30.0/24` | Kali test host |
 | VPN | `10.10.250.0/24` | Administrative access via WireGuard |
 
-Detailed network isolation and the build order are described in [lab setup](architecture/lab-setup.md). The [architecture diagram](architecture/architecture.md) and [communication matrix](#9-communication-matrix) follow the same component names and pathways.
+Detailed network isolation and the build order are described in [lab setup](architecture/lab-setup.md). The [architecture diagram](architecture/architecture.md) and [communication matrix](#2-communication-matrix) follow the same component names and pathways.
 
 ---
 
 
 ## 2. Communication matrix
 
-The matrix deliberately separates **observed collection** from **workflow/integration routes**. Product-standard service ports are indicated where the host's container exposure was not part of the captured Wazuh port inventory. The same edges appear in [architecture.md](architecture.md).
+The matrix deliberately separates **observed collection** from **workflow/integration routes**. Product-standard service ports are indicated where the host's container exposure was not part of the captured Wazuh port inventory. The same edges appear in [architecture.md](architecture/architecture.md).
 
 | Source | Destination | Port / protocol | Authentication | Purpose / status |
 |---|---|---|---|---|
