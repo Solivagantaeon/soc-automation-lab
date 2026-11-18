@@ -6,11 +6,10 @@ Single-host lab on **Proxmox VE 9.2**. Firewall/router: **OPNsense** with VLAN-a
 
 | Segment | VLAN | Subnet | Role |
 |---|---|---|---|
-| Management | — | 10.10.99.0/24 | Proxmox & OPNsense admin |
 | VICTIM | 10 | 10.10.10.0/24 | AD domain, Windows endpoints |
 | SOC | 20 | 10.10.20.0/24 | SOC tooling, internal DNS (`.lab`) |
 | ATTACK | 30 | 10.10.30.0/24 | Kali Linux |
-| VPN | — | 10.10.250.0/24 | WireGuard (admins / SOC team) |
+
 
 ## Hosts
 

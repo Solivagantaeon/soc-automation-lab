@@ -16,11 +16,9 @@ This document describes the deployed components of the isolated SOC Automation L
 
 | Network / role | Address or network | Component |
 |---|---|---|
-| Management | `10.10.99.0/24` | Proxmox and firewall administration |
-| VICTIM / Windows | `10.10.10.0/24` | Domain controller and Windows endpoints |
+| VICTIM  | `10.10.10.0/24` | Domain controller Windows, and Linux endpoints |
 | SOC / tooling | `10.10.20.0/24` | Wazuh, Shuffle, Cortex, MISP, TheHive |
 | ATTACK | `10.10.30.0/24` | Kali test host |
-| VPN | `10.10.250.0/24` | Administrative access via WireGuard |
 
 Detailed network isolation and the build order are described in [lab setup](architecture/lab-setup.md). The [architecture diagram](architecture/architecture.md) and [communication matrix](#2-communication-matrix) follow the same component names and pathways.
 

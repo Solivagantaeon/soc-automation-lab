@@ -535,12 +535,17 @@ The route rules use the normalized observable type. Analyzer nodes use the corre
 
 **Execute** starts an analysis in Cortex for one observable. Cortex returns a job ID. Think of this ID as a tracking number for that analysis.
 
+**Initial wait** pauses for 10 seconds before the first check. Team Cymru, CIRCL and AbuseIPDB usually answer within a few seconds, so all reports of one alert are ready at the first check and reach `Merge` together.
+
 **Get a report** uses that same ID to check whether the analysis is ready and to collect its result. If Cortex is still working, n8n waits two seconds and checks again. It repeats this up to five times. If the analysis is still unfinished, the workflow records it as pending and continues.
+
+**Why the initial wait matters:** `Merge` passes its data on every time one of its inputs receives items. A report that needs another polling round reaches `Merge` later and starts a second run of `Summary Enrichments`, `Scoring` and `Decision` with only part of the results. Each run makes its own decision, so one alert can get two audit rows, two TheHive create requests, or a decision based on incomplete evidence.
 
 ```mermaid
 flowchart TD
     A["Execute"] --> B["Job ID"]
-    B --> C["Get report"]
+    B --> I["Initial wait 10s"]
+    I --> C["Get report"]
     C --> D{"Waiting?"}
     D -- "No" --> M["Merge"]
     D -- "Yes" --> W["Wait 2s"]
@@ -550,14 +555,13 @@ flowchart TD
     M --> S["Summary"]
 ```
 
-**Figure:** Cortex polling and merge flow for one job.
-*Figure. One Cortex job is checked repeatedly using the same job ID until it finishes or reaches the retry limit.*
+**How to build the initial wait:** in every analyzer branch, insert a **Wait** node between `Execute <analyzer>` and `Get a report <analyzer>`. Resume: *After Time Interval*, amount `10`, unit *Seconds*.
 
-![Cortex analyzer routes and polling branches](../images/n8n/69-analyzer-polling-branches.png)
+![Initial wait in the analyzer branches](../images/n8n/<nr>-cortex-initial-wait.png)
 
-*Figure. Analyzer branches submit jobs and poll their reports before sending results to Merge.*
+**How to test it:** Use an alert with several hashes, for example a file added to `/var/www/html` on SOC-LIN-01 (rule 554, three hashes, six Cortex jobs). In the execution, `Merge` and `Summary Enrichments` run once, `cortex.results` holds all six results and `Create an alert` runs at most once. Use rule `100723` to check that **Get a report** reuses the job ID from **Execute**.
 
-**How to test it:** Use rule `100723`. Open an **Execute** result and note its job ID. In the matching **Get a report** node, confirm that the same ID is used. Seeing `Waiting` on the first check is normal. The workflow should wait and check that same ID again.
+![Summary Enrichments with all results in one batch](../images/n8n/<nr>-summary-enrichments-one-batch.png)
 
 #### Node: Summary Enrichments
 
@@ -599,7 +603,7 @@ The workflow returned five Cortex result entries, `processing.status: complete`,
 | A report remains `Waiting` or `InProgress` | The analyzer job has not finished yet | Continue polling with the same job ID within the configured limit |
 | Cortex reports `Service parameter is missing` | The analyzer job failed before returning a usable report | Inspect the Cortex job and analyzer worker configuration. This message alone does not indicate a missing Wazuh field |
 | VirusTotal returns `NotFoundError` with a completed job | The exact URL was not found in that lookup | Preserve the analyzer response. Do not interpret it as proof that the URL is benign |
-
+| `Merge`, `Summary Enrichments` and `Decision` run twice for one alert | A report needed another polling round and reached `Merge` after the first batch | Check that the initial Wait is connected between `Execute` and `Get a report`. If Cortex is slow, raise the wait time |
 ## 5. Score
 
 **Owner:** @arturesturemkuros
