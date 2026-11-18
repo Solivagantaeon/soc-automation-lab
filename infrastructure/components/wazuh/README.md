@@ -83,7 +83,7 @@ Expected result: a JSON response listing manager daemon statuses (authenticated 
 
 ### 2.6 Evidence and related files
 
-- ![Wazuh agent inventory](images/wazuh/04-wazuh-agents.png)
+- ![Wazuh agent inventory](../../images/wazuh/04-wazuh-agents.png)
 - Agent configuration: [`../detection/wazuh/agent-config/agent.conf`](../detection/wazuh/agent-config/agent.conf)
 - Related ingestion issue: [#4 — Wazuh agents, Sysmon and Suricata](https://github.com/Solivagantaeon/soc-automation-lab/issues/4)
 
