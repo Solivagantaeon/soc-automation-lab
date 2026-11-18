@@ -22,7 +22,7 @@ This document describes the deployed components of the isolated SOC Automation L
 | ATTACK | `10.10.30.0/24` | Kali test host |
 | VPN | `10.10.250.0/24` | Administrative access via WireGuard |
 
-Detailed network isolation and the build order are described in [lab setup](lab-setup.md). The [architecture diagram](architecture.md) and [communication matrix](#9-communication-matrix) follow the same component names and pathways.
+Detailed network isolation and the build order are described in [lab setup](architecture/lab-setup.md). The [architecture diagram](architecture/architecture.md) and [communication matrix](#9-communication-matrix) follow the same component names and pathways.
 
 ---
 
