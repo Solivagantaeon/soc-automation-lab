@@ -1,6 +1,6 @@
 # Architecture
 
-> Documentation baseline: 18 October 2026. The diagram and [communication matrix](components.md#9-communication-matrix) use the same component names and transport assumptions. Solid lines indicate observed ingestion or implemented/tested paths; dashed lines represent architecture/integration paths whose individual results are validated separately.
+> Documentation baseline: 18 October 2026. The diagram and [communication matrix](../README.md#2-communication-matrix) use the same component names and transport assumptions. Solid lines indicate observed ingestion or implemented/tested paths; dashed lines represent architecture/integration paths whose individual results are validated separately.
 
 ## Network segmentation
 
@@ -89,4 +89,4 @@ Workflow overview screenshot: [Shuffle editor](../images/shuffle/06-shuffle-runn
 
 ## Component reference
 
-Complete deployment, independent health checks, troubleshooting, and ports are documented in [`components.md`](components.md).
+Complete deployment, independent health checks, troubleshooting, and ports are documented in [`components.md`](../components/).
