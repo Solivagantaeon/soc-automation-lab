@@ -10,7 +10,7 @@ Sysmon provides detailed Windows activity records, including process creation, p
 | `SOC-WIN10-01` | `102` | `10.10.10.150` | Windows 10 | `15.15` | `4.14.9` |
 | `SOC-WIN11-AI` | `103` | `10.10.10.171` | Windows 11 | `15.21` | `4.14.9` |
 
-**Installation method:** native Sysmon Windows service, manually deployed with the `sysmon-modular` Balanced configuration. The Windows 10 host uses Sysmon schema 4.90; the domain controller and Windows 11 use schema 4.91. The deployment record, configuration hashes, and inspection commands are in [`../detection/sysmon/README.md`](../detection/sysmon/README.md).
+**Installation method:** native Sysmon Windows service, manually deployed with the `sysmon-modular` Balanced configuration. The Windows 10 host uses Sysmon schema 4.90; the domain controller and Windows 11 use schema 4.91. The deployment record, configuration hashes, and inspection commands are in [`../../../detection/sysmon/README.md`](../../../detection/sysmon/README.md).
 
 ### 4.2 Ports, authentication and APIs
 
@@ -69,8 +69,8 @@ For process-access detection rule `92910`, a sample involving `OneDrive.exe` acc
 
 ### 4.5 Evidence and related files
 
-- Sysmon deployment notes: [`../detection/sysmon/README.md`](../detection/sysmon/README.md)
-- Agent configuration: [`../detection/wazuh/agent-config/agent.conf`](../detection/wazuh/agent-config/agent.conf)
-- Sanitized sample record: [`../samples/alerts/wazuh/sysmon-92213-exe-in-temp.json`](../samples/alerts/wazuh/sysmon-92213-exe-in-temp.json)
+- Sysmon deployment notes: [`../../../detection/sysmon/README.md`](../../../detection/sysmon/README.md)
+- Agent configuration: [`../../../detection/wazuh/agent-config/agent.conf`](../../../detection/wazuh/agent-config/agent.conf)
+- Sanitized sample record: [`../../../samples/alerts/wazuh/sysmon-92213-exe-in-temp.json`](../../../samples/alerts/wazuh/sysmon-92213-exe-in-temp.json)
 
 ---
