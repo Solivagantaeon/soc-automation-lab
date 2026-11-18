@@ -31,8 +31,8 @@ Open the MISP UI and sign in locally; verify that the administration/status inte
 
 ### 7.4 Evidence and references
 
-- MISP configuration notes: [`../enrichment/misp/README.md`](../enrichment/misp/README.md)
-- Host inventory: [lab setup](lab-setup.md)
+- MISP configuration notes: [`../../../enrichment/misp/README.md`](../../../enrichment/misp/README.md)
+- Host inventory: [lab setup](../../architecture/lab-setup.md)
 - API reference: [MISP OpenAPI](https://www.misp.software/openapi/)
 
 ---
