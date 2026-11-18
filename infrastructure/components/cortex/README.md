@@ -39,8 +39,8 @@ An authenticated Cortex session can list available analyzers without Wazuh, Shuf
 
 ### 6.5 Evidence and references
 
-- Cortex configuration notes: [`../enrichment/cortex/README.md`](../enrichment/cortex/README.md)
-- Cortex and TheHive host: [lab setup](lab-setup.md)
-- Workflow connection: [architecture](architecture.md)
+- Cortex configuration notes: [`../../../enrichment/cortex/README.md`](../../../enrichment/cortex/README.md)
+- Cortex and TheHive host: [lab setup](../../architecture/lab-setup.md)
+- Workflow connection: [architecture](../../architecture/architecture.md)
 
 ---
