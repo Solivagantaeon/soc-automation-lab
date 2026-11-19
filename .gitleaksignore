@@ -15,3 +15,5 @@ dd06371ba8ecc388ae9a65fa54a0cdfbff5f3938:docs/runbooks/n8n-deploy.md:generic-api
 # 1d290e9: sanitized Wazuh n8n template placeholders, not live values
 1d290e9a37d571215117fb9c5ac2015cbc9b184d:detection/wazuh/integrations/n8n-integration.xml:xml-secret-element:7
 1d290e9a37d571215117fb9c5ac2015cbc9b184d:detection/wazuh/integrations/n8n-integration.xml:xml-secret-element:8
+# In ff03a1e, getTagNames lowercases a MISP tag name to check for duplicates.
+ff03a1e3ded191042b70b30eb1768c544e642993:soar/n8n/nodes/summary-enrichments.js:api-key-header:55
