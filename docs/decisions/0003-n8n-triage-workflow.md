@@ -229,7 +229,7 @@ Before sending observables to Cortex, the workflow splits them into individual i
 
 The workflow does not send file contents or filenames to Cortex. It can send a file hash.
 
-Each analyzer starts once and returns an ID for its analysis. `Get a report` uses that same ID to check the result. If the analysis is still running, n8n waits two seconds and checks again. It tries up to five times. If no result is ready, the summary marks the analysis as pending.
+Each analyzer starts once and returns an ID for its analysis. Before the first check, n8n waits 10 seconds, so that the reports of one alert reach `Merge` together. `Get a report` uses that same ID to check the result. If the analysis is still running, n8n waits two seconds and checks again. It tries up to five times. If no result is ready, the summary marks the analysis as pending.
 
 `Summary Enrichments` combines the MISP matches, Cortex results, skipped observables, and job status.
 
@@ -479,7 +479,7 @@ Build and test instructions, screenshots and the test alert are in the [n8n tria
 - **Report step:** run the test with the real credential on `Execute TeamCymru` and `TEST FAILED` on `Get a report TeamCymru`. Expect two records with node `Get a report TeamCymru`, one for each hash.
 - **AbuseIPDB:** run the test with two real public IPs and `TEST FAILED` on `Execute AbuseIPDB`. Expect one record per IP, and neither IP in `skipped_by_filter`. Redact the IPs in any screenshot.
 - **Score:** run the test alert through the Score stage and confirm that every failed service is listed under `scoring.sources.failed`, `coverage` is below `min_coverage_for_fp` and the verdict is `needs_review`.
-- **Known issue, slow reports:** in one run, the Team Cymru result for one of two hashes appeared in neither `cortex.results` nor `processing.failed`. The likely cause is that its report needed another polling round and the final `Merge` had already passed its data on. This has to be investigated, because a lost result also makes an alert look cleaner than it is.
+- **Results in two batches (#92, mitigated):** `Merge` passes data on each time an input receives items, so a report that needed another polling round started a second run of Scoring and Decision with part of the results. In the PoC (#92) this produced two `SOC_Audit` rows for one alert (scenario 1) and a TheHive alert without the MD5 evidence plus a rejected duplicate create request (scenario 3). A 10-second wait before the first report check makes all reports reach `Merge` together in normal conditions. It is not a full fix: a report that is still not ready after 10 seconds starts a second batch again. A full fix would poll with Cortex `GET /api/job/<id>/waitreport` in one request per job, or collect all results before `Merge`.
 - **Node names:** the Error Formatters find their nodes by name, so renaming a node requires updating the constants in the formatter. The VirusTotal report node is still named `Get a report UnshortenLink`. Renaming it to `Get a report VirusTotal` would match the analyzer it polls.
 
 ### 8. TheHive
