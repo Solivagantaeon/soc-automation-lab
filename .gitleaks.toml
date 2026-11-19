@@ -42,6 +42,13 @@ secretGroup = 1
 entropy = 3.5
 keywords = ["key", "token"]
 
+[[rules.allowlists]]
+description = "Case-insensitive MISP tag comparison in getTagNames"
+condition = "AND"
+paths = ['^soar/n8n/nodes/summary-enrichments\.js$']
+regexTarget = "line"
+regexes = ['(?m)^[ \t]*const key = trimmedName\.toLowerCase\(\);[ \t]*$']
+
 [[rules]]
 id = "url-secret-param"
 description = "Credential in a URL query (?apikey=, &token=, &password=, ...)"
