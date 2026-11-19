@@ -106,11 +106,11 @@ The prior multi-IP evidence is in [`../../samples/results/misp/multi-ip-wazuh-te
 
 ## n8n lab context — Issue #69
 
-This section documents the MISP branch of the n8n triage workflow. The branch searches normalized alert observables and returns matching attributes in `misp.unique_indicators`, together with `misp.attribute_count`. It runs alongside the Cortex enrichment branch.
+This section documents the MISP branch of the n8n triage workflow. The branch searches normalized alert observables and returns matching attributes in `misp.unique_indicators`, together with `misp.attribute_count`. It runs alongside the Cortex enrichment branch. The n8n query requests event tags with `includeEventTags: true`. The summary merges event and attribute tags and counts each attribute identity once. Multiple attributes in the same event may legitimately have the same value. The [regression results](../../docs/poc-live-workflow.md#regression-checks-on-17-november) show how Decision and TheHive used these fields.
 
 In the Issue #69 all-routes test, MISP returned two attributes for `1.1.1.1`. Both had `to_ids: false`; one carried a warninglist comment identifying the address as a known public DNS resolver. Review the attribute comments, `to_ids`, `disable_correlation`, event context, and warninglist information together. A MISP match or `to_ids` value alone does not establish a malicious or benign verdict.
 
-![n8n MISP Attribute Search and lab results](../../docs/images/n8n/69-misp-search-and-results.png)
+![MISP search requesting event tags for the normalized observable values](../../docs/images/n8n/96-misp-event-tags-search.png)
 
 The workflow configuration and end-to-end test are documented in the [n8n triage runbook](../../docs/runbooks/n8n-triage.md#4-misp-and-cortex).
 ## TheHive import filter
