@@ -203,11 +203,11 @@ This section documents the Cortex branch of the n8n triage workflow. After split
 | `hash` | `TeamCymruMHR_1_0` and `CIRCLHashlookup_1_1` |
 | `url` | `VirusTotal_GetReport_3_1` |
 
-Each analyzer is submitted once. The workflow polls its report using the job ID returned by the corresponding Execute node. Pending jobs wait two seconds before the next report check, with up to five polling attempts.
+Each branch processes one observable at a time. It starts the analyzer once per eligible observable and polls the returned job ID after a two-second wait. Reports and error records return through the branch merge to the same loop. Its done output releases the collected items to the final merge. The [polling runbook](../../docs/runbooks/n8n-triage.md#cortex-analyzer-execution-and-report-polling) describes the retry limit.
 
 ![Issue #69 Cortex eligibility and type routing](../../docs/images/n8n/69-normalize-dedup-routing.png)
 
-![Issue #69 Cortex analyzer and polling branches](../../docs/images/n8n/69-analyzer-polling-branches.png)
+![AbuseIPDB processing two observables in the corrected polling loop](../../docs/images/n8n/93-cortex-abuse-loop.png)
 
 The rule `100723` lab test exercised all four observable routes and returned five Cortex results. Maltiverse classified `soc-lab-postdns.example.org` as `neutral`; AbuseIPDB returned a whitelist indication and confidence score `0` for `1.1.1.1`; Team Cymru and CIRCL Hashlookup returned no known record for the test hash. VirusTotal completed its lookup but returned `NotFoundError` for the exact test URL. This is a completed lookup with no record, not a clean verdict.
 
