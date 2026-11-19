@@ -54,7 +54,8 @@ Only Caddy publishes ports. PostgreSQL, Redis and n8n itself are not reachable f
 | Path | Content |
 |---|---|
 | [`deploy/`](deploy/) | `compose.yml`, `Caddyfile`, `make-env.sh` (generates `.env` on the VM) and the queue smoke test workflow `soc-queue-smoke-test.json` |
-| `triage/` | triage workflow `SOC - Wazuh alert triage` (normalization, deduplication, MISP/Cortex enrichment, scoring, TheHive) - added in a separate PR |
+| [`nodes/`](nodes/) | JavaScript used in the triage workflow, including the enrichment summary and TheHive alert builder |
+| [`triage/enrichment-routing.json`](triage/enrichment-routing.json) | MISP request settings, Cortex loop connections and final merge inputs for the existing triage workflow. Use this reference with the [enrichment runbook](../../docs/runbooks/n8n-triage.md#4-misp-and-cortex). |
 
 ## Deployment
 
