@@ -1,0 +1,286 @@
+{
+  "source": "Selected fields and counts from saved n8n execution records on 2026-11-17. Per-node counts are entries in runData. Created object counts are successful output items.",
+  "before": {
+    "execution": "16684",
+    "workflowVersion": "57f015c5",
+    "mode": "manual",
+    "status": "error",
+    "nodeRuns": {
+      "Merge": 2,
+      "Summary Enrichments": 2,
+      "Scoring": 2,
+      "Decision": 2,
+      "Create an alert": 2
+    },
+    "failure": "The second Create an alert request reused the sourceRef."
+  },
+  "manualRuns": [
+    {
+      "execution": "16685",
+      "workflowVersion": "0aa15417",
+      "mode": "manual",
+      "status": "success",
+      "sourceRef": "soc-regression-20261117-930003",
+      "nodeRuns": {
+        "Merge": 1,
+        "Summary Enrichments": 1,
+        "Scoring": 1,
+        "Decision": 1,
+        "Create an alert": 1,
+        "Audit - Record Decision": 0
+      },
+      "cortex": {
+        "reports": 8,
+        "complete": 8,
+        "pending": 0,
+        "failed": 0
+      },
+      "misp": {
+        "rawRows": 9,
+        "distinctAttributeUuids": 9,
+        "attribute_count": 9
+      },
+      "decision": {
+        "outcome": "analyst_review",
+        "reason_code": "conflicting_evidence",
+        "has_benign_misp_tag": true,
+        "score": 59,
+        "verdict": "medium",
+        "coverage": 1,
+        "analysis_complete": true
+      },
+      "theHive": {
+        "createdAlerts": 1,
+        "createdObservables": 5
+      },
+      "dnsObservable": {
+        "value": "8.8.8.8",
+        "idsEnabledMispEvents": [
+          "1411"
+        ],
+        "mispEventsWithLabBenignTag": [
+          "1686"
+        ],
+        "abuseIpDbWhitelisted": true,
+        "storedTags": [
+          "ioc-verdict:unknown"
+        ],
+        "storedMessage": "Source field: data.dstip\nIOC verdict: unknown\nEvidence: MISP attribute to_ids: true; MISP tag soc-lab:benign; AbuseIPDB marked the IP as whitelisted"
+      }
+    },
+    {
+      "execution": "16686",
+      "workflowVersion": "0aa15417",
+      "mode": "manual",
+      "status": "success",
+      "sourceRef": "soc-regression-20261117-930004",
+      "nodeRuns": {
+        "Merge": 1,
+        "Summary Enrichments": 1,
+        "Scoring": 1,
+        "Decision": 1,
+        "Create an alert": 1,
+        "Audit - Record Decision": 0
+      },
+      "cortex": {
+        "reports": 9,
+        "complete": 9,
+        "pending": 0,
+        "failed": 0
+      },
+      "misp": {
+        "rawRows": 12,
+        "distinctAttributeUuids": 12,
+        "attribute_count": 12
+      },
+      "decision": {
+        "outcome": "analyst_review",
+        "reason_code": "conflicting_evidence",
+        "has_benign_misp_tag": true,
+        "score": 69,
+        "verdict": "medium",
+        "coverage": 1,
+        "analysis_complete": true
+      },
+      "theHive": {
+        "createdAlerts": 1,
+        "createdObservables": 6
+      },
+      "dnsObservable": {
+        "value": "8.8.8.8",
+        "idsEnabledMispEvents": [
+          "1411"
+        ],
+        "mispEventsWithLabBenignTag": [
+          "1686"
+        ],
+        "abuseIpDbWhitelisted": true,
+        "storedTags": [
+          "ioc-verdict:unknown"
+        ],
+        "storedMessage": "Source field: data.dstip\nIOC verdict: unknown\nEvidence: MISP attribute to_ids: true; MISP tag soc-lab:benign; AbuseIPDB marked the IP as whitelisted"
+      }
+    },
+    {
+      "execution": "16687",
+      "workflowVersion": "0aa15417",
+      "mode": "manual",
+      "status": "success",
+      "sourceRef": "soc-regression-20261117-930005",
+      "nodeRuns": {
+        "Merge": 1,
+        "Summary Enrichments": 1,
+        "Scoring": 1,
+        "Decision": 1,
+        "Create an alert": 1,
+        "Audit - Record Decision": 0
+      },
+      "cortex": {
+        "reports": 10,
+        "complete": 10,
+        "pending": 0,
+        "failed": 0
+      },
+      "misp": {
+        "rawRows": 9,
+        "distinctAttributeUuids": 9,
+        "attribute_count": 9
+      },
+      "decision": {
+        "outcome": "analyst_review",
+        "reason_code": "conflicting_evidence",
+        "has_benign_misp_tag": true,
+        "score": 87,
+        "verdict": "high",
+        "coverage": 1,
+        "analysis_complete": true
+      },
+      "theHive": {
+        "createdAlerts": 1,
+        "createdObservables": 7
+      },
+      "dnsObservable": {
+        "value": "8.8.8.8",
+        "idsEnabledMispEvents": [
+          "1411"
+        ],
+        "mispEventsWithLabBenignTag": [
+          "1686"
+        ],
+        "abuseIpDbWhitelisted": true,
+        "storedTags": [
+          "ioc-verdict:unknown"
+        ],
+        "storedMessage": "Source field: data.dstip\nIOC verdict: unknown\nEvidence: MISP attribute to_ids: true; MISP tag soc-lab:benign; AbuseIPDB marked the IP as whitelisted"
+      }
+    }
+  ],
+  "allRoutesExecution16687": [
+    {
+      "analyzer": "Maltiverse",
+      "submitted": 1,
+      "reportStatusCounts": {
+        "InProgress": 2,
+        "Success": 1
+      },
+      "doneItems": 1
+    },
+    {
+      "analyzer": "AbuseIPDB",
+      "submitted": 2,
+      "reportStatusCounts": {
+        "Success": 2,
+        "InProgress": 2
+      },
+      "doneItems": 2
+    },
+    {
+      "analyzer": "TeamCymru",
+      "submitted": 3,
+      "reportStatusCounts": {
+        "InProgress": 4,
+        "Success": 3
+      },
+      "doneItems": 3
+    },
+    {
+      "analyzer": "CirclHash",
+      "submitted": 3,
+      "reportStatusCounts": {
+        "InProgress": 6,
+        "Success": 3
+      },
+      "doneItems": 3
+    },
+    {
+      "analyzer": "VirusTotal",
+      "submitted": 1,
+      "reportStatusCounts": {
+        "InProgress": 2,
+        "Success": 1
+      },
+      "doneItems": 1
+    }
+  ],
+  "filenameInExecution16687": {
+    "value": "Updater.exe",
+    "mispEvent": "952",
+    "attributes": [
+      {
+        "id": "167686",
+        "uuid": "5b9667a0-1f88-4d8f-85e8-4904950d210f"
+      },
+      {
+        "id": "167695",
+        "uuid": "5b98e209-c518-4f5d-886d-4756950d210f"
+      },
+      {
+        "id": "167701",
+        "uuid": "5b98e338-23b0-4569-84d1-4062950d210f"
+      }
+    ],
+    "originalRenderedLines": 3,
+    "distinctOriginalLineTexts": 1
+  },
+  "localReplay": {
+    "method": "The proposed JavaScript nodes were run locally with saved Merge and upstream node outputs. One extra copy of attribute 167686 was added to each input. The lab execution was not rerun for the new display format.",
+    "results": [
+      {
+        "execution": "16685",
+        "mispRowsAfterAddingOneDuplicate": 10,
+        "attributeCount": 9,
+        "filenameLines": 1,
+        "visibleFilenameAttributeIds": [
+          "167686",
+          "167695",
+          "167701"
+        ],
+        "totalReferenceLines": 7
+      },
+      {
+        "execution": "16686",
+        "mispRowsAfterAddingOneDuplicate": 13,
+        "attributeCount": 12,
+        "filenameLines": 1,
+        "visibleFilenameAttributeIds": [
+          "167686",
+          "167695",
+          "167701"
+        ],
+        "totalReferenceLines": 10
+      },
+      {
+        "execution": "16687",
+        "mispRowsAfterAddingOneDuplicate": 10,
+        "attributeCount": 9,
+        "filenameLines": 1,
+        "visibleFilenameAttributeIds": [
+          "167686",
+          "167695",
+          "167701"
+        ],
+        "totalReferenceLines": 7
+      }
+    ]
+  }
+}
