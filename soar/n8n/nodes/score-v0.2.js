@@ -1,7 +1,7 @@
 /**
  * SOC - Alert Scoring
  * Stage: Scoring (after "Summary Enrichments", before "Create an alert")
- * Version: 0.2.2
+ * Version: 0.2.3
  *
  * Input:  output of Summary Enrichments (alert, misp, cortex, processing)
  *         optionally with a "scoring_config" field added by an upstream
@@ -24,10 +24,12 @@
  *   its verdict is needs_review and input_problems explains why
  * - CIRCL "known" cancels a hash's weak Team Cymru MHR detections and adds
  *   the known-good discount, but a strong MHR detection overrides CIRCL
+ * - a MISP match on a weak attribute type (e.g. filename) gets a separate,
+ *   lower weight than a match on a strong type (e.g. a hash or an IP)
  */
 
 const DEFAULT_CONFIG = {
-  version: '0.2',
+  version: '0.2.3',
 
   rule_level_multiplier: 2, // Wazuh rule level 0-15 -> 0-30 points
 
@@ -38,7 +40,24 @@ const DEFAULT_CONFIG = {
   bands: { high: 70, medium: 40, low: 20 },
 
   sources: {
-    misp: { enabled: true, to_ids: 30, match: 15 },
+    misp: {
+      enabled: true,
+
+      // points for a match on a strong attribute type (hash, IP, domain, URL)
+      to_ids: 30, // the attribute has to_ids = true
+      match: 15, // any other match
+
+      // points for a match on a weak attribute type
+      to_ids_weak: 8,
+      match_weak: 4,
+
+      // MISP attribute types that are weak indicators on their own: a common
+      // value (e.g. "Updater.exe") is easily shared by harmless files.
+      // Comparison ignores case. Composite types that contain a hash
+      // (e.g. "filename|sha256") are not listed, so they stay strong, and so
+      // does every type that is not on this list.
+      weak_types: ['filename', 'mutex', 'regkey', 'user-agent', 'comment'],
+    },
 
     abuseipdb: {
       enabled: true,
@@ -132,6 +151,14 @@ function mergeConfig(defaults, override, path, warnings) {
         out[key] = mergeConfig(def, val, where, warnings);
       } else {
         warnings.push(`${where}: expected an object, default used`);
+        out[key] = def;
+      }
+    } else if (Array.isArray(def) && typeof def[0] === 'string') {
+      // list of names (an empty list is allowed and means "none")
+      if (Array.isArray(val) && val.every(v => typeof v === 'string')) {
+        out[key] = val.map(v => v.trim().toLowerCase()).filter(v => v !== '');
+      } else {
+        warnings.push(`${where}: expected a list of text values, default used`);
         out[key] = def;
       }
     } else if (Array.isArray(def)) {
@@ -451,25 +478,34 @@ function scoreAlert(data, cfg, configWarnings, inputProblems) {
 
   // --- 4. MISP ---------------------------------------------------
   if (active('misp')) {
-    let mispPoints = 0;
-    let mispReason = null;
+    const weakTypes = new Set(src.misp.weak_types);
+
+    // the indicator with the most points represents MISP in the score
+    let best = null;
 
     for (const ind of data.misp?.unique_indicators ?? []) {
-      const attrs = ind.attributes ?? [];
-      const hasToIds = attrs.some(a => a.to_ids === true);
-      const points = hasToIds ? src.misp.to_ids : src.misp.match;
+      // "type" is the MISP attribute type (md5, ip-dst, filename, ...)
+      const type = String(ind.type ?? '').trim().toLowerCase() || 'unknown';
+      const weak = weakTypes.has(type);
+      const hasToIds = (ind.attributes ?? []).some(a => a.to_ids === true);
 
-      if (points > mispPoints) {
-        mispPoints = points;
+      const points = weak
+        ? (hasToIds ? src.misp.to_ids_weak : src.misp.match_weak)
+        : (hasToIds ? src.misp.to_ids : src.misp.match);
 
-        mispReason = hasToIds
-          ? `MISP hit (to_ids) for ${ind.value}`
-          : `MISP hit for ${ind.value}`;
+      if (!best || points > best.points) {
+        best = { points, type, weak, hasToIds, value: ind.value };
       }
     }
 
-    if (mispPoints > 0) {
-      add('misp', mispPoints, mispReason, undefined);
+    if (best && best.points > 0) {
+      add(
+        'misp',
+        best.points,
+        `MISP hit${best.hasToIds ? ' (to_ids)' : ''} on ` +
+          `${best.weak ? 'weak ' : ''}type ${best.type} for ${best.value}`,
+        best.value
+      );
     }
   }
 
