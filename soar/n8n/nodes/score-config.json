@@ -1,6 +1,6 @@
 {
   "scoring_config": {
-    "version": "0.2",
+    "version": "0.2.3",
     "rule_level_multiplier": 2,
     "min_coverage_for_fp": 0.6,
     "bands": {
@@ -12,7 +12,10 @@
       "misp": {
         "enabled": true,
         "to_ids": 30,
-        "match": 15
+        "match": 15,
+        "to_ids_weak": 8,
+        "match_weak": 4,
+        "weak_types": ["filename", "mutex", "regkey", "user-agent", "comment"]
       },
       "abuseipdb": {
         "enabled": true,
