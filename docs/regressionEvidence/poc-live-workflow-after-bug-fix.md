@@ -28,7 +28,7 @@ A regression check repeats the condition that exposed a bug and inspects the out
 
 </details>
 
-*Used** 
+**Used**
 workflow version: 
  -   `0aa15417`
 related:
@@ -46,7 +46,7 @@ related:
 
 **Result.** Event `1686` supplied `soc-lab:benign`. The Decision flag was `true` in all three editor runs. [MISP request in n8n](../images/n8n/96-misp-event-tags-search.png) · [Recorded Decision fields](../../samples/results/n8n/enrichment-regression.json)
 
-*Used** 
+**Used**
 workflow version: 
  -   `0aa15417`
 related:
@@ -70,7 +70,7 @@ related:
 
 </details>
 
-*Used** 
+**Used**
 workflow version: 
  -   `0aa15417`
 related:
