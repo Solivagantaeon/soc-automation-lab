@@ -216,7 +216,7 @@ The workflow checks Wazuh alert observables against MISP and Cortex. MISP looks 
 
 #### Decision
 
-MISP searches the normalized observables and returns matching attributes with their event context.
+MISP searches normalized observables with `includeEventTags: true`. The summary merges attribute and event tags before Decision reads them. It counts each attribute once, by UUID, by attribute ID if the UUID is missing, or by event ID, type and value if both are missing.
 
 Before sending observables to Cortex, the workflow splits them into individual items, removes duplicates, and checks whether each item can be analyzed. Eligible items go to the matching analyzer. Skipped items are kept with a reason.
 
@@ -229,7 +229,7 @@ Before sending observables to Cortex, the workflow splits them into individual i
 
 The workflow does not send file contents or filenames to Cortex. It can send a file hash.
 
-Each analyzer starts once and returns an ID for its analysis. Before the first check, n8n waits 10 seconds, so that the reports of one alert reach `Merge` together. `Get a report` uses that same ID to check the result. If the analysis is still running, n8n waits two seconds and checks again. It tries up to five times. If no result is ready, the summary marks the analysis as pending.
+The [second EICAR run in the live PoC](../poc-live-workflow.md#issues-found-in-the-first-run) used a ten-second initial wait. Each analyzer branch now uses a one-item loop. It starts one Cortex job per eligible observable, waits two seconds and polls the same job ID until it has a terminal result or reaches its limit. The branch merge returns a completed report, the last pending report at the polling limit, or an error record to its loop. The loop's done output sends the branch's collected records to the final merge. This prevents a late report for the same alert from starting a second decision. The [polling settings in runbook §4](../runbooks/n8n-triage.md#cortex-analyzer-execution-and-report-polling) show how the retry limit is applied.
 
 `Summary Enrichments` combines the MISP matches, Cortex results, skipped observables, and job status.
 
@@ -254,8 +254,9 @@ The workflow finished with no pending or failed jobs. VirusTotal did not find th
 
 MISP returned two attributes for `1.1.1.1`. Both had `to_ids: false`. One included a warninglist comment identifying it as a known public DNS resolver. These attributes provide context, not a standalone verdict.
 
-The [n8n triage runbook](../runbooks/n8n-triage.md#4-misp-and-cortex) documents the node settings and test steps. The [MISP README](../../enrichment/misp/README.md#n8n-lab-context--issue-69) and [Cortex README](../../enrichment/cortex/README.md#n8n-cortex-workflow--issue-69) describe the lab context.
+On 17 November, the final merge ran once in each of three editor runs, including one with ten Cortex jobs. The [delayed-report check (#93)](../regressionEvidence/poc-live-workflow-after-bug-fix.md#93-one-decision-per-alert) records the node counts. The [event-tag check (#96)](../regressionEvidence/poc-live-workflow-after-bug-fix.md#96-misp-event-tags-reach-decision) follows the MISP tag into Decision.
 
+The [n8n triage runbook](../runbooks/n8n-triage.md#4-misp-and-cortex) documents the node settings and test steps. The [MISP README](../../enrichment/misp/README.md#n8n-lab-context--issue-69) and [Cortex README](../../enrichment/cortex/README.md#n8n-cortex-workflow--issue-69) describe the lab context.
 
 ### 5. Score
 
@@ -510,6 +511,8 @@ The policy selects the most restrictive explicit TLP and PAP markings found on t
 The builder uses the original Wazuh alert ID as `sourceRef`, with type `external` and source `Wazuh`. It validates that `sourceRef` is present and no longer than 128 characters. TheHive rejects a repeated `(type, source, sourceRef)` combination in the same organization, so a rerun must use a fresh source alert ID or handle the existing alert explicitly.
 
 The alert description includes the Decision outcome and rationale, score, verdict, coverage, analysis status, asset and user context, source alert and rule details, MITRE ATT&CK data, IOC verdicts, MISP references, Cortex summaries, and unavailable or pending sources. Only eligible external IP, domain, URL, and hash observables are attached. Internal addresses and hostnames are excluded. Each observable carries its own IOC verdict, evidence message, and the alert's TLP/PAP markings.
+
+For an individual IOC, an IDS-enabled MISP attribute counts as adverse evidence under the lab policy. An AbuseIPDB whitelist entry for that same IOC counts as benign evidence. The builder records both and marks the IOC `unknown` when they conflict. Matched attributes retain their own IDs even when a single reference line can describe their shared evidence. The [stored IP verdict (#97)](../regressionEvidence/poc-live-workflow-after-bug-fix.md#97-thehive-shows-conflicting-evidence-for-an-ip) and [local reference-format replay (#98)](../regressionEvidence/poc-live-workflow-after-bug-fix.md#98-misp-references-keep-distinct-attributes) show the two outputs. [Runbook §8](../runbooks/n8n-triage.md#8-thehive) documents the alert builder and observable nodes.
 
 TheHive severity is calculated after Decision by `Build TheHive Alert`:
 

@@ -31,6 +31,39 @@ function compactObservable(item) {
   });
 }
 
+function getTagNames(...tagLists) {
+  const names = [];
+  const seen = new Set();
+
+  for (const tagList of tagLists) {
+    const entries = Array.isArray(tagList)
+      ? tagList
+      : tagList === undefined || tagList === null
+        ? []
+        : [tagList];
+
+    for (const tag of entries) {
+      const name = typeof tag === 'string'
+        ? tag
+        : tag?.name;
+
+      if (typeof name !== 'string' || name.trim() === '') {
+        continue;
+      }
+
+      const trimmedName = name.trim();
+      const key = trimmedName.toLowerCase();
+
+      if (!seen.has(key)) {
+        seen.add(key);
+        names.push(trimmedName);
+      }
+    }
+  }
+
+  return names;
+}
+
 const rawObservables = Array.isArray(alert.observables)
   ? alert.observables
   : [];
@@ -44,9 +77,11 @@ const isAnalyzerRow = item =>
     item.analyzerName
   );
 
-const mispRows = rows.filter(item =>
-  item.Event && item.value !== undefined
-);
+function isMispAttribute(item) {
+  return item.value !== undefined && (item.Event != null || item.event_id != null);
+}
+
+const mispRows = rows.filter(isMispAttribute);
 
 const cortexRows = rows.filter(isAnalyzerRow);
 
@@ -55,7 +90,7 @@ const skippedIpRows = rows.filter(item => {
     return true;
   }
 
-  if (item.Event || isAnalyzerRow(item)) {
+  if (isMispAttribute(item) || isAnalyzerRow(item)) {
     return false;
   }
 
@@ -71,9 +106,59 @@ const skippedIpRows = rows.filter(item => {
   return type.includes('ip') && value !== undefined && value !== null;
 });
 
-const groupedMisp = new Map();
+// Deduplicate repeated MISP references by attribute UUID, then ID.
+// If neither exists, use event ID + attribute type + value.
+const uniqueMispRowsByKey = new Map();
+// Some copies of the same attribute contain only the numeric ID.
+// Resolve those even when the row carrying both identifiers arrives later.
+const uuidById = new Map();
+for (const item of mispRows) {
+  const id = String(item.id ?? '').trim();
+  const uuid = String(item.uuid ?? '').trim().toLowerCase();
+  if (id && uuid) uuidById.set(id, uuid);
+}
 
 for (const item of mispRows) {
+  const attributeId = String(item.id ?? '').trim();
+  const uuid = String(item.uuid ?? '').trim().toLowerCase() || uuidById.get(attributeId);
+  const eventId = String(item.Event?.id ?? item.event_id ?? '').trim();
+  const type = String(item.type ?? 'unknown').trim();
+  const value = String(item.value ?? '').trim();
+
+  let attributeKey;
+  if (uuid) attributeKey = `uuid:${uuid}`;
+  else if (attributeId) attributeKey = `id:${attributeId}`;
+  else if (eventId) attributeKey = `fallback:${eventId}\u0000${type.toLowerCase()}\u0000${value}`;
+  else attributeKey = Symbol(); // Missing identity and event: preserve this row.
+
+  const tags = getTagNames(
+    item.Tag,
+    item.Event?.Tag,
+    item.Event?.Tags
+  );
+
+  const existing = uniqueMispRowsByKey.get(attributeKey);
+
+  if (existing) {
+    existing.tags = getTagNames(existing.tags, tags);
+    if (!existing.id && attributeId) existing.id = item.id;
+    if (existing.item.to_ids == null && item.to_ids != null) {
+      existing.item = { ...existing.item, to_ids: item.to_ids };
+    }
+  } else {
+    uniqueMispRowsByKey.set(attributeKey, {
+      item,
+      tags,
+      id: item.id,
+      uuid,
+    });
+  }
+}
+
+const uniqueMispRows = [...uniqueMispRowsByKey.values()];
+const groupedMisp = new Map();
+
+for (const { item, tags, id, uuid } of uniqueMispRows) {
   const type = item.type ?? 'unknown';
   const value = item.value ?? '';
   const key = `${type}\u0000${value}`;
@@ -88,16 +173,14 @@ for (const item of mispRows) {
 
   const threatLevel = item.Event?.ThreatLevel;
 
-  const tags = Array.isArray(item.Tag)
-    ? item.Tag.map(tag => tag.name).filter(Boolean)
-    : [];
-
   groupedMisp.get(key).attributes.push(clean({
+    uuid,
+    id,
     comment: item.comment,
     to_ids: item.to_ids,
     disable_correlation: item.disable_correlation,
     event: clean({
-      id: item.Event?.id,
+      id: item.Event?.id ?? item.event_id,
       title: item.Event?.info,
       date: item.Event?.date,
       threat_level:
@@ -459,7 +542,7 @@ return [{
     }),
 
     misp: {
-      attribute_count: mispRows.length,
+      attribute_count: uniqueMispRows.length,
       unique_indicators: [...groupedMisp.values()],
     },
 
