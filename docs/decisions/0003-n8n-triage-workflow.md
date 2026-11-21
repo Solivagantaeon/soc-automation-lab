@@ -277,7 +277,7 @@ The score is a sum of points limited to 0-100:
 | Part | Default points |
 |---|---|
 | Wazuh rule level | Level x 2, at most 30 |
-| MISP | 30 for an attribute with `to_ids: true`, otherwise 15 for any match |
+| MISP | Strong attribute types: 30 with `to_ids: true`, otherwise 15. Weak types (`filename`, `mutex`, `regkey`, `user-agent`, `comment`): 8 with `to_ids: true`, otherwise 4 |
 | AbuseIPDB | 25 from confidence 75, 12 from 25, -10 if whitelisted |
 | Maltiverse | `malicious` 20, `suspicious` 10, `whitelist` -5, historical matches only 5 |
 | VirusTotal | 25 from 10 detections, 15 from 3, 8 from 1 |
@@ -287,6 +287,7 @@ The score is a sum of points limited to 0-100:
 The stage follows these rules:
 
 - Each source gives one entry. When it returned results for several observables, the entry with the most points is used.
+- MISP points depend on the attribute type as well as on `to_ids`. A match on a weak type, such as a file name, gives fewer points than a match on a hash, IP address, or domain. Composite types that contain a hash (for example `filename|sha256`) and unknown types are treated as strong. The list of weak types and both weights are part of `scoring_config`.
 - A hash known in CIRCL makes the Team Cymru MHR detections for that hash count as 0, unless the MHR detection is 50% or more. A strong MHR detection overrides the CIRCL status, and the CIRCL discount is not applied to that hash.
 - The score gives a verdict: `high` from 70, `medium` from 40, `low` from 20, otherwise `likely_false_positive`.
 - Coverage is the share of sources that answered. A source with both a result and an error counts as half, a pending analyzer counts as not answered, and a disabled source is left out.
@@ -307,6 +308,8 @@ A source that failed says nothing about the alert. Counting it as 0 points would
 
 The CIRCL rule comes from the lab data. An empty file is harmless, but MHR reports a detection rate for its hash (37%). Without the rule, such a hash would add points. CIRCL "known" only says that a file is in a reference collection, not that it is harmless: in the n8n test both hashes of the EICAR test file were known in CIRCL, while MHR reported 93% detections for them. For this reason a strong MHR detection (50% or more, configurable) overrides the CIRCL status.
 
+MISP attributes of different types carry different evidence. A file name such as `Updater.exe` is shared by legitimate software, so a match alone says little, while a match on a hash or an IP address is specific. Giving both 30 points would let a common file name raise an alert to the `medium` band. The weights for weak types (8 and 4) are a starting point, like all other weights.
+
 With the default weights, the rule level alone (at most 30) stays below the `medium` band (40). A `medium` or `high` verdict needs at least one enrichment signal.
 
 The rules are in a separate node because the weights are expected to change after the first replay of real alerts, and the person who tunes them should not have to edit code. Checking the config matters for the same reason: a typo in a key would otherwise change decisions without anyone noticing.
@@ -326,8 +329,12 @@ The scoring logic was run outside n8n on the `Summary Enrichments` output of two
 | 5 | MHR 80%, no CIRCL record | Score 25, `low`, coverage 1 |
 | 6 | Item that contains only `scoring_config`, without alert data | Score 0, `needs_review`, coverage 0, `input_problems` lists the three missing parts |
 | 7 | Level 12, Maltiverse `malicious`, VirusTotal 2/91, two hashes known in CIRCL with MHR 93% (the EICAR test file in the lab), MISP failed | Score 67, `medium`, coverage 0.8. The CIRCL discount is not applied and the MHR detection counts |
+| 8 | Level 7, MISP match on a `filename` attribute with `to_ids: true`, nothing else | Score 22, `low`. MISP gives 8 points |
+| 9 | Level 7, MISP match on an `md5` attribute with `to_ids: true`, nothing else | Score 44, `medium`. MISP gives 30 points |
 
-All seven cases gave the stated results on v0.2.2. In addition, 34 automated checks passed: the default config, overriding one weight, switching a source off, the config checks (unknown key, wrong type, wrong bands, unsorted and invalid tiers), the input check (an item without alert data), and the CIRCL exception (weak, strong, and mixed hashes, and the exception switched off).
+All nine cases gave the stated results on v0.2.3 when run outside n8n. In addition, 58 automated checks of the config passed: the default config, overriding one weight, switching a source off, the config checks (unknown key, wrong type, wrong bands, unsorted and invalid tiers, the list of weak types), the input check (an item without alert data), the CIRCL exception (weak, strong, and mixed hashes, and the exception switched off), and the MISP attribute types (weak, strong, composite, unknown, and changed weights). A further 21 checks fed the real `Summary Enrichments` code into `Scoring`, including MISP rows that arrive twice and attributes with `to_ids: false`.
+
+In n8n, tests 1-7 were run on v0.2.1 and v0.2.2. For rule `92213`, Scoring returned 67 (`medium`) with coverage 0.8 and MISP listed as failed. The alert contained two hashes, but `cortex.results` held results for only one of them, so Test 7 is not verified for both hashes. The weak-type rule (tests 8 and 9) has not been run in n8n yet.
 
 These tests validate the scoring logic. They do not validate a full workflow run in which every enrichment source answers, and the live weights have not been compared with real alerts.
 
@@ -335,14 +342,14 @@ The [n8n triage runbook](../runbooks/n8n-triage.md#5-score) documents the node s
 
 #### Follow-up
 
-- The first test runs showed enrichment errors that lower coverage until they are fixed: MISP `Unsupported protocol localhost:`, AbuseIPDB `Invalid URL`, and Team Cymru and CIRCL `Paired item data ... is unavailable` when an alert has two hashes. These belong to the MISP and Cortex stage.
+- The first test runs showed enrichment errors that lower coverage until they are fixed: MISP `Unsupported protocol localhost:`, AbuseIPDB `Invalid URL`, and Team Cymru and CIRCL `Paired item data ... is unavailable` when an alert has two hashes. These belong to the MISP and Cortex stage. Failure handling (stage 7) addresses the paired item errors; its result should be checked in the `scoring.sources.failed` list of a real run.
+- The weak MISP types and their weights (8 and 4) are a starting point and need the team's agreement. A MISP match with `to_ids: false` (for example a warning list) still gives 15 points on a strong type.
 - Hashes are currently not sent to VirusTotal, so a hash gets signals only from Team Cymru MHR and CIRCL.
 - The CIRCL discount applies once per alert, not per hash. An alert with one known and one unknown hash gets -10 for both.
 - Coverage counts only sources that returned a result or an error. A branch that returns nothing at all does not lower it, so every node must report its failures.
 - With the default weights, an alert at rule level 15 with clean enrichment gets only `low`. The team should decide whether high rule levels need a minimum verdict.
-- The Decision stage must map the verdicts (`high`, `medium`, `low`, `likely_false_positive`, `needs_review`) to its three outcomes.
-
-
+- The Decision stage reads the `Scoring` output and treats coverage below 1, `config_warnings`, and `input_problems` as an incomplete analysis, so it never closes such an alert automatically.
+- Wazuh forwards only alerts of level 12 or higher, so the rule level part is always at least 24 points. Auto-close with `likely_false_positive` (below 20) therefore needs strong negative evidence, such as an AbuseIPDB whitelist or a CIRCL known hash. The team should confirm that this is intended.
 
 ### 6. Decision
 

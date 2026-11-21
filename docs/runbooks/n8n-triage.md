@@ -671,6 +671,8 @@ flowchart TD
 | `min_coverage_for_fp` | Lowest coverage at which a low score may be called a false positive | `0.6` |
 | `sources.<name>.enabled` | Turns a source on or off. A disabled source gives no points and does not count in coverage | `true` |
 | `sources.misp.to_ids`, `sources.misp.match` | Points for a MISP attribute with `to_ids: true`, and for any other match | `30`, `15` |
+| `sources.misp.to_ids_weak`, `sources.misp.match_weak` | The same two cases, for a match on a weak attribute type | `8`, `4` |
+| `sources.misp.weak_types` | MISP attribute types that are weak indicators (a list of text values, compared in lower case). Every other type, including composite types such as `filename\|sha256` and unknown types, gets the normal points | `filename`, `mutex`, `regkey`, `user-agent`, `comment` |
 | `sources.abuseipdb.tiers`, `sources.abuseipdb.whitelisted` | Points by abuse confidence score, and points for a whitelisted IP | `>=75: 25`, `>=25: 12`, `-10` |
 | `sources.maltiverse.malicious`, `suspicious`, `historical_only`, `whitelist` | Points by classification | `20`, `10`, `5`, `-5` |
 | `sources.virustotal.tiers` | Points by number of detecting engines | `>=10: 25`, `>=3: 15`, `>=1: 8` |
@@ -710,7 +712,7 @@ The `Scoring` node checks the config before using it. An unknown key, a value of
 |---|---|
 | `alert.rule.level` | Rule level points |
 | `cortex.results[]` (`analyzer`, `observable`, `status`, `summary`) | Points from AbuseIPDB, Maltiverse, VirusTotal, Team Cymru MHR, and CIRCL. Only results with status `complete` give points |
-| `misp.unique_indicators[].attributes[].to_ids` | MISP points |
+| `misp.unique_indicators[].type`, `.value`, `.attributes[].to_ids` | MISP points. The type decides whether the match is weak or strong, `to_ids` decides the level inside that group |
 | `processing.failed[]`, `processing.pending[]` | Coverage |
 
 **Points (default values):**
@@ -718,14 +720,14 @@ The `Scoring` node checks the config before using it. An unknown key, a value of
 | Source | What is read | Points |
 |---|---|---|
 | Rule level | `alert.rule.level` | Level x 2, at most 30 |
-| MISP | `to_ids` of the matched attributes | 30 if any attribute has `to_ids: true`, otherwise 15 for any match |
+| MISP | Type and `to_ids` of the matched attributes | Strong types (hashes, IP addresses, domains, URLs, and others): 30 with `to_ids: true`, otherwise 15. Weak types (`filename`, `mutex`, `regkey`, `user-agent`, `comment`): 8 with `to_ids: true`, otherwise 4 |
 | AbuseIPDB | Abuse confidence score, `whitelisted` | 25 from score 75, 12 from score 25, -10 if whitelisted |
 | Maltiverse | Classification, historical matches | `malicious` 20, `suspicious` 10, `whitelist` -5; other classifications with historical matches 5 |
 | VirusTotal | `GetReport` value `detections/engines` | 25 from 10 detections, 15 from 3, 8 from 1 |
 | Team Cymru MHR | `detection_pct` | 15 from 50%, 8 from 20%. Ignored when CIRCL lists the same hash as known and the detection is below 50% |
 | CIRCL Hashlookup | `Result` equal to `known` | -10. Not applied to a hash whose MHR detection is 50% or more |
 
-Each source gives one entry. When a source returned results for several observables, the entry with the most points is used. The total is rounded and limited to 0-100.
+Each source gives one entry. When a source returned results for several observables, the entry with the most points is used. For MISP this means that a strong match wins over a weak one in the same alert. The total is rounded and limited to 0-100.
 
 **Verdicts:**
 
@@ -767,6 +769,8 @@ The scoring logic was run on the `Summary Enrichments` output of two lab test al
 | 5 | MHR 80%, no CIRCL record | Score 25, `low`, coverage 1 |
 | 6 | Item that contains only `scoring_config`, without alert data | Score 0, `needs_review`, coverage 0, `input_problems` lists the three missing parts |
 | 7 | Level 12, Maltiverse `malicious`, VirusTotal 2/91, two hashes known in CIRCL with MHR 93% (the EICAR test file in the lab), MISP failed | Score 67, `medium`, coverage 0.8. The CIRCL discount is not applied and the MHR detection counts |
+| 8 | Level 7, MISP match on a `filename` attribute (`Updater.exe`) with `to_ids: true`, nothing else | Score 22, `low`. MISP gives 8 points, reason `MISP hit (to_ids) on weak type filename for Updater.exe` |
+| 9 | Level 7, MISP match on an `md5` attribute with `to_ids: true`, nothing else | Score 44, `medium`. MISP gives 30 points |
 
 Config tests:
 
@@ -776,10 +780,12 @@ Config tests:
 | `sources.virustotal.enabled` set to `false` | Test 2 gives score 44 and coverage 0.25 |
 | `sources.teamcymru.ignore_when_circl_known` set to `false` | Test 1 gives score 8 |
 | `sources.circl.known_good_unless_mhr_pct` set to `101` | Test 7 gives score 42, because the exception is off |
+| `sources.misp.weak_types` set to `[]` | Test 8 gives score 44, because `filename` is now a strong type |
+| `sources.misp.to_ids_weak` set to `0` | Test 8 gives score 14, with no MISP entry in the breakdown |
 | Key `sources.maltivers` (typo) | Score unchanged, warning `unknown setting ignored` |
 | `rule_level_multiplier` set to `"abc"` | Default used, warning in `config_warnings` |
 
-All seven tests gave the expected results on v0.2.2. In addition, 34 automated checks passed, including a check that the shipped `score-config.json` gives the same results as the built-in defaults.
+All nine tests gave the expected results on v0.2.3 when run outside n8n. In addition, 58 automated checks of the config (`test_config.js`) and 21 end-to-end checks that feed the real `Summary Enrichments` code into `Scoring` passed, including a check that the shipped `score-config.json` gives the same results as the built-in defaults. The weak-type rule (tests 8 and 9) has not been run in n8n yet.
 
 **Observed n8n output:** In the captured run for rule `92213`, Scoring returned `67` (`medium`) with coverage `0.8`; MISP was listed as failed. Both MD5 and SHA-256 were present in the alert, but the supplied `cortex.results` contained results only for the MD5. This screenshot shows the Scoring result for the enrichment data that arrived; it does not verify Cortex results for both hashes in Test 7.
 
@@ -796,9 +802,10 @@ All seven tests gave the expected results on v0.2.2. In addition, 34 automated c
 | Changing the config has no effect | `Scoring Config` is not connected before `Scoring`, or it does not keep the input fields, so `scoring_config` is missing and the built-in defaults are used without a warning | Check the connection and the **Include Other Input Fields** option. Confirm that `scoring_config` appears in the `Scoring` input |
 | Every alert gets score 0, rule level 0, verdict `needs_review`, and `input_problems` is listed | `Scoring Config` does not pass the input fields on, so `Scoring` receives only `scoring_config` | In `Scoring Config` turn on **Include Other Input Fields** (or **Include in Output: All Input Fields**). The output of `Scoring Config` must show `alert`, `misp`, `cortex`, and `processing` next to `scoring_config` |
 | A hash has MHR detections but gives 0 points | CIRCL lists the hash as known, the MHR detection is below `known_good_unless_mhr_pct` (50%), and `ignore_when_circl_known` is `true` | This is expected for weak detections. Lower `known_good_unless_mhr_pct`, or set `ignore_when_circl_known` to `false`, to count the MHR detections anyway |
+| A MISP match gives only 8 or 4 points | The matched attribute is of a weak type (for example `filename`) | This is expected. Change `sources.misp.weak_types`, `to_ids_weak`, or `match_weak` to adjust it. The reason in the breakdown names the type |
 | Code node reports an error when using `$input.all()` | The node is not configured to process all input items | Set Mode to `Run Once for All Items` |
 
-## 6. Decision
+# 6. Decision
 
 **Owner:** @MKonrad-afk
 **What it does:** Combines the score with the asset inventory and returns `closed`, `analyst_review`, or `malicious` with a reason.
