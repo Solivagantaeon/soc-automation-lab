@@ -378,7 +378,7 @@ The screenshots show the workflow with the new nodes, the Dedup output for a dup
 
 ![Issue #69 n8n enrichment workflow overview](../images/n8n/69-workflow-overview.png)
 
-*Figure. The full workflow, including its separate MISP and Cortex enrichment branches.*
+*Issue #69 shows where enrichment starts. The polling settings and screenshots below show the later Cortex loops.*
 
 ### MISP branch
 
@@ -388,21 +388,24 @@ The screenshots show the workflow with the new nodes, the Dedup output for a dup
 
 **How to build it:**
 
-1. Add the MISP **Get a filtered list of attributes** node to the branch from `Normalize`.
+1. Connect the true output of `New Alert?` to the MISP node **Get a filtered list of attributes**.
 2. Select the existing MISP credential.
 3. Set **Resource** to `Attribute` and **Operation** to `Search`.
 4. Turn on **Use JSON to Specify Fields**.
 5. In the **JSON** field, enter this expression:
 
-   `{{ { "value": $json.observables.map(observable => observable.data) } }}`
+   ```javascript
+   {{ {
+     "value": $json.observables.map(observable => observable.data),
+     "includeEventTags": true
+   } }}
+   ```
 
-   This collects the `data` value from every item in the normalized `observables` array and passes the values to MISP as its `value` search filter. The expression uses the alert's observable values at runtime.
+6. Connect the success output to input 1 of the final `Merge`. Keep the error output connected to `Error Formatter - MISP`, which feeds input 9 of that merge.
 
-6. Keep the MISP branch connected directly to `Normalize`, independently of the Cortex eligibility and analyzer routes.
+![MISP Attribute Search with includeEventTags enabled](../images/n8n/96-misp-event-tags-search.png)
 
-![MISP Attribute Search and lab results](../images/n8n/69-misp-search-and-results.png)
-
-**Figure:** MISP Attribute Search configuration and matching lab results.
+*Execution 16687. MISP returned nine rows for the alert’s observables. The request asks MISP to include event tags on matched attributes.*
 
 | Setting | Value |
 |---|---|
@@ -410,7 +413,7 @@ The screenshots show the workflow with the new nodes, the Dedup output for a dup
 | Resource | `Attribute` |
 | Operation | `Search` |
 | Use JSON to Specify Fields | On |
-| JSON search filter | `value` mapped from `$json.observables[].data` |
+| JSON search filter | `value` from the normalized observables and `includeEventTags: true` |
 | Output used by summary | `misp.attribute_count`, `misp.unique_indicators` |
 
 **How to test it:** Send the raw Wazuh lab alert for rule `100723`. Check that the MISP node's JSON field evaluates to the alert's observable values. In the observed test, MISP returned two attributes for `1.1.1.1`. Both had `to_ids: false`. One included a warninglist comment identifying the address as a known public DNS resolver. Review each attribute's comment, `to_ids`, `disable_correlation`, event, and warninglist context. A match or a `to_ids` value alone is not a malicious or benign verdict.
@@ -430,7 +433,7 @@ The screenshots show the workflow with the new nodes, the Dedup output for a dup
 
 **How to build it:**
 
-1. Connect the node after `Normalize`.
+1. Connect the true output of `New Alert?` to the split node.
 2. Split the `observables` field into individual items.
 3. Confirm that each item still contains the alert metadata and the observable fields required by downstream nodes.
 
@@ -533,31 +536,28 @@ The route rules use the normalized observable type. Analyzer nodes use the corre
 
 #### Cortex analyzer execution and report polling
 
-**Execute** starts an analysis in Cortex for one observable. Cortex returns a job ID. Think of this ID as a tracking number for that analysis.
+Each analyzer branch uses **Loop Over Items** with **Batch Size** `1` and **Reset** off. It starts one job for each eligible observable. The branch collects completed reports, pending jobs and errors while it works through its items. Only its **done** output feeds the final merge.
 
-**Get a report** uses that same ID to check whether the analysis is ready and to collect its result. If Cortex is still working, n8n waits two seconds and checks again. It repeats this up to five times. If the analysis is still unfinished, the workflow records it as pending and continues.
+| Analyzer | Loop node on the canvas | Branch merge (Append, 3 inputs) | Final Merge input |
+|---|---|---|---:|
+| Maltiverse | `Loop Over Items Multiverse` | `MergeMaltiverse` | 2 |
+| AbuseIPDB | `Loop Over Items Abuse` | `MergeAbusIPBD` | 3 |
+| Team Cymru MHR | `Loop Over Items TeamCymru` | `MergeTeamCymru` | 5 |
+| CIRCL Hashlookup | `Loop Over Items Circl` | `MergeCirclHash` | 6 |
+| VirusTotal | `Loop Over Items Virus` | `MergeVirusTotal` | 7 |
 
-```mermaid
-flowchart TD
-    A["Execute"] --> B["Job ID"]
-    B --> C["Get report"]
-    C --> D{"Waiting?"}
-    D -- "No" --> M["Merge"]
-    D -- "Yes" --> W["Wait 2s"]
-    W --> R{"Limit hit?"}
-    R -- "No" --> C
-    R -- "Yes" --> M
-    M --> S["Summary"]
-```
+1. Connect **loop** to `Execute …`. On success, wait two seconds and request the report with job ID `{{ $json._id ?? $json.id }}`.
+2. If the report is ready, send it to input **2** of the branch merge. A `Waiting` or `InProgress` response follows the two-second retry path and checks the same job again while the limit allows it.
+3. On reaching the limit, send the last pending report to branch input **1**. Send errors from either Cortex call through that service's error formatter to branch input **3**.
+4. Connect the branch merge output back to the **same loop node**. Connect **done** to the final `Merge` input in the table. The existing MISP success, rejected-IP, skipped-observable and MISP-error routes use inputs 1, 4, 8 and 9 respectively.
 
-**Figure:** Cortex polling and merge flow for one job.
-*Figure. One Cortex job is checked repeatedly using the same job ID until it finishes or reaches the retry limit.*
+The tested retry condition is `{{ $runIndex < 6 }}` on each branch's limit node. This index counts runs of that node within the workflow execution. Earlier jobs can consume retries that would otherwise be available to later jobs on that branch. On exhaustion, the summary records the unfinished job as pending.
 
-![Cortex analyzer routes and polling branches](../images/n8n/69-analyzer-polling-branches.png)
+![Two AbuseIPDB jobs returning through the branch merge](../images/n8n/93-cortex-abuse-loop.png)
 
-*Figure. Analyzer branches submit jobs and poll their reports before sending results to Merge.*
+*Execution 16687. AbuseIPDB processed two IPs. Cortex was queried four times for those two jobs. The loop returned two results on completion.*
 
-**How to test it:** Use rule `100723`. Open an **Execute** result and note its job ID. In the matching **Get a report** node, confirm that the same ID is used. Seeing `Waiting` on the first check is normal. The workflow should wait and check that same ID again.
+The [routing settings](../../soar/n8n/triage/enrichment-routing.json) list the exact node names, expressions and connections. n8n documents the two outputs in [Loop Over Items](https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.splitinbatches/).
 
 #### Node: Summary Enrichments
 
@@ -565,13 +565,15 @@ flowchart TD
 
 **How to build it:**
 
-1. Append the analyzer, MISP, and skipped-record branches through the existing `Merge` node.
-2. Connect the merged items to `Summary Enrichments`.
-3. Use the implementation in [`summary-enrichments.js`](../../soar/n8n/nodes/summary-enrichments.js).
+1. Set the final `Merge` to **Append** with nine inputs and connect the routes listed above.
+2. Connect its output to `Summary Enrichments`. Set this Code node to **Run Once for All Items**.
+3. Paste [`summary-enrichments.js`](../../soar/n8n/nodes/summary-enrichments.js).
 
-![Merge and summary path](../images/n8n/69-merge-and-summary-path.png)
+For each matched MISP attribute the summary merges names from `Tag`, `Event.Tag` and `Event.Tags`. It identifies an attribute by UUID, by attribute ID when the UUID is missing, or by event ID, attribute type and value when both identifiers are missing. A repeated row contributes any additional tags and counts once. Distinct attributes for the same indicator retain their IDs. `misp.attribute_count` counts these attributes, while `unique_indicators` groups them by type and value.
 
-*Figure. MISP results, analyzer reports, and skipped observables flow into the final summary.*
+![Two distinct attribute IDs for Updater.exe in MISP event 952](../images/n8n/98-misp-distinct-attributes.png)
+
+*The builder output preserved three distinct filename attributes from event 952. This view shows the first two IDs, 167686 and 167695. The saved output also contains 167701.*
 
 | Setting | Value |
 |---|---|
@@ -579,7 +581,7 @@ flowchart TD
 | Summary node | `Summary Enrichments` |
 | Implementation | [`summary-enrichments.js`](../../soar/n8n/nodes/summary-enrichments.js) |
 
-**End-to-end verification:** Rule `100723` exercised all four Cortex observable routes:
+**Earlier enrichment check (issue #69).** Rule `100723` exercised all four Cortex observable routes:
 
 | Observable | Result |
 |---|---|
@@ -590,6 +592,13 @@ flowchart TD
 
 The workflow returned five Cortex result entries, `processing.status: complete`, and empty `pending` and `failed` lists. The VirusTotal `NotFoundError` means the URL was not found in that lookup. It is not a clean verdict. The internal source IP, agent IP, and hostname were retained under `skipped_by_filter`.
 
+#### Check a saved enrichment run
+
+1. In n8n execution history, open the final `Merge`. Compare its Cortex results by analyzer and observable with the jobs submitted. With one alert on the analyst-review path, `Summary Enrichments`, `Scoring`, `Decision` and `Create an alert` should each run once.
+2. For a matched IP, follow the event tag from the MISP response through `misp.unique_indicators` to `decision.has_benign_misp_tag`. For a repeated MISP row, compare the attribute identity with `misp.attribute_count`.
+
+See the [node counts for delayed reports (#93)](../regressionEvidence/poc-live-workflow-after-bug-fix.md#93-one-decision-per-alert), [event-tag check (#96)](../regressionEvidence/poc-live-workflow-after-bug-fix.md#96-misp-event-tags-reach-decision) and [attribute-count replay (#98)](../regressionEvidence/poc-live-workflow-after-bug-fix.md#98-misp-references-keep-distinct-attributes). [ADR §4](../decisions/0003-n8n-triage-workflow.md#4-misp-and-cortex) explains the routing choice.
+
 **If it does not work:**
 
 | What you see | Cause | Fix |
@@ -599,6 +608,7 @@ The workflow returned five Cortex result entries, `processing.status: complete`,
 | A report remains `Waiting` or `InProgress` | The analyzer job has not finished yet | Continue polling with the same job ID within the configured limit |
 | Cortex reports `Service parameter is missing` | The analyzer job failed before returning a usable report | Inspect the Cortex job and analyzer worker configuration. This message alone does not indicate a missing Wazuh field |
 | VirusTotal returns `NotFoundError` with a completed job | The exact URL was not found in that lookup | Preserve the analyzer response. Do not interpret it as proof that the URL is benign |
+| A single alert starts `Decision` twice | A report can reach the final merge before its branch finishes | Follow each branch merge back to its own loop. Only the loop’s `done` output for that analyzer should feed the final `Merge`. |
 
 ## 5. Score
 
@@ -1189,9 +1199,13 @@ This node runs after MISP/Cortex enrichment. It sets the markings that TheHive r
 | Top-level `type`, `source`, `sourceRef`, `title`, `description`, `severity`, `tlp`, `pap`, `tags`, `date`, and related fields | Mapped automatically by the native TheHive Alert node |
 | `thehive_observables` | Eligible external IP, domain, URL, and hash values. sent to a separate observable creation path |
 
-The alert description records the Decision outcome, reason, score, verdict, coverage, analysis status, asset and source event context, IOC verdicts, enrichment summaries, and unavailable or pending sources. Internal IPs and hostnames are excluded from TheHive observables. The severity mapping is documented in ADR 0003, section 8.
+The alert description records the Decision outcome, reason, score, verdict, coverage, analysis status, asset and source event context, IOC verdicts, enrichment summaries, and unavailable or pending sources.
 
-The builder uses the Wazuh alert ID as `sourceRef`. it fails if the ID is missing or longer than 128 characters. TheHive rejects another alert with the same `(type, source, sourceRef)` tuple in the same organization, so use a fresh source alert ID for each test run.
+For each eligible observable, the builder treats a matching MISP attribute with `to_ids: true` as adverse evidence under the lab policy. A whitelist is benign evidence. When both apply to the same IOC, the builder sets `ioc-verdict:unknown` and records both reasons in its message. In `[MISP REFERENCES]`, attributes for one indicator that share the same displayed event, IDS flag, tags and comment share one line. The line lists the individual attribute IDs, using a UUID when the numeric ID is absent.
+
+Internal IPs and hostnames are excluded from TheHive observables. See the [severity rules in ADR §8](../decisions/0003-n8n-triage-workflow.md#8-thehive).
+
+The builder uses the Wazuh alert ID as `sourceRef`. It fails if the ID is missing or longer than 128 characters. TheHive rejects another alert with the same `(type, source, sourceRef)` tuple in the same organization, so use a fresh source alert ID for each test run.
 
 ![The alert builder node and generated output](../images/n8n/73-build-thehive-alert.png)
 
@@ -1266,6 +1280,8 @@ The synthetic run `soc-hive73-fasttest-20261110-05` completed successfully. Deci
 
 The synthetic test used a new Wazuh alert ID, rule ID, and agent ID. The existing `sourceRef` must not be reused for another Create Alert test.
 
+The 17 November [stored-observable check (#97)](../regressionEvidence/poc-live-workflow-after-bug-fix.md#97-thehive-shows-conflicting-evidence-for-an-ip) follows `8.8.8.8` into TheHive. The [reference-format check (#98)](../regressionEvidence/poc-live-workflow-after-bug-fix.md#98-misp-references-keep-distinct-attributes) records the local replay of the alert builder.
+
 ### Troubleshooting
 
 | Symptom | Check |
@@ -1287,7 +1303,6 @@ This runbook documents the tested lab behavior. TLP/PAP are assigned after enric
 - [Change case or alert classification settings](https://docs.strangebee.com/thehive/user-guides/analyst-corner/cases/change-case-alert-classification-settings/) for severity, TLP, and PAP meanings.
 - [Add an observable](https://docs.strangebee.com/thehive/user-guides/analyst-corner/cases/observables/add-an-observable/) for observable fields and markings.
 - [Run analyzers on an observable](https://docs.strangebee.com/thehive/user-guides/analyst-corner/cases/observables/run-analyzers-on-an-observable/) for analyzer compatibility with observable type, TLP, and PAP.
-
 
 
 ## 9. Audit

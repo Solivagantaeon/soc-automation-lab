@@ -14,14 +14,14 @@ We ran three alerts, one for each outcome the Decision node can return.
 |---|---|---|---|---|---|
 | 1 | Deployed jQuery from the Ubuntu package to the web root on SOC-LIN-01 | 554, File added to the system (level 5) | `closed`, a row in `SOC_Audit`, nothing in TheHive | `closed` (`complete_low_risk_analysis`, score 0), **two** rows in `SOC_Audit`, nothing in TheHive |  PASS |
 | 2 | Ran a renamed copy of `curl.exe` from the user's Temp folder on SOC-WIN10-01; it connected to 8.8.8.8  | 100921, Executable from user Temp folder connected to 8.8.8.8:443 (level 12, added for the PoC) | `analyst_review`, alert in TheHive | `analyst_review` (`analyst_review_required`, score 44, verdict `medium`), one alert in TheHive with 8.8.8.8 attached | PASS |
-| 3 | Wrote the EICAR test file to the web root on SOC-LIN-01 | 554, File added to the system (level 5) | `malicious`, alert in TheHive with the IOCs attached | `malicious` (`malicious_evidence`, score 25, verdict `low`), one alert in TheHive with three hashes, two marked malicious | PASS (second run, after a workflow fix; see the scenario) |
+| 3 | Wrote the EICAR test file to the web root on SOC-LIN-01 | 554, File added to the system (level 5) | `malicious`, alert in TheHive with the IOCs attached | `malicious` (`malicious_evidence`, score 25, verdict `low`), one alert in TheHive with three hashes, two marked malicious | PASS (second run with a temporary polling delay) |
 
 
 All three runs reached the expected outcome, and each one also showed something to fix.
 
 Scenario 1 reached the expected outcome: the benign file was closed automatically with a written reason and nothing reached TheHive. The run also showed that enrichment results can reach the decision in separate batches, which recorded the same alert twice in `SOC_Audit` (see [Issues found](#issues-found1)).
 
-Scenario 2 also reached the expected outcome: the threat intelligence disagreed, so the workflow did not decide and sent the alert to an analyst. The default Wazuh rules do not detect a program in a user's Temp folder connecting to the internet, so we added rule `100921` for this behaviour. The run also exposed two scoring weaknesses (see [Notes](#notes)).
+Scenario 2 also reached the expected outcome: the threat intelligence disagreed, so the workflow did not decide and sent the alert to an analyst. The default Wazuh rules do not detect a program in a user's Temp folder connecting to the internet, so we added rule `100921` for this behaviour. The [enrichment findings](#scenario-2-enrichment-findings) show how this run handled the filename and the conflicting signals for `8.8.8.8`.
 
 Scenario 3 reached the expected outcome on the second run: Team Cymru MHR reported the EICAR test file as 97% malicious, so the workflow escalated it to TheHive with the hashes attached, although the score alone was low and the host allows automatic closure. The first run hit the batch bug from scenario 1 with a visible effect: the TheHive alert lacked part of the evidence and the execution ended with an error.
 ## What was running
@@ -164,7 +164,7 @@ Reason recorded by the workflow: *"The complete analysis produced a likely-false
 
 ### Issues found1
 
-- **Duplicate items after enrichment.** `Summary Enrichments` emits 2 items for one alert, which then go through Scoring and Decision. Result: two `SOC_Audit` rows (id 21 and 22) and two `thehive_skipped` counters for one alert. The decision is correct, but the funnel counters are inflated, and for a non-closed outcome this could create two TheHive alerts. TODO issue #
+- **Duplicate items after enrichment.** `Summary Enrichments` emits 2 items for one alert, which then go through Scoring and Decision. Result: two `SOC_Audit` rows (id 21 and 22) and two `thehive_skipped` counters for one alert. The decision is correct, but the funnel counters are inflated, and for other outcomes a second create request can be rejected because the alert already exists. See the [follow-up for #93 with before-and-after node counts](regressionEvidence/poc-live-workflow-after-bug-fix.md#93-one-decision-per-alert).
 - **`alert_id` is `null` in `SOC_Audit`**, while the counter table has the correct ID (`1794692751.963227`). TODO issue #
 
 
@@ -220,7 +220,7 @@ Execution 16668, started 2026-11-15 12:05:19 (+01:00), took 8.961s s.
 
 | Source | Observable | What came back |
 |---|---|---|
-| MISP | `Updater.exe` (file name) | Event 952, *OSINT - Operation AppleJeus: Lazarus hits cryptocurrency exchange with fake installer and macOS malware*, `to_ids: true` (the same attribute three times) |
+| MISP | `Updater.exe` (file name) | Event 952, *OSINT - Operation AppleJeus: Lazarus hits cryptocurrency exchange with fake installer and macOS malware*, `to_ids: true` (three identical-looking lines in the original alert description) |
 | MISP | `8.8.8.8` | Four attributes: event 1331 (`to_ids: false`), event 1351 (`to_ids: false`, warninglist: public DNS resolver), event 1411 *Fake 7-Zip downloads are turning home PCs into proxy nodes* (`to_ids: true`), and the lab event 1686 *SOC-LAB test IOCs – benign* (`to_ids: false`, comment "Google DNS - known benign") |
 | Cortex: `AbuseIPDB_2_0` | `8.8.8.8` | `whitelisted: true`, confidence score 0, Google LLC, Content Delivery Network; still 71 reports (24 in the last 7 days), mostly *Port Scan* |
 
@@ -228,7 +228,7 @@ The other analyzers (Maltiverse, Team Cymru, CIRCL, VirusTotal) did not run: the
 
 ![MISP result for scenario 2](images/n8n/92-s2-enrichment-misp.png)
 
-*Figure 10. Summary Enrichments, MISP part: 8.8.8.8 matches four attributes, one of them in the lab event "SOC-LAB test IOCs – benign". None has `to_ids: true`.*
+*Figure 10. Summary Enrichments, MISP part: 8.8.8.8 matches four attributes, one of them in the lab event "SOC-LAB test IOCs – benign". Event 1411 is the IDS-enabled match listed in the enrichment table.*
 
 ![AbuseIPDB result for scenario 2](images/n8n/92-s2-enrichment-abuseipdb.png)
 
@@ -301,12 +301,12 @@ We added rule `100921` to `local_rules.xml` on the Wazuh manager. The default ru
 ~~~
 
 
-**What the run showed about scoring:**
+#### Scenario 2 enrichment findings
 
 - **A file-name match counts as much as a hash.** `Updater.exe` matched an attribute in a public report on the Lazarus group and added 30 points, the same as a hash match. Common file names are weak indicators and should get a separate, lower weight in `score-config.json`.
-- **The `soc-lab:benign` tag never reaches the decision.** The tag is set on the MISP event, but the MISP node returns only attribute tags, so `has_benign_misp_tag` is `false`. The search should include event tags (`includeEventTags`).
-- **The IOC verdict in the TheHive description uses AbuseIPDB only.** 8.8.8.8 is described as "benign" although event 1411 lists it with `to_ids: true`.
-- **The MISP references list repeats the same attribute three times.**
+- In execution 16668 the event tag `soc-lab:benign` did not reach Decision. [Follow-up for #96: event tags in Decision](regressionEvidence/poc-live-workflow-after-bug-fix.md#96-misp-event-tags-reach-decision).
+- The original alert called 8.8.8.8 benign despite the IDS-enabled match from event 1411. [Follow-up for #97: the stored IP verdict](regressionEvidence/poc-live-workflow-after-bug-fix.md#97-thehive-shows-conflicting-evidence-for-an-ip).
+- The original description printed three indistinguishable filename references. [Follow-up for #98: attribute IDs and the rendered references](regressionEvidence/poc-live-workflow-after-bug-fix.md#98-misp-references-keep-distinct-attributes).
 
 ## Scenario 3: confirmed malicious, prioritised in TheHive
 
@@ -328,7 +328,7 @@ sha256sum /var/www/html/eicar.com
 
 `sha256sum` printed `275a021bbfb6489e54d471899f7db9d1663fc695ec2fe2a2c4538aabf651fd0f`, the published SHA-256 of the EICAR file.
 
-This section reports the second run, at 15:43. The first run, at 15:19, ended with the expected outcome but exposed a workflow bug that was fixed before the second run (see [Issues found in the first run](#issues-found-in-the-first-run)).
+This section reports the second run, at 15:43. The first run, at 15:19, ended with the expected outcome but exposed a workflow bug that was mitigated with a ten-second wait before the second run (see [Issues found in the first run](#issues-found-in-the-first-run)).
 
 <details>
 <summary>Screenshot: commands run on SOC-LIN-01</summary>
@@ -438,12 +438,11 @@ The first run (execution 16669, Wazuh alert `1794752368.37304554`, 15:19) on wor
 - The second batch tried to create the same alert. TheHive rejected the duplicate `sourceRef`, and the execution ended with status `error`.
 - Both batches were `malicious` here. A batch with only the SHA-1 results would have scored 0 and closed the EICAR alert automatically.
 
-The cause, the evidence and the fix (a 10-second wait before the first report check) are in. The second run, reported above, used the fixed workflow.
-
-
+The second run used a ten-second initial wait. This let the reports finish together on that run. The [follow-up for #93](regressionEvidence/poc-live-workflow-after-bug-fix.md#93-one-decision-per-alert) records the later loop change and the runs that exercised delayed reports.
 
 ## Related
 
+- [Regression checks and a template for future fixes](regressionEvidence/poc-live-workflow-after-bug-fix.md)
 - [n8n triage runbook](runbooks/n8n-triage.md): how every node is built and tested
 - [ADR 0003](decisions/0003-n8n-triage-workflow.md): why the workflow looks the way it does
 - [First end-to-end test](e2e-test.md): the five-node version from 31 October 2026 (#55)

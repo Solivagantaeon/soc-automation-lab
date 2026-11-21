@@ -1,0 +1,40 @@
+{
+  "id": "soc-regression-20261118-930107",
+  "timestamp": "2026-11-18T14:00:00+01:00",
+  "rule": {
+    "id": "101897",
+    "level": 12,
+    "description": "SOC regression check for Cortex routing and MISP references",
+    "firedtimes": 1,
+    "groups": [
+      "local",
+      "sysmon_event3"
+    ]
+  },
+  "agent": {
+    "id": "197",
+    "name": "SOC-REGRESSION-197",
+    "ip": "10.10.10.197"
+  },
+  "manager": {
+    "name": "soc-lab-manager"
+  },
+  "data": {
+    "srcip": "1.1.1.1",
+    "dstip": "8.8.8.8",
+    "domain": "wicar.org",
+    "url": "https://wicar.org/",
+    "win": {
+      "system": {
+        "eventID": "3"
+      },
+      "eventdata": {
+        "hashes": "MD5=44d88612fea8a8f36de82e1278abb02f,SHA1=3395856ce81f2b7382dee72602f798b642f14140,SHA256=275a021bbfb6489e54d471899f7db9d1663fc695ec2fe2a2c4538aabf651fd0f",
+        "image": "C:\\Lab\\Fixtures\\Updater.exe",
+        "destinationPort": "443",
+        "initiated": "true"
+      }
+    }
+  },
+  "full_log": "Synthetic regression alert with two IPs, a domain, a URL, three file hashes and a filename."
+}

@@ -37,7 +37,9 @@ function text(value, fallback = 'Not provided') {
 }
 
 function isTrue(value) {
-  return value === true || value === 1 || String(value).toLowerCase() === 'true';
+  return value === true ||
+    value === 1 ||
+    ['true', '1'].includes(String(value ?? '').trim().toLowerCase());
 }
 
 function normalizedValue(value) {
@@ -111,6 +113,10 @@ function observableEvidence(value, mispIndicators, cortexResults) {
 
   const malicious = [];
   const benign = [];
+
+  if (attributes.some(attribute => isTrue(attribute.to_ids))) {
+    malicious.push('MISP attribute to_ids: true');
+  }
 
   if (tags.has('soc-lab:malicious')) malicious.push('MISP tag soc-lab:malicious');
   if (tags.has('soc-lab:benign')) benign.push('MISP tag soc-lab:benign');
@@ -215,6 +221,31 @@ function classifySeverity(outcome, decision, asset) {
   return { value: 2, label: 'MEDIUM', reason: 'The decision does not match a defined low, medium, or high severity rule.' };
 }
 
+function formatMispReferences(indicators) {
+  const lines = [];
+  for (const indicator of indicators) {
+    const references = new Map();
+    for (const attribute of asArray(indicator.attributes)) {
+      const event = attribute.event ?? {};
+      const tags = asArray(attribute.tags).slice().sort().join(', ') || 'none';
+      const details = [
+        `${text(indicator.type, 'IOC')} ${text(indicator.value)} — event ${text(event.id, 'ID unavailable')} (${text(event.title, 'title unavailable')})`,
+        `to_ids=${text(attribute.to_ids, 'unknown')}`,
+        `tags=${tags}`,
+        `comment=${text(attribute.comment, 'none')}`,
+      ].join('; ');
+      if (!references.has(details)) references.set(details, new Set());
+      const identifier = text(attribute.id, '') || text(attribute.uuid, '');
+      if (identifier) references.get(details).add(identifier);
+    }
+    for (const [details, identifiers] of references) {
+      const suffix = identifiers.size ? ` [attributes: ${[...identifiers].join(', ')}]` : '';
+      lines.push(details + suffix);
+    }
+  }
+  return lines.length ? lines : ['No matching MISP attributes.'];
+}
+
 function buildDescription(item, normalizedAlert, outcome, tlp, pap, observables, policy, severityInfo) {
   const alert = item.alert ?? {};
   const decision = item.decision ?? {};
@@ -310,15 +341,7 @@ function buildDescription(item, normalizedAlert, outcome, tlp, pap, observables,
       : ['No eligible external IP, domain, URL, or hash was present.']),
     '',
     '[MISP REFERENCES]',
-    ...(mispIndicators.length > 0
-      ? mispIndicators.flatMap(indicator => {
-          const attrs = asArray(indicator.attributes);
-          return attrs.map(attribute => {
-            const event = attribute.event ?? {};
-            return `${text(indicator.type, 'IOC')} ${text(indicator.value)} — event ${text(event.id, 'ID unavailable')} (${text(event.title, 'title unavailable')}); to_ids=${text(attribute.to_ids, 'unknown')}; tags=${asArray(attribute.tags).join(', ') || 'none'}; comment=${text(attribute.comment, 'none')}`;
-          });
-        })
-      : ['No matching MISP attributes.']),
+    ...formatMispReferences(mispIndicators),
     '',
     '[CORTEX RESULTS]',
     ...(cortexResults.length > 0
