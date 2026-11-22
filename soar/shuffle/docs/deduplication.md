@@ -12,11 +12,11 @@ The SHA-256 fingerprint uses the agent ID, rule ID, source IP, destination IP, d
 - For a repeated fingerprint, `Get TheHive Alert ID` reads that cached scalar and the TheHive app's `Update Alert` action updates the same alert. Its `AlertId` input is mapped to `$get_thehive_alert_id.value`.
 - The duplicate counter is incremented for the repeated event.
 
-![Shuffle duplicate alert path with TheHive Update Alert](images/shuffle/16-dedup-workflow-path.png)
+![Shuffle duplicate alert path with TheHive Update Alert](../../../docs/images/shuffle/16-dedup-workflow-path.png)
 
 *Figure 1. Current Shuffle path, including the TheHive app Update Alert node.*
 
-![TheHive Update Alert action mapping](images/shuffle/16-thehive-update-alert-action.png)
+![TheHive Update Alert action mapping](../../../docs/images/shuffle/16-thehive-update-alert-action.png)
 
 *Figure 2. The TheHive app action uses the ID returned by the cache lookup.*
 
@@ -39,14 +39,14 @@ The ID extractor accepts a Create Alert response or a list of responses, keeps s
 | Duplicate update | The TheHive app update targeted the cached alert ID and returned HTTP `204` |
 | Duplicate counter | The first repeated event produced `count 2` and stored value `"2"` |
 
-![TheHive alert ID lookup](images/shuffle/16-thehive-alert-id-lookup.png)
+![TheHive alert ID lookup](../../../docs/images/shuffle/16-thehive-alert-id-lookup.png)
 
 *Figure 3. Lookup returns the cached TheHive alert ID for the repeated fingerprint.*
 
-![Duplicate counter verification](images/shuffle/16-duplicate-counter.png)
+![Duplicate counter verification](../../../docs/images/shuffle/16-duplicate-counter.png)
 
 *Figure 4. Shuffle returned count 2 and persisted it in the duplicate counter category.*
 
 ## Cortex enrichment
 
-The related [Issue #9 enrichment](../enrichment/cortex/README.md) contribution validates typed IP, domain, and file-hash observables, routes them to their configured lookup sources, normalizes the reports, and calculates per-observable risk and routing fields. `Collect_Alert_Enrichment` combines those results into one alert-level JSON object with alert metadata and one entry per distinct observable. The collector's status indicates whether the collected analyses are complete, partial, or unavailable. Its route table, analyzer results, tests, and screenshots are documented with the Cortex enrichment work. The deduplication datastore described above tracks repeated alerts separately from those IOC enrichment results.
+The related [Issue #9 enrichment](../../../enrichment/cortex/README.md) contribution validates typed IP, domain, and file-hash observables, routes them to their configured lookup sources, normalizes the reports, and calculates per-observable risk and routing fields. `Collect_Alert_Enrichment` combines those results into one alert-level JSON object with alert metadata and one entry per distinct observable. The collector's status indicates whether the collected analyses are complete, partial, or unavailable. Its route table, analyzer results, tests, and screenshots are documented with the Cortex enrichment work. The deduplication datastore described above tracks repeated alerts separately from those IOC enrichment results.

@@ -40,8 +40,8 @@ Open the Shuffle UI over HTTPS and inspect the workflow editor and **Runtime Loc
 
 ### 5.5 Evidence and references
 
-- ![Shuffle triage workflow](../../images/shuffle/06-shuffle-running.png)
-- Shuffle workflow documentation: [`../../../soar/shuffle/README.md`](../../../soar/shuffle/README.md)
-- Architecture workflow: [architecture](../../architecture/architecture.md)
+- ![Shuffle triage workflow](../images/shuffle/06-shuffle-running.png)
+- Shuffle workflow documentation: [`../../../soar/shuffle/README.md`](../../soar/shuffle/README.md)
+- Architecture workflow: [architecture](../architecture/architecture.md)
 
 ---
