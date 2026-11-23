@@ -3,7 +3,7 @@
 n8n is the SOAR engine of the pipeline: Wazuh pushes selected alerts to an n8n webhook, and n8n normalizes them,
 removes duplicates, enriches observables with MISP and Cortex, scores the result and creates alerts in TheHive.
 It replaced Shuffle in October 2026 - the Shuffle workflow is archived as v0.1 in [`soar/shuffle/`](../shuffle/),
-and the reasons are recorded in [ADR 0002](../../docs/decisions/0002-soar-n8n.md).
+and the trade-offs behind the switch are compared in the [SOAR engine comparison](../../docs/research/soar-engine-comparison.md#72-findings).
 
 n8n runs self-hosted in queue mode on a dedicated VM in the SOC VLAN, behind an HTTPS reverse proxy, so a burst of
 alerts is queued and processed by a worker instead of slowing down the web interface.

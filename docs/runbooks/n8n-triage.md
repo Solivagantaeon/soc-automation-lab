@@ -597,7 +597,7 @@ The workflow returned five Cortex result entries, `processing.status: complete`,
 1. In n8n execution history, open the final `Merge`. Compare its Cortex results by analyzer and observable with the jobs submitted. With one alert on the analyst-review path, `Summary Enrichments`, `Scoring`, `Decision` and `Create an alert` should each run once.
 2. For a matched IP, follow the event tag from the MISP response through `misp.unique_indicators` to `decision.has_benign_misp_tag`. For a repeated MISP row, compare the attribute identity with `misp.attribute_count`.
 
-See the [node counts for delayed reports (#93)](../regressionEvidence/poc-live-workflow-after-bug-fix.md#93-one-decision-per-alert), [event-tag check (#96)](../regressionEvidence/poc-live-workflow-after-bug-fix.md#96-misp-event-tags-reach-decision) and [attribute-count replay (#98)](../regressionEvidence/poc-live-workflow-after-bug-fix.md#98-misp-references-keep-distinct-attributes). [ADR §4](../decisions/0003-n8n-triage-workflow.md#4-misp-and-cortex) explains the routing choice.
+See the [node counts for delayed reports (#93)](../regression-evidence/poc-live-workflow-after-bug-fix.md#93-one-decision-per-alert), [event-tag check (#96)](../regression-evidence/poc-live-workflow-after-bug-fix.md#96-misp-event-tags-reach-decision) and [attribute-count replay (#98)](../regression-evidence/poc-live-workflow-after-bug-fix.md#98-misp-references-keep-distinct-attributes). [ADR §4](../decisions/0003-n8n-triage-workflow.md#4-misp-and-cortex) explains the routing choice.
 
 **If it does not work:**
 
@@ -1280,7 +1280,7 @@ The synthetic run `soc-hive73-fasttest-20261110-05` completed successfully. Deci
 
 The synthetic test used a new Wazuh alert ID, rule ID, and agent ID. The existing `sourceRef` must not be reused for another Create Alert test.
 
-The 17 November [stored-observable check (#97)](../regressionEvidence/poc-live-workflow-after-bug-fix.md#97-thehive-shows-conflicting-evidence-for-an-ip) follows `8.8.8.8` into TheHive. The [reference-format check (#98)](../regressionEvidence/poc-live-workflow-after-bug-fix.md#98-misp-references-keep-distinct-attributes) records the local replay of the alert builder.
+The 17 November [stored-observable check (#97)](../regression-evidence/poc-live-workflow-after-bug-fix.md#97-thehive-shows-conflicting-evidence-for-an-ip) follows `8.8.8.8` into TheHive. The [reference-format check (#98)](../regression-evidence/poc-live-workflow-after-bug-fix.md#98-misp-references-keep-distinct-attributes) records the local replay of the alert builder.
 
 ### Troubleshooting
 

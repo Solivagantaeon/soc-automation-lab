@@ -4,7 +4,7 @@ A regression check repeats the condition that exposed a bug and inspects the out
 
 ## 93. One decision per alert
 
-**Before.** A late Cortex report started a second decision for the same Wazuh alert. In [scenario 1](../poc-live-workflow.md#issues-found1), execution `13918` wrote two audit rows. In [scenario 3](../poc-live-workflow.md#issues-found-in-the-first-run), execution `16669` created an alert before the MD5 reports arrived. TheHive rejected the second create request for the same `sourceRef`. [Issue #93](https://github.com/Solivagantaeon/soc-automation-lab/issues/93)
+**Before.** A late Cortex report started a second decision for the same Wazuh alert. In [scenario 1](../poc-live-workflow.md#issues-found), execution `13918` wrote two audit rows. In [scenario 3](../poc-live-workflow.md#issues-found-in-the-first-run), execution `16669` created an alert before the MD5 reports arrived. TheHive rejected the second create request for the same `sourceRef`. [Issue #93](https://github.com/Solivagantaeon/soc-automation-lab/issues/93)
 
 **Change.** Each Cortex branch processes one observable at a time and sends its collected results to the final `Merge` through the loop’s `done` output. [Runbook §4](../runbooks/n8n-triage.md#cortex-analyzer-execution-and-report-polling) · [ADR §4](../decisions/0003-n8n-triage-workflow.md#4-misp-and-cortex)
 

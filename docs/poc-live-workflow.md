@@ -19,7 +19,7 @@ We ran three alerts, one for each outcome the Decision node can return.
 
 All three runs reached the expected outcome, and each one also showed something to fix.
 
-Scenario 1 reached the expected outcome: the benign file was closed automatically with a written reason and nothing reached TheHive. The run also showed that enrichment results can reach the decision in separate batches, which recorded the same alert twice in `SOC_Audit` (see [Issues found](#issues-found1)).
+Scenario 1 reached the expected outcome: the benign file was closed automatically with a written reason and nothing reached TheHive. The run also showed that enrichment results can reach the decision in separate batches, which recorded the same alert twice in `SOC_Audit` (see [Issues found](#issues-found)).
 
 Scenario 2 also reached the expected outcome: the threat intelligence disagreed, so the workflow did not decide and sent the alert to an analyst. The default Wazuh rules do not detect a program in a user's Temp folder connecting to the internet, so we added rule `100921` for this behaviour. The [enrichment findings](#scenario-2-enrichment-findings) show how this run handled the filename and the conflicting signals for `8.8.8.8`.
 
@@ -28,8 +28,8 @@ Scenario 3 reached the expected outcome on the second run: Team Cymru MHR report
 
 | Item | Value |
 |---|---|
-| n8n workflow | `SOC - Wazuh alert triage` (ID `JqM02cALddRCz3a4`), published on 2026-11-13 12:07 (+01:00), version `5cb075fd` |
-| Node code | `normalize-v1.2.js`, `score-v0.2.js`, `decision-v0.1.js`, `thehive-alert-v0.3.js` from [`soar/n8n/nodes/`](../soar/n8n/nodes/) <!-- confirm these are the versions in the live workflow --> |
+| n8n workflow | `SOC - Wazuh alert triage` (ID `JqM02cALddRCz3a4`). Version `5cb075fd`, published on 2026-11-13 12:07 (+01:00), ran scenario 1. Version `5af171b1` ran scenario 2 and the first run of scenario 3, and version `021b562b` the second run of scenario 3. The Code nodes are the same in all three versions. |
+| Node code | `normalize-v1.2.js`, `score-v0.2.js`, `decision-v0.1.js`, `thehive-alert-v0.3.js` from [`soar/n8n/nodes/`](../soar/n8n/nodes/) at commit `2472cab` (2026-11-12), checked against the workflow stored with each execution. Score and the TheHive alert builder match the files, and Decision differs only in formatting and comments. Normalize is the earlier revision from commit `53101e0` (2026-11-07), without the source-IP deduplication key added on 2026-11-09. |
 | Scoring config | [`score-config.json`](../soar/n8n/nodes/score-config.json) |
 | Wazuh integration | `custom-n8n`, two `<integration>` blocks: one forwards alerts at level 12 and above, one forwards selected rules by `rule_id` (added for this PoC, see below) |
 | Cortex analyzers used | Hashes: `TeamCymruMHR_1_0`, `CIRCLHashlookup_1_1`, `VirusTotal_GetReport_3_1`. IPs: `AbuseIPDB_2_0`. Several types: `Maltiverse_Report_1_0`. |
@@ -41,9 +41,9 @@ Lab machines that take part:
 |---|---|---|
 | Kali | 10.10.30.100 | Sends the test requests |
 | SOC-LIN-01 (agent `006`) | 10.10.10.100 | Linux endpoint and test web server |
-| SOC-WIN10-01 (agent `007`) | 10.10.10.150 | Windows endpoint <!-- delete the row if not used --> |
+| SOC-WIN10-01 (agent `007`) | 10.10.10.150 | Windows endpoint |
 | Wazuh manager | 10.10.20.243 | Detects and forwards alerts to n8n |
-| n8n | TODO | Runs the triage workflow |
+| n8n | 10.10.20.248 | Runs the triage workflow |
 | MISP | 10.10.20.50 | Threat intelligence lookup |
 | Cortex and TheHive | 10.10.20.247 | Analyzers and the alert queue for the analyst |
 
@@ -162,10 +162,10 @@ Reason recorded by the workflow: *"The complete analysis produced a likely-false
 
 *Figure 6. SOC_Audit for execution 13918: the decision is recorded correctly* 
 
-### Issues found1
+### Issues found
 
-- **Duplicate items after enrichment.** `Summary Enrichments` emits 2 items for one alert, which then go through Scoring and Decision. Result: two `SOC_Audit` rows (id 21 and 22) and two `thehive_skipped` counters for one alert. The decision is correct, but the funnel counters are inflated, and for other outcomes a second create request can be rejected because the alert already exists. See the [follow-up for #93 with before-and-after node counts](regressionEvidence/poc-live-workflow-after-bug-fix.md#93-one-decision-per-alert).
-- **`alert_id` is `null` in `SOC_Audit`**, while the counter table has the correct ID (`1794692751.963227`). TODO issue #
+- **Duplicate items after enrichment.** `Summary Enrichments` emits 2 items for one alert, which then go through Scoring and Decision. Result: two `SOC_Audit` rows (id 21 and 22) and two `thehive_skipped` counters for one alert. The decision is correct, but the funnel counters are inflated, and for other outcomes a second create request can be rejected because the alert already exists. See the [follow-up for #93 with before-and-after node counts](regression-evidence/poc-live-workflow-after-bug-fix.md#93-one-decision-per-alert).
+- **`alert_id` is `null` in `SOC_Audit`**, while the counter table has the correct ID (`1794692751.963227`). Fixed after the PoC in [#94](https://github.com/Solivagantaeon/soc-automation-lab/issues/94).
 
 
 ## Scenario 2: unclear alert, sent to the analyst
@@ -186,11 +186,11 @@ Copy-Item C:\Windows\System32\curl.exe "$env:TEMP\updater.exe" -Force
 ~~~
 
 <details>
-<summary>Screenshot: commands run on SOC-WIN-10-01</summary>
+<summary>Screenshot: commands run on SOC-WIN10-01</summary>
 
-![Trigger command on SOC-WIN-10](images/endpoints/92-s2-trigger-command.png)
+![Trigger command on SOC-WIN10-01](images/endpoints/92-s2-trigger-command.png)
 
-*Figure 7. PowerShell on SOC-WIN10-01, standard user: start time recorded with `Get-Date` (12:05:XX), then `updater.exe` from the Temp folder connects to 8.8.8.8 and returns HTTP XXX.*
+*Figure 7. PowerShell on SOC-WIN10-01, standard user: start time recorded with `Get-Date` (12:04:54), then `updater.exe` is copied to the Temp folder and connects to 8.8.8.8. Its output is discarded (`-s -o NUL`), so the screenshot shows no response.*
 
 </details>
 
@@ -304,9 +304,9 @@ We added rule `100921` to `local_rules.xml` on the Wazuh manager. The default ru
 #### Scenario 2 enrichment findings
 
 - **A file-name match counts as much as a hash.** `Updater.exe` matched an attribute in a public report on the Lazarus group and added 30 points, the same as a hash match. Common file names are weak indicators and should get a separate, lower weight in `score-config.json`.
-- In execution 16668 the event tag `soc-lab:benign` did not reach Decision. [Follow-up for #96: event tags in Decision](regressionEvidence/poc-live-workflow-after-bug-fix.md#96-misp-event-tags-reach-decision).
-- The original alert called 8.8.8.8 benign despite the IDS-enabled match from event 1411. [Follow-up for #97: the stored IP verdict](regressionEvidence/poc-live-workflow-after-bug-fix.md#97-thehive-shows-conflicting-evidence-for-an-ip).
-- The original description printed three indistinguishable filename references. [Follow-up for #98: attribute IDs and the rendered references](regressionEvidence/poc-live-workflow-after-bug-fix.md#98-misp-references-keep-distinct-attributes).
+- In execution 16668 the event tag `soc-lab:benign` did not reach Decision. [Follow-up for #96: event tags in Decision](regression-evidence/poc-live-workflow-after-bug-fix.md#96-misp-event-tags-reach-decision).
+- The original alert called 8.8.8.8 benign despite the IDS-enabled match from event 1411. [Follow-up for #97: the stored IP verdict](regression-evidence/poc-live-workflow-after-bug-fix.md#97-thehive-shows-conflicting-evidence-for-an-ip).
+- The original description printed three indistinguishable filename references. [Follow-up for #98: attribute IDs and the rendered references](regression-evidence/poc-live-workflow-after-bug-fix.md#98-misp-references-keep-distinct-attributes).
 
 ## Scenario 3: confirmed malicious, prioritised in TheHive
 
@@ -335,7 +335,7 @@ This section reports the second run, at 15:43. The first run, at 15:19, ended wi
 
 ![Trigger command on SOC-LIN-01](images/endpoints/92-s3-trigger-command.png)
 
-*Figure 15. Terminal on SOC-LIN-01: start time recorded with `date -Is` (TODO 15:43:xx), the EICAR file written to the web root, and its SHA-256.*
+*Figure 15. Terminal on SOC-LIN-01: start time recorded with `date -Is` (15:43:14) and the EICAR file written to the web root.*
 
 </details>
 
@@ -438,11 +438,11 @@ The first run (execution 16669, Wazuh alert `1794752368.37304554`, 15:19) on wor
 - The second batch tried to create the same alert. TheHive rejected the duplicate `sourceRef`, and the execution ended with status `error`.
 - Both batches were `malicious` here. A batch with only the SHA-1 results would have scored 0 and closed the EICAR alert automatically.
 
-The second run used a ten-second initial wait. This let the reports finish together on that run. The [follow-up for #93](regressionEvidence/poc-live-workflow-after-bug-fix.md#93-one-decision-per-alert) records the later loop change and the runs that exercised delayed reports.
+The second run used a ten-second initial wait. This let the reports finish together on that run. The [follow-up for #93](regression-evidence/poc-live-workflow-after-bug-fix.md#93-one-decision-per-alert) records the later loop change and the runs that exercised delayed reports.
 
 ## Related
 
-- [Regression checks and a template for future fixes](regressionEvidence/poc-live-workflow-after-bug-fix.md)
+- [Regression checks and a template for future fixes](regression-evidence/poc-live-workflow-after-bug-fix.md)
 - [n8n triage runbook](runbooks/n8n-triage.md): how every node is built and tested
 - [ADR 0003](decisions/0003-n8n-triage-workflow.md): why the workflow looks the way it does
 - [First end-to-end test](e2e-test.md): the five-node version from 31 October 2026 (#55)

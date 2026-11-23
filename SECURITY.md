@@ -10,8 +10,9 @@ If you notice a leaked credential, private key or personal data in this reposito
 
 | Kind | Examples |
 |---|---|
-| Credentials | API keys (TheHive, Cortex, MISP, VirusTotal, AbuseIPDB, Shuffle), passwords, tokens, cookies, `Authorization` headers, private keys, WireGuard keys, Wazuh agent keys, password hashes |
-| Shuffle webhooks | `.../api/v1/hooks/webhook_<id>`, and the trigger `id` in a workflow export, which **is** that URL |
+| Credentials | API keys (TheHive, Cortex, MISP, VirusTotal, AbuseIPDB, n8n), passwords, tokens, cookies, `Authorization` headers, private keys, WireGuard keys, Wazuh agent keys, password hashes |
+| n8n secrets | the webhook URL and the Wazuh webhook token (`X-Wazuh-Token`), `N8N_ENCRYPTION_KEY`, `/opt/n8n/.env`, credential exports (`n8n export:credentials`), pinned data with real alerts in a workflow export |
+| Shuffle webhooks (archived v0.1) | `.../api/v1/hooks/webhook_<id>`, and the trigger `id` in a workflow export, which **is** that URL |
 | Network data | our public (home) IP address, router details, the VPN endpoint |
 | Personal data | real names, personal e-mails, user names in paths (`/Users/<name>`, `C:\Users\<name>`), photos with GPS data |
 | Raw lab artefacts | unsanitised exports, `*.bak` config backups, Wazuh installer passwords, OPNsense config backups, HAR files, packet captures, event logs, memory dumps, cracked hashes |
@@ -22,7 +23,7 @@ Screenshots count too: look for keys on settings pages, webhook URLs, the logged
 
 | Layer | Where | What it catches | Limits |
 |---|---|---|---|
-| 1. GitHub push protection | GitHub, also for web uploads | well-known token formats (GitHub, AWS, Slack, ...) | does **not** know TheHive / MISP / Cortex keys or Shuffle webhooks |
+| 1. GitHub push protection | GitHub, also for web uploads | well-known token formats (GitHub, AWS, Slack, ...) | does **not** know TheHive / MISP / Cortex keys, n8n secrets or Shuffle webhooks |
 | 2. pre-commit hooks | your computer | gitleaks, `sanitize_export.py`, `check_images.py`, every commit you push | only for `git commit` / `git push`, **not** for files uploaded in the browser |
 | 3. CI on every push (`checks.yml`) | GitHub Actions | gitleaks over the full history of every branch; secrets and personal data in all files **and in every new commit**; image metadata and OCR of visible text | runs after the push: the data is already public, so rotate |
 | 4. Rules on `main` | repository settings | nothing reaches `main` without a pull request, a review and green checks | |
