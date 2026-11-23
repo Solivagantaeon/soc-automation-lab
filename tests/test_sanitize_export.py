@@ -87,7 +87,7 @@ class SanitizeXmlTest(unittest.TestCase):
         self.assertGreaterEqual(len(findings), 2)
 
     def test_repo_snippet_with_placeholder_is_clean(self):
-        _, findings = se.sanitize_file(ROOT / "detection/wazuh/integrations/shuffle-integration.xml")
+        _, findings = se.sanitize_file(ROOT / "soar/shuffle/integration/shuffle-integration.xml")
         self.assertEqual(findings, [])
 
 
