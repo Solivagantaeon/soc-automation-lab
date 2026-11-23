@@ -418,6 +418,10 @@ The screenshots show the workflow with the new nodes, the Dedup output for a dup
 
 **How to test it:** Send the raw Wazuh lab alert for rule `100723`. Check that the MISP node's JSON field evaluates to the alert's observable values. In the observed test, MISP returned two attributes for `1.1.1.1`. Both had `to_ids: false`. One included a warninglist comment identifying the address as a known public DNS resolver. Review each attribute's comment, `to_ids`, `disable_correlation`, event, and warninglist context. A match or a `to_ids` value alone is not a malicious or benign verdict.
 
+![Issue #69 MISP attribute search result for 1.1.1.1](../images/n8n/69-misp-search-and-results.png)
+
+*Issue #69 test. The first attribute returned for `1.1.1.1` has `to_ids: false` and keeps its event context. The JSON filter shown is the issue #69 version: `includeEventTags` was added later in #96 (see the configuration above).*
+
 **If it does not work:**
 
 | What you see | Cause | Fix |
@@ -591,6 +595,32 @@ For each matched MISP attribute the summary merges names from `Tag`, `Event.Tag`
 | Test URL | VirusTotal job completed and returned `NotFoundError` for the exact URL |
 
 The workflow returned five Cortex result entries, `processing.status: complete`, and empty `pending` and `failed` lists. The VirusTotal `NotFoundError` means the URL was not found in that lookup. It is not a clean verdict. The internal source IP, agent IP, and hostname were retained under `skipped_by_filter`.
+<details>
+<summary>Issue #69 screenshots of the earlier enrichment layout</summary>
+
+These screenshots record the issue #69 test. Later issues changed parts of the layout, so build the workflow from the sections above.
+
+![Issue #69 analyzer branches with Wait and limit nodes](../images/n8n/69-analyzer-polling-branches.png)
+
+*Analyzer branches in issue #69. Each branch polls with a Wait and a limit check, without **Loop Over Items**. Issue #93 added the loops and branch merges described above.*
+
+![Issue #69 AbuseIPDB report request returning Waiting](../images/n8n/69-cortex-job-report-polling.png)
+
+![Issue #69 Team Cymru report request returning InProgress and Waiting](../images/n8n/69-cortex-teamcymru-report-polling.png)
+
+![Issue #69 CIRCL Hashlookup report request returning InProgress and Waiting](../images/n8n/69-cortex-circl-report-polling.png)
+
+*First report requests for AbuseIPDB, Team Cymru and CIRCL Hashlookup. Cortex answers `Waiting` or `InProgress`, so the branch polls the same job again. The Job ID here is `$('Execute …').item.json._id`. The current workflow uses `{{ $json._id ?? $json.id }}` (see [Failure handling](#7-failure-handling)).*
+
+![Issue #69 Summary Enrichments code](../images/n8n/69-summary-enrichments-code.png)
+
+*`Summary Enrichments` code from issue #69. The current version is [`summary-enrichments.js`](../../soar/n8n/nodes/summary-enrichments.js).*
+
+![Issue #69 path from Merge to TheHive](../images/n8n/69-merge-and-summary-path.png)
+
+*In issue #69 the summary went straight to `Create an alert`. [Score](#5-score) and [Decision](#6-decision) now run between them.*
+
+</details>
 
 #### Check a saved enrichment run
 
@@ -1447,7 +1477,7 @@ Records how many alerts reach each selected workflow stage. Counter records can 
 
 The Counters stage only records metrics. It does not change the existing triage, scoring, deduplication, enrichment, or decision logic.
 
-![Counters workflow overview](../images/n8n/75-01%20%E2%80%94%20Counters%20workflow%20overview%20%E2%80%94%20kopia.png)
+![Counters workflow overview](../images/n8n/75-01-counters-workflow-overview.png)
 
 ### 10.1. Data Table: SOC_Counters
 
@@ -1472,7 +1502,7 @@ All counter Insert nodes use the following settings:
 | Data table | `SOC_Counters` |
 | Mapping Column Mode | `Map Each Column Manually` |
 
-![SOC_Counters Data Table](../images/n8n/75-02%20%E2%80%94%20SOC_Counters%20table.png)
+![SOC_Counters Data Table](../images/n8n/75-02-soc-counters-table.png)
 
 ### 10.2. Counter-node placement
 
@@ -1505,7 +1535,7 @@ A Data Table Insert node returns the inserted row, which must not replace the al
 
 **Screenshot evidence:**
 
-![Count - Raw Alert counter](../images/n8n/75-03%20%E2%80%94%20Raw%20Counter.png)
+![Count - Raw Alert counter](../images/n8n/75-03-raw-alert-counter.png)
 
 ### 10.4. Node: Count - Normalized Alert
 
@@ -1531,7 +1561,7 @@ A Data Table Insert node returns the inserted row, which must not replace the al
 
 **Screenshot evidence:**
 
-![Count - Normalized Alert counter](../images/n8n/75-04%20%E2%80%94%20Normalized%20counter.png)
+![Count - Normalized Alert counter](../images/n8n/75-04-normalized-alert-counter.png)
 
 ### 10.5. Node: Count - Dedup New
 
@@ -1577,7 +1607,7 @@ A Data Table Insert node returns the inserted row, which must not replace the al
 
 **Screenshot evidence for both deduplication counters:**
 
-![Deduplication counters](../images/n8n/75-05%20%E2%80%94%20Deduplication%20counters.png)
+![Deduplication counters](../images/n8n/75-05-deduplication-counters.png)
 
 ### 10.7. Node: Count Cortex Results
 
@@ -1650,7 +1680,7 @@ Node settings:
 
 **Screenshot evidence:**
 
-![Count Cortex Results calculation](../images/n8n/75-06%20%E2%80%94%20Cortex%20Results%20calculation.png)
+![Count Cortex Results calculation](../images/n8n/75-06-cortex-results-calculation.png)
 
 ### 10.8. Node: Count - Cortex Results
 
@@ -1677,7 +1707,7 @@ Cortex outcomes describe analyzer execution status, not whether an observable is
 
 **Screenshot evidence:**
 
-![Cortex counter persistence](../images/n8n/75-07%20%E2%80%94%20Cortex%20counter%20persistence.png)
+![Cortex counter persistence](../images/n8n/75-07-cortex-counter-persistence.png)
 
 ### 10.9. Node: Count - TheHive Alert Created
 
@@ -1727,7 +1757,7 @@ This counter records the branch taken. It does not mean that the alert was class
 
 **Screenshot evidence for TheHive counters:**
 
-![TheHive Alert Created and Skipped counters](../images/n8n/75-08%20%E2%80%94%20TheHive%20Alert%20Created%20and%20Skipped%20(1).png)
+![TheHive Alert Created and Skipped counters](../images/n8n/75-08-thehive-alert-created-and-skipped.png)
 
 ### 10.11. How to verify a complete counter execution
 
@@ -1766,7 +1796,3 @@ The duplicate and TheHive-skipped branch tests are treated as PASS for this task
 | TheHive-created counter is missing | The TheHive creation node failed, or its successful output is not connected to the counter branch | Inspect the `Create an alert` execution and parallel connection |
 | TheHive-skipped counter is missing | The TRUE output of `If` did not execute, or it is not connected to the counter branch | Inspect the `If` output and counter connection |
 
-
-## Full test
-
-**Owner:** @Solivagantaeon
