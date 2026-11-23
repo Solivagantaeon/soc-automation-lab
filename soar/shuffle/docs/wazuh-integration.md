@@ -1,5 +1,8 @@
 # Runbook – Wazuh → Shuffle integration
 
+> **Archived (v0.1).** Shuffle was replaced by n8n on 2026-10-22 and this page is no longer maintained.
+> Current pipeline: [`soar/n8n/`](../../n8n/). About the archive: [`soar/shuffle/`](../README.md).
+
 Sends every Wazuh alert (level ≥ 3), including Suricata IDS alerts, to a Shuffle workflow over HTTPS.
 Background and rationale: [ADR 0001](../../../docs/decisions/0001-wazuh-integration-shuffle.md).
 
@@ -8,7 +11,7 @@ Background and rationale: [ADR 0001](../../../docs/decisions/0001-wazuh-integrat
 | Wazuh manager | `wazuh-master`, 10.10.20.243, Wazuh 4.14.9 |
 | Shuffle | `https://shuffle.lab:3443` (10.10.20.245), self-signed certificate |
 | IDS | Suricata on OPNsense (`vlan01`), shipped by the Wazuh agent `opnsense` → rule 86601 |
-| Config file | `detection/wazuh/integrations/shuffle-integration.xml` |
+| Config file | `soar/shuffle/integration/shuffle-integration.xml` |
 
 All commands run as `root` on the manager unless stated otherwise.
 
@@ -64,7 +67,7 @@ cp /var/ossec/etc/ossec.conf /var/ossec/etc/ossec.conf.bak-$(date +%F)
 ```
 
 In `/var/ossec/etc/ossec.conf` keep **exactly one** `shuffle` block – the content of
-`detection/wazuh/integrations/shuffle-integration.xml`, with `__SHUFFLE_WEBHOOK_URL__` replaced by the real URL from step 1:
+`soar/shuffle/integration/shuffle-integration.xml`, with `__SHUFFLE_WEBHOOK_URL__` replaced by the real URL from step 1:
 
 ```xml
 <integration>
@@ -159,7 +162,7 @@ Evidence: [`web-31103-sqli.json`](../samples/web-31103-sqli.json), [`web-31106-a
 The same injection method replays a Suricata event (`eve.json` line, location `/var/log/suricata/eve.json`). The JSON decoder needs the line to start with `{`, so `logger`/journald (which add a syslog header) cannot be used for this.
 ### Samples
 
-`samples/alerts/shuffle-integration/*.json` are built from `alerts.json` with the integration's own `generate_msg()` from `shuffle.py`, i.e. the same envelope Shuffle receives (`severity`, `pretext`, `title`, `rule_id`, `timestamp`, `id`, `all_fields`). Real lab alerts. They contain only lab hostnames, private addresses and the built-in Administrator account; the external IP in the Suricata sample was replaced with 203.0.113.10 (RFC 5737).
+`soar/shuffle/samples/*.json` are built from `alerts.json` with the integration's own `generate_msg()` from `shuffle.py`, i.e. the same envelope Shuffle receives (`severity`, `pretext`, `title`, `rule_id`, `timestamp`, `id`, `all_fields`). Real lab alerts. They contain only lab hostnames, private addresses and the built-in Administrator account; the external IP in the Suricata sample was replaced with 203.0.113.10 (RFC 5737).
 FIM samples (550, 554) come from alerts at 00:29, before the TLS fix – same format, but those particular alerts were not delivered to Shuffle.
 
 ---

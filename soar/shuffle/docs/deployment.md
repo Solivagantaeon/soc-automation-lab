@@ -1,6 +1,9 @@
-## 5. Shuffle — security orchestration and triage
+# 5. Shuffle — security orchestration and triage
 
-### 5.1 Purpose and deployment
+> **Archived (v0.1).** Shuffle was replaced by n8n on 2026-10-22 and this page is no longer maintained.
+> Current pipeline: [`soar/n8n/`](../../n8n/). About the archive: [`soar/shuffle/`](../README.md).
+
+## 5.1 Purpose and deployment
 
 Shuffle receives selected Wazuh alert JSON payloads through a webhook and orchestrates normalisation, IOC extraction, deduplication, external enrichment, scoring and creation of analyst-facing records in TheHive. Its active workflow is labelled **SOC Automation v1.0** in the captured editor.
 
@@ -14,7 +17,7 @@ Shuffle receives selected Wazuh alert JSON payloads through a webhook and orches
 | Typical backend API | `5001/TCP` in the Shuffle deployment, kept within the private environment |
 | Workflow access | Authenticated Shuffle user and API/application credentials stored in the platform |
 
-### 5.2 Ports, authentication and APIs
+## 5.2 Ports, authentication and APIs
 
 - **Inbound:** authenticated Shuffle UI uses HTTPS on port `3443`; the Wazuh integration targets a protected workflow webhook through the Shuffle endpoint. The full webhook URL is a secret and is never committed.
 - **Backend:** Shuffle provides an HTTP REST API on its backend service (commonly port `5001` internally).
@@ -32,16 +35,16 @@ sudo docker compose up -d
 
 Open the Shuffle UI over HTTPS and inspect the workflow editor and **Runtime Location** state. A running runtime and accessible authenticated UI establish basic Shuffle service health without triggering Wazuh, Cortex, MISP or TheHive. To test the orchestration engine in isolation, use a synthetic manual runtime argument in an otherwise non-integrated test workflow. Do not store the webhook URL in the example.
 
-### 5.4 Problems and solutions
+## 5.4 Problems and solutions
 
 - **Webhook handoff:** the Wazuh-to-Shuffle link was established with test alert payloads; the workflow receives alerts through its webhook trigger. Use `rule_id`-based filtering rather than a severity-only condition.
 - **Repeated test alerts:** workflow development uses unique synthetic alert/rule/agent identifiers for successive tests, preventing deduplication from masking expected outputs.
 - **Enrichment availability:** the workflow separates observable extraction, scoring and downstream enrichment paths. External analyzer failures should be handled independently, without presenting an enrichment API timeout as proof of malicious activity.
 
-### 5.5 Evidence and references
+## 5.5 Evidence and references
 
-- ![Shuffle triage workflow](../images/shuffle/06-shuffle-running.png)
-- Shuffle workflow documentation: [`../../../soar/shuffle/README.md`](../../soar/shuffle/README.md)
-- Architecture workflow: [architecture](../architecture/architecture.md)
+- ![Shuffle triage workflow](../../../docs/images/shuffle/06-shuffle-running.png)
+- Shuffle workflow documentation: [`soar/shuffle/README.md`](../README.md)
+- Architecture workflow: [architecture](../../../infrastructure/architecture/architecture.md)
 
 ---

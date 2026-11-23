@@ -6,7 +6,6 @@ This directory contains integration files used by the Wazuh manager.
 |---|---|
 | [`custom-n8n`](custom-n8n) | Custom executable that forwards matching Wazuh alerts to n8n. See [The `custom-n8n` integration](#the-custom-n8n-integration). |
 | [`n8n-integration.xml`](n8n-integration.xml) | Sanitized manager-side configuration for n8n. See [n8n integration configuration](#n8n-integration-configuration). |
-| [`shuffle-integration.xml`](shuffle-integration.xml) | Configuration template for the separate Shuffle integration. See [Shuffle integration configuration](#shuffle-integration-configuration). |
 
 ## The `custom-n8n` integration
 
@@ -24,11 +23,9 @@ Although this file contains Python code, it has no `.py` suffix because Wazuh ex
 
 [`n8n-integration.xml`](n8n-integration.xml) contains the sanitized Wazuh `<integration>` block that invokes `custom-n8n`. It sends JSON alerts at level 12 and above. For installation, see [Install on the Wazuh manager](#install-on-the-wazuh-manager). The n8n node settings and lab test are documented in the [n8n triage runbook](../../../docs/runbooks/n8n-triage.md#1-webhook).
 
-### Shuffle integration configuration
+### Shuffle integration (archived)
 
-[`shuffle-integration.xml`](shuffle-integration.xml) is a separate Wazuh-to-Shuffle configuration. It uses the `shuffle` integration name and forwards JSON alerts at level 3 and above. It does not configure or invoke `custom-n8n`.
-
-For the existing Shuffle setup, see the [Wazuh–Shuffle integration runbook](../../../docs/runbooks/wazuh-integration-shuffle.md).
+The Wazuh → Shuffle integration used until 2026-10-22 is archived with the rest of v0.1 in [`soar/shuffle/`](../../../soar/shuffle/): the [configuration](../../../soar/shuffle/integration/shuffle-integration.xml) and the [runbook](../../../soar/shuffle/docs/wazuh-integration.md).
 
 ## Install on the Wazuh manager
 

@@ -1,5 +1,8 @@
 # Wazuh alert deduplication with TheHive Update Alert
 
+> **Archived (v0.1).** Shuffle was replaced by n8n on 2026-10-22 and this page is no longer maintained.
+> Current pipeline: [`soar/n8n/`](../../n8n/). About the archive: [`soar/shuffle/`](../README.md).
+
 **Related issue:** [#16 — Deduplication and alert correlation](https://github.com/Solivagantaeon/soc-automation-lab/issues/16)
 
 Shuffle fingerprints incoming Wazuh events. A new fingerprint creates a TheHive alert; a repeat finds that alert, updates it through the TheHive app, and increments the duplicate count.

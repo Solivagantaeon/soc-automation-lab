@@ -77,7 +77,7 @@ sequenceDiagram
     T-->>A: Alert available for review
 ```
 
-Workflow overview screenshot: [Shuffle editor](../images/shuffle/06-shuffle-running.png). TheHive output screenshot: [test alerts](../images/thehive/06-thehive-running.png). Successful operation of specific enrichment providers requires validation of their corresponding workflow executions.
+Workflow overview screenshot: [Shuffle editor](../docs/images/shuffle/06-shuffle-running.png). TheHive output screenshot: [test alerts](../images/thehive/06-thehive-running.png). Successful operation of specific enrichment providers requires validation of their corresponding workflow executions.
 
 ## Key design decisions
 
