@@ -1,10 +1,10 @@
 # Regression checks for the live triage workflow
 
-A regression check repeats the condition that exposed a bug and inspects the output that went wrong. The [original live PoC](../poc-live-workflow.md#results) records three alerts sent by Wazuh.
+A regression check repeats the condition that exposed a bug and inspects the output that went wrong. The [original live PoC](poc-live-workflow.md#results) records three alerts sent by Wazuh.
 
 ## 93. One decision per alert
 
-**Before.** A late Cortex report started a second decision for the same Wazuh alert. In [scenario 1](../poc-live-workflow.md#issues-found), execution `13918` wrote two audit rows. In [scenario 3](../poc-live-workflow.md#issues-found-in-the-first-run), execution `16669` created an alert before the MD5 reports arrived. TheHive rejected the second create request for the same `sourceRef`. [Issue #93](https://github.com/Solivagantaeon/soc-automation-lab/issues/93)
+**Before.** A late Cortex report started a second decision for the same Wazuh alert. In [scenario 1](poc-live-workflow.md#issues-found), execution `13918` wrote two audit rows. In [scenario 3](poc-live-workflow.md#issues-found-in-the-first-run), execution `16669` created an alert before the MD5 reports arrived. TheHive rejected the second create request for the same `sourceRef`. [Issue #93](https://github.com/Solivagantaeon/soc-automation-lab/issues/93)
 
 **Change.** Each Cortex branch processes one observable at a time and sends its collected results to the final `Merge` through the loop’s `done` output. [Runbook §4](../runbooks/n8n-triage.md#cortex-analyzer-execution-and-report-polling) · [ADR §4](../decisions/0003-n8n-triage-workflow.md#4-misp-and-cortex)
 
@@ -38,7 +38,7 @@ related:
 
 ## 96. MISP event tags reach Decision
 
-**Before.** In [scenario 2](../poc-live-workflow.md#scenario-2-enrichment-findings), event `1686` tagged `8.8.8.8` as `soc-lab:benign`, but execution `16668` recorded `has_benign_misp_tag: false`. [Issue #96](https://github.com/Solivagantaeon/soc-automation-lab/issues/96)
+**Before.** In [scenario 2](poc-live-workflow.md#scenario-2-enrichment-findings), event `1686` tagged `8.8.8.8` as `soc-lab:benign`, but execution `16668` recorded `has_benign_misp_tag: false`. [Issue #96](https://github.com/Solivagantaeon/soc-automation-lab/issues/96)
 
 **Change.** The MISP search requests `includeEventTags: true`. `Summary Enrichments` collects tags from `Tag`, `Event.Tag` and `Event.Tags`. [MISP node settings](../runbooks/n8n-triage.md#misp-branch)
 
@@ -55,7 +55,7 @@ related:
 
 ## 97. TheHive shows conflicting evidence for an IP
 
-**Before.** The [scenario 2 alert](../poc-live-workflow.md#scenario-2-enrichment-findings) labelled `8.8.8.8` benign. AbuseIPDB whitelisted the IP, but MISP event `1411` also had a matching attribute with `to_ids: true`. [Issue #97](https://github.com/Solivagantaeon/soc-automation-lab/issues/97)
+**Before.** The [scenario 2 alert](poc-live-workflow.md#scenario-2-enrichment-findings) labelled `8.8.8.8` benign. AbuseIPDB whitelisted the IP, but MISP event `1411` also had a matching attribute with `to_ids: true`. [Issue #97](https://github.com/Solivagantaeon/soc-automation-lab/issues/97)
 
 **Change.** `Build TheHive Alert` now counts an IDS-enabled MISP match as adverse evidence for the matching observable. [Runbook §8](../runbooks/n8n-triage.md#8-thehive) · [ADR §8](../decisions/0003-n8n-triage-workflow.md#8-thehive)
 
@@ -80,7 +80,7 @@ related:
 
 ## 98. MISP references keep distinct attributes
 
-**Before.** The [scenario 2 description](../poc-live-workflow.md#scenario-2-enrichment-findings) showed three identical-looking references to `Updater.exe`. [Issue #98](https://github.com/Solivagantaeon/soc-automation-lab/issues/98)
+**Before.** The [scenario 2 description](poc-live-workflow.md#scenario-2-enrichment-findings) showed three identical-looking references to `Updater.exe`. [Issue #98](https://github.com/Solivagantaeon/soc-automation-lab/issues/98)
 
 **Change.** `Summary Enrichments` identifies an attribute by UUID, then by attribute ID. If both are missing, it uses the event ID, type and value when available. The alert builder groups references for one indicator when the event, IDS flag, tags and comment match, and lists their IDs on that line.
 

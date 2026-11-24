@@ -29,8 +29,8 @@ Scenario 3 reached the expected outcome on the second run: Team Cymru MHR report
 | Item | Value |
 |---|---|
 | n8n workflow | `SOC - Wazuh alert triage` (ID `JqM02cALddRCz3a4`). Version `5cb075fd`, published on 2026-11-13 12:07 (+01:00), ran scenario 1. Version `5af171b1` ran scenario 2 and the first run of scenario 3, and version `021b562b` the second run of scenario 3. The Code nodes are the same in all three versions. |
-| Node code | `normalize-v1.2.js`, `score-v0.2.js`, `decision-v0.1.js`, `thehive-alert-v0.3.js` from [`soar/n8n/nodes/`](../soar/n8n/nodes/) at commit `2472cab` (2026-11-12), checked against the workflow stored with each execution. Score and the TheHive alert builder match the files, and Decision differs only in formatting and comments. Normalize is the earlier revision from commit `53101e0` (2026-11-07), without the source-IP deduplication key added on 2026-11-09. |
-| Scoring config | [`score-config.json`](../soar/n8n/nodes/score-config.json) |
+| Node code | `normalize-v1.2.js`, `score-v0.2.js`, `decision-v0.1.js`, `thehive-alert-v0.3.js` from [`soar/n8n/nodes/`](../../soar/n8n/nodes/) at commit `2472cab` (2026-11-12), checked against the workflow stored with each execution. Score and the TheHive alert builder match the files, and Decision differs only in formatting and comments. Normalize is the earlier revision from commit `53101e0` (2026-11-07), without the source-IP deduplication key added on 2026-11-09. |
+| Scoring config | [`score-config.json`](../../soar/n8n/nodes/score-config.json) |
 | Wazuh integration | `custom-n8n`, two `<integration>` blocks: one forwards alerts at level 12 and above, one forwards selected rules by `rule_id` (added for this PoC, see below) |
 | Cortex analyzers used | Hashes: `TeamCymruMHR_1_0`, `CIRCLHashlookup_1_1`, `VirusTotal_GetReport_3_1`. IPs: `AbuseIPDB_2_0`. Several types: `Maltiverse_Report_1_0`. |
 | MISP | Attribute search on the lab instance (10.10.20.50) for every observable from the alert. |
@@ -97,7 +97,7 @@ sudo cp /usr/share/javascript/jquery/jquery.min.js /var/www/html/js/jquery.min.j
 <details>
 <summary>Screenshot: commands run on SOC-LIN-01</summary>
 
-![Trigger command on SOC-LIN-01](images/endpoints/92-s1-trigger-command.png)
+![Trigger command on SOC-LIN-01](../images/endpoints/92-s1-trigger-command.png)
 
 *Figure 1. Terminal on SOC-LIN-01: start time recorded with `date -Is` (22:45:30), then the file copied to the web root.*
 
@@ -113,14 +113,14 @@ sudo cp /usr/share/javascript/jquery/jquery.min.js /var/www/html/js/jquery.min.j
 | Alert ID | 1794692751.963227 |
 | Time | 2026-11-14T22:45:51.315+01:00 |
 
-![Wazuh alert for scenario 1](images/wazuh/92-s1-alert-554.png)
+![Wazuh alert for scenario 1](../images/wazuh/92-s1-alert-554.png)
 
 *Figure 2. Wazuh Discover: rule 554 on SOC-LIN-01 at 22:45:51, 21 s after the file was copied to the web root.*
 
 ### n8n execution
 
 Execution 13918, 2026-11-14 22:45:52 (+01:00), took 21.5 s.
-![n8n execution 13918](images/n8n/92-s1-execution.png)
+![n8n execution 13918](../images/n8n/92-s1-execution.png)
 
 *Figure 3. n8n execution 13918: the alert passes normalization, deduplication and enrichment (MISP, Team Cymru, CIRCL), then ends at* Count - TheHive Skipped*;* Create an alert *did not run.*
 
@@ -132,7 +132,7 @@ Execution 13918, 2026-11-14 22:45:52 (+01:00), took 21.5 s.
 | Cortex: TeamCymruMHR_1_0 | SHA-256, SHA-1, MD5 of the file | No record found` (not in the malware hash registry) |
 | Cortex: CIRCLHashlookup_1_1 | SHA-256 `03378a72…588fd | known file `jquery.min.js` (89 037 B), `hashlookup:trust: 100`, 12 parent packages |
 
-![CIRCL Hashlookup result for scenario 1](images/n8n/92-s1-circl-hashlookup.png)
+![CIRCL Hashlookup result for scenario 1](../images/n8n/92-s1-circl-hashlookup.png)
 
 *Figure 4. CIRCL Hashlookup in Cortex knows the file: same SHA-256 as in the Wazuh alert, `hashlookup:trust: 100`, found in 12 public packages.*
 
@@ -150,7 +150,7 @@ Execution 13918, 2026-11-14 22:45:52 (+01:00), took 21.5 s.
 
 Reason recorded by the workflow: *"The complete analysis produced a likely-false-positive verdict and the asset inventory allows automatic closure."*
 
-![Decision output for scenario 1](images/n8n/92-s1-decision.png)
+![Decision output for scenario 1](../images/n8n/92-s1-decision.png)
 
 *Figure 5. Decision node output: the workflow closed the alert as a likely false positive and recorded why.*
 
@@ -158,13 +158,13 @@ Reason recorded by the workflow: *"The complete analysis produced a likely-false
 
 `SOC_Audit` has the decision for execution 13918: outcome `closed`, reason `complete_low_risk_analysis`, score 0, recorded at 2026-11-14T22:46:14+01:00. The workflow took the `TheHive skipped` branch (`Count - TheHive Skipped`), and TheHive (organisation `soclab`) has no new alert after 22:45 for alert ID `1794692751.963227`.
 
-![SOC_Audit rows for scenario 1](images/n8n/92-s1-audit-row.png)
+![SOC_Audit rows for scenario 1](../images/n8n/92-s1-audit-row.png)
 
 *Figure 6. SOC_Audit for execution 13918: the decision is recorded correctly* 
 
 ### Issues found
 
-- **Duplicate items after enrichment.** `Summary Enrichments` emits 2 items for one alert, which then go through Scoring and Decision. Result: two `SOC_Audit` rows (id 21 and 22) and two `thehive_skipped` counters for one alert. The decision is correct, but the funnel counters are inflated, and for other outcomes a second create request can be rejected because the alert already exists. See the [follow-up for #93 with before-and-after node counts](regression-evidence/poc-live-workflow-after-bug-fix.md#93-one-decision-per-alert).
+- **Duplicate items after enrichment.** `Summary Enrichments` emits 2 items for one alert, which then go through Scoring and Decision. Result: two `SOC_Audit` rows (id 21 and 22) and two `thehive_skipped` counters for one alert. The decision is correct, but the funnel counters are inflated, and for other outcomes a second create request can be rejected because the alert already exists. See the [follow-up for #93 with before-and-after node counts](regression-after-bug-fixes.md#93-one-decision-per-alert).
 - **`alert_id` is `null` in `SOC_Audit`**, while the counter table has the correct ID (`1794692751.963227`). Fixed after the PoC in [#94](https://github.com/Solivagantaeon/soc-automation-lab/issues/94).
 
 
@@ -188,7 +188,7 @@ Copy-Item C:\Windows\System32\curl.exe "$env:TEMP\updater.exe" -Force
 <details>
 <summary>Screenshot: commands run on SOC-WIN10-01</summary>
 
-![Trigger command on SOC-WIN10-01](images/endpoints/92-s2-trigger-command.png)
+![Trigger command on SOC-WIN10-01](../images/endpoints/92-s2-trigger-command.png)
 
 *Figure 7. PowerShell on SOC-WIN10-01, standard user: start time recorded with `Get-Date` (12:04:54), then `updater.exe` is copied to the Temp folder and connects to 8.8.8.8. Its output is discarded (`-s -o NUL`), so the screenshot shows no response.*
 
@@ -204,7 +204,7 @@ Copy-Item C:\Windows\System32\curl.exe "$env:TEMP\updater.exe" -Force
 | Alert ID | 1794740716.37121389 |
 | Time | 2026-11-15T12:05:16.926+01:00 |
 
-![Wazuh alert for scenario 2](images/wazuh/92-s2-alert-100921.png)
+![Wazuh alert for scenario 2](../images/wazuh/92-s2-alert-100921.png)
 
 *Figure 8. Wazuh Discover: rule 100921 on SOC-WIN10-01 at 12:05:16. The alert names the program (`…\Temp\updater.exe`) and the destination (8.8.8.8:443); its level 12 is enough for the integration to forward it to n8n.*
 
@@ -212,7 +212,7 @@ Copy-Item C:\Windows\System32\curl.exe "$env:TEMP\updater.exe" -Force
 
 Execution 16668, started 2026-11-15 12:05:19 (+01:00), took 8.961s s.
 
-![n8n execution for scenario 2](images/n8n/92-s2-execution.png)
+![n8n execution for scenario 2](../images/n8n/92-s2-execution.png)
 *Figure 9. n8n execution 16668: the alert is new (1), MISP is queried (2) and AbuseIPDB is the only Cortex analyzer that runs, because 8.8.8.8 is the only external observable (3). The decision is `analyst_review` (4), so the alert and its observable are created in TheHive (5).*
 
 
@@ -226,11 +226,11 @@ Execution 16668, started 2026-11-15 12:05:19 (+01:00), took 8.961s s.
 
 The other analyzers (Maltiverse, Team Cymru, CIRCL, VirusTotal) did not run: the alert has no hash, domain or URL. The internal source IP, the host name, the user and the file name were not sent to Cortex.
 
-![MISP result for scenario 2](images/n8n/92-s2-enrichment-misp.png)
+![MISP result for scenario 2](../images/n8n/92-s2-enrichment-misp.png)
 
 *Figure 10. Summary Enrichments, MISP part: 8.8.8.8 matches four attributes, one of them in the lab event "SOC-LAB test IOCs – benign". Event 1411 is the IDS-enabled match listed in the enrichment table.*
 
-![AbuseIPDB result for scenario 2](images/n8n/92-s2-enrichment-abuseipdb.png)
+![AbuseIPDB result for scenario 2](../images/n8n/92-s2-enrichment-abuseipdb.png)
 
 *Figure 11. AbuseIPDB marks 8.8.8.8 as whitelisted (Google LLC, confidence 0), yet lists 71 reports, mostly port scans. `processing.status` is `complete`: every source answered.*
 
@@ -252,11 +252,11 @@ Reason recorded by the workflow: *"Scoring verdict "medium" requires analyst rev
 
 The asset would allow automatic closure, but only a `likely_false_positive` verdict can be closed, so the asset policy was never applied. The analysis was complete: the alert went to an analyst because of the evidence, not because a source was missing.
 
-![Scoring output for scenario 2](images/n8n/92-s2-scoring.png)
+![Scoring output for scenario 2](../images/n8n/92-s2-scoring.png)
 
 *Figure 12. Scoring output: 44 points, verdict `medium`, coverage 1 (1). The rule level adds 24 (2), AbuseIPDB subtracts 10 because 8.8.8.8 is whitelisted (3), and MISP adds 30 for an IDS-flagged attribute matching the file name `Updater.exe` (4). The evidence points in opposite directions.*
 
-![Decision output for scenario 2](images/n8n/92-s2-decision.png)
+![Decision output for scenario 2](../images/n8n/92-s2-decision.png)
 
 *Figure 13. Decision output: the analysis is complete and the asset allows auto-close, but the `medium` verdict sends the alert to an analyst (`analyst_review_required`). No malicious signal was found.*
 
@@ -277,7 +277,7 @@ TheHive (organisation `soclab`) has a new alert `~286867456`, status *New*, unas
 
 The description gives the analyst the decision, the asset, the source alert and every MISP and Cortex result, so the conflict is visible without opening n8n. Exactly one alert was created for this Wazuh alert.
 
-![TheHive alert for scenario 2](images/thehive/92-s2-thehive-alert.png)
+![TheHive alert for scenario 2](../images/thehive/92-s2-thehive-alert.png)
 
 *Figure 14. TheHive alert in `soclab`: the title names the host and the IOC (1), severity Medium with TLP and PAP AMBER (2), and the reference is the Wazuh alert ID (3). The description repeats the automated decision (4) and lists the conflicting evidence: a MISP report on Lazarus that matches the file name (5) and an AbuseIPDB whitelist entry for 8.8.8.8 (6). The user name is redacted.*
 
@@ -304,9 +304,9 @@ We added rule `100921` to `local_rules.xml` on the Wazuh manager. The default ru
 #### Scenario 2 enrichment findings
 
 - **A file-name match counts as much as a hash.** `Updater.exe` matched an attribute in a public report on the Lazarus group and added 30 points, the same as a hash match. Common file names are weak indicators and should get a separate, lower weight in `score-config.json`.
-- In execution 16668 the event tag `soc-lab:benign` did not reach Decision. [Follow-up for #96: event tags in Decision](regression-evidence/poc-live-workflow-after-bug-fix.md#96-misp-event-tags-reach-decision).
-- The original alert called 8.8.8.8 benign despite the IDS-enabled match from event 1411. [Follow-up for #97: the stored IP verdict](regression-evidence/poc-live-workflow-after-bug-fix.md#97-thehive-shows-conflicting-evidence-for-an-ip).
-- The original description printed three indistinguishable filename references. [Follow-up for #98: attribute IDs and the rendered references](regression-evidence/poc-live-workflow-after-bug-fix.md#98-misp-references-keep-distinct-attributes).
+- In execution 16668 the event tag `soc-lab:benign` did not reach Decision. [Follow-up for #96: event tags in Decision](regression-after-bug-fixes.md#96-misp-event-tags-reach-decision).
+- The original alert called 8.8.8.8 benign despite the IDS-enabled match from event 1411. [Follow-up for #97: the stored IP verdict](regression-after-bug-fixes.md#97-thehive-shows-conflicting-evidence-for-an-ip).
+- The original description printed three indistinguishable filename references. [Follow-up for #98: attribute IDs and the rendered references](regression-after-bug-fixes.md#98-misp-references-keep-distinct-attributes).
 
 ## Scenario 3: confirmed malicious, prioritised in TheHive
 
@@ -333,7 +333,7 @@ This section reports the second run, at 15:43. The first run, at 15:19, ended wi
 <details>
 <summary>Screenshot: commands run on SOC-LIN-01</summary>
 
-![Trigger command on SOC-LIN-01](images/endpoints/92-s3-trigger-command.png)
+![Trigger command on SOC-LIN-01](../images/endpoints/92-s3-trigger-command.png)
 
 *Figure 15. Terminal on SOC-LIN-01: start time recorded with `date -Is` (15:43:14) and the EICAR file written to the web root.*
 
@@ -349,7 +349,7 @@ This section reports the second run, at 15:43. The first run, at 15:19, ended wi
 | Alert ID | 1794753803.37330334 |
 | Time | 2026-11-15T15:43:23.041+01:00 |
 
-![Wazuh alert for scenario 3](images/wazuh/92-s3-alert-554.png)
+![Wazuh alert for scenario 3](../images/wazuh/92-s3-alert-554.png)
 
 *Figure 16. Wazuh Discover: rule 554 on SOC-LIN-01 at 15:43:23 for `/var/www/html/eicar.com`, with the same SHA-256 as in the terminal.*
 
@@ -357,7 +357,7 @@ This section reports the second run, at 15:43. The first run, at 15:19, ended wi
 
 Execution 16670, started 2026-11-15 15:43:24 (+01:00), took 32.7 s. Workflow version `021b562b`, with the 10-second initial wait before the first Cortex report check.
 
-![n8n execution for scenario 3](images/n8n/92-s3-execution.png)
+![n8n execution for scenario 3](../images/n8n/92-s3-execution.png)
 
 *Figure 17. n8n execution 16670: the alert is new (1), its three file hashes go to Team Cymru MHR and CIRCL Hashlookup after a 10-second initial wait (2), all results reach `Merge` in one run (3), the decision is `malicious` (4), and one TheHive alert with three observables is created (5).*
 
@@ -373,11 +373,11 @@ Execution 16670, started 2026-11-15 15:43:24 (+01:00), took 32.7 s. Workflow ver
 
 The other analyzers did not run: the alert has no external IP, domain or URL. The agent IP is internal, and the file name is not a Cortex observable type. All six Cortex jobs completed and nothing was pending or failed.
 
-![Team Cymru results for scenario 3](images/n8n/92-s3-enrichment-teamcymru.png)
+![Team Cymru results for scenario 3](../images/n8n/92-s3-enrichment-teamcymru.png)
 
 *Figure 18. Summary Enrichments, Team Cymru MHR part: the SHA-256 (1) and MD5 (3) hashes have a 97% antivirus detection rate, and MHR has no record for SHA-1 (2). All three jobs completed (4).*
 
-![CIRCL Hashlookup results for scenario 3](images/n8n/92-s3-enrichment-circl.png)
+![CIRCL Hashlookup results for scenario 3](../images/n8n/92-s3-enrichment-circl.png)
 
 *Figure 19. Summary Enrichments, CIRCL Hashlookup part: all three hashes of the EICAR file are "known" with level `safe` (1–3), the same result that closed the jQuery file in scenario 1. Team Cymru MHR reports 97% for the same file (Figure 18); Scoring resolves the conflict (Figure 20).*
 
@@ -398,11 +398,11 @@ Reason recorded by the workflow: *"Team Cymru MHR detection is at least 50%"*.
 
 CIRCL would normally subtract 10 points for a known file. Because MHR reports 97% for the same hash, Scoring cancels that discount and records why. The score alone stays `low`, but the Decision node checks malicious signals before the verdict, so a strong detection from one source is enough for `malicious`. The asset would allow automatic closure, as in scenario 1, but that rule is never reached.
 
-![Scoring output for scenario 3](images/n8n/92-s3-scoring.png)
+![Scoring output for scenario 3](../images/n8n/92-s3-scoring.png)
 
 *Figure 20. Scoring output: 25 points, verdict `low`, coverage 1 (1); all three sources answered (2). The rule level adds 10 (3). CIRCL would subtract 10 for a known file, but the 97% MHR detection cancels that discount (4), and Team Cymru adds 15 (5). The score alone stays low; the decision comes from the MHR signal (Figure 21).*
 
-![Decision output for scenario 3](images/n8n/92-s3-decision.png)
+![Decision output for scenario 3](../images/n8n/92-s3-decision.png)
 
 *Figure 21. Decision output: the outcome is `malicious` with reason code `malicious_evidence` (1), because Team Cymru MHR reports at least 50% (2). The score is only 25 (`low`) and the analysis is complete (3). The asset inventory allows automatic closure for SOC-LIN-01 (4), the same as in scenario 1, but a malicious signal is checked before the score, so the alert goes to TheHive instead.*
 
@@ -412,11 +412,11 @@ CIRCL would normally subtract 10 points for a known file. Because MHR reports 97
 
 The description gives the analyst the decision, the asset, the source alert, the verdict per observable and all six Cortex results, so the conflict between MHR and CIRCL is visible without opening n8n. Exactly one alert was created, and `SOC_Audit` has no row for this alert, because only closed alerts are audited there.
 
-![TheHive alert for scenario 3](images/thehive/92-s3-thehive-alert.png)
+![TheHive alert for scenario 3](../images/thehive/92-s3-thehive-alert.png)
 
 *Figure 22. TheHive alert `~491663488`: title and severity High (1), the reference is the Wazuh alert ID (2). The decision is `malicious` because Team Cymru MHR reports at least 50% (3), although the score alone is only 25 (`low`). The SHA-256 and MD5 hashes are marked malicious, SHA-1 is unknown (4). All six Cortex results are complete; MHR reports 97% while CIRCL lists the file as "known" (5).*
 
-![TheHive observables for scenario 3](images/thehive/92-s3-thehive-observables.png)
+![TheHive observables for scenario 3](../images/thehive/92-s3-thehive-observables.png)
 
 *Figure 23. Observables of the TheHive alert: the MD5 (1) and SHA-256 (3) hashes are tagged `ioc-verdict:malicious` from the Team Cymru MHR result, and SHA-1 is `ioc-verdict:unknown` because MHR has no record for it (2). The Cortex reports are not linked to the observables (4); the analyst finds them in the alert description.*
 
@@ -438,11 +438,11 @@ The first run (execution 16669, Wazuh alert `1794752368.37304554`, 15:19) on wor
 - The second batch tried to create the same alert. TheHive rejected the duplicate `sourceRef`, and the execution ended with status `error`.
 - Both batches were `malicious` here. A batch with only the SHA-1 results would have scored 0 and closed the EICAR alert automatically.
 
-The second run used a ten-second initial wait. This let the reports finish together on that run. The [follow-up for #93](regression-evidence/poc-live-workflow-after-bug-fix.md#93-one-decision-per-alert) records the later loop change and the runs that exercised delayed reports.
+The second run used a ten-second initial wait. This let the reports finish together on that run. The [follow-up for #93](regression-after-bug-fixes.md#93-one-decision-per-alert) records the later loop change and the runs that exercised delayed reports.
 
 ## Related
 
-- [Regression checks and a template for future fixes](regression-evidence/poc-live-workflow-after-bug-fix.md)
-- [n8n triage runbook](runbooks/n8n-triage.md): how every node is built and tested
-- [ADR 0003](decisions/0003-n8n-triage-workflow.md): why the workflow looks the way it does
-- [First end-to-end test](e2e-test.md): the five-node version from 31 October 2026 (#55)
+- [Regression checks and a template for future fixes](regression-after-bug-fixes.md)
+- [n8n triage runbook](../runbooks/n8n-triage.md): how every node is built and tested
+- [ADR 0003](../decisions/0003-n8n-triage-workflow.md): why the workflow looks the way it does
+- [First end-to-end test](e2e-first-run.md): the five-node version from 31 October 2026 (#55)

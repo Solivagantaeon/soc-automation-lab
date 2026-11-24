@@ -7,7 +7,7 @@ One controlled web request from Kali raised Wazuh rule 31103. Wazuh sent one ale
 
 The final n8n execution shows one item passing through all five nodes. TheHive returned a new alert with ID 4152 and the Wazuh alert ID as its source reference.
 
-![All five nodes completed in one n8n execution](images/n8n/55-07-complete-n8n-execution.png)
+![All five nodes completed in one n8n execution](../images/n8n/55-07-complete-n8n-execution.png)
 
 This is the first working version of the pipeline, focused on proving that one alert can travel from Wazuh to TheHive.
 
@@ -72,9 +72,9 @@ The **Get a filtered list of attributes** node searches MISP's Attribute resourc
 
 For this run, MISP returned the test attribute **586697** in event **1687**. Its type is **ip-src**, its value is **10.10.30.100**, and **to_ids** is true. In simple terms, MISP found the test IP and marked it as useful for detection.
 
-![MISP search expression used by the workflow](images/n8n/55-01-misp-search-configuration.png)
+![MISP search expression used by the workflow](../images/n8n/55-01-misp-search-configuration.png)
 
-![MISP test attribute and the IP passed to Cortex](images/n8n/55-02-misp-hit-and-observable.png)
+![MISP test attribute and the IP passed to Cortex](../images/n8n/55-02-misp-hit-and-observable.png)
 
 If the node returns no items, check that the MISP test event is available to the account used by n8n, and that the incoming field is **body.data.srcip**. A missing or differently named field means the search is sent without the IP.
 
@@ -90,9 +90,9 @@ The workflow passes the IP returned by the MISP node into Cortex. The test IP is
 
 Earlier tests used **MaxMind_GeoIP_4_0**. Those jobs failed with **Unknown IP address** for the private test IP. Switching to AbuseIPDB produced a successful analyzer job. The analyzer history below shows the earlier failures and the successful choice used for the test.
 
-![Cortex analyzer history during testing](images/n8n/55-04-cortex-analyzer-history.png)
+![Cortex analyzer history during testing](../images/n8n/55-04-cortex-analyzer-history.png)
 
-![Successful AbuseIPDB analyzer job](images/n8n/55-05-abuseipdb-success.png)
+![Successful AbuseIPDB analyzer job](../images/n8n/55-05-abuseipdb-success.png)
 
 Cortex jobs run in the background. The **Get a job report** node uses the job ID returned by **Execute an analyzer**:
 
@@ -100,7 +100,7 @@ Cortex jobs run in the background. The **Get a job report** node uses the job ID
 {{ $('Execute an analyzer').item.json._id }}
 ~~~
 
-![Get a job report configuration](images/n8n/55-03-cortex-job-report-configuration.png)
+![Get a job report configuration](../images/n8n/55-03-cortex-job-report-configuration.png)
 
 If a report still says **Waiting**, allow the analyzer to finish and run the report step again. Do not treat a queued job as a completed report.
 
@@ -115,11 +115,11 @@ The created alert shown in the final run has:
 - source reference **1793448744.519064**,
 - one IP observable: **10.10.30.100**.
 
-![TheHive rejected the first attempt because title was missing](images/n8n/55-06-thehive-title-mapping-error.png)
+![TheHive rejected the first attempt because title was missing](../images/n8n/55-06-thehive-title-mapping-error.png)
 
-![TheHive alert created by the workflow](images/n8n/55-08-thehive-alert-list.png)
+![TheHive alert created by the workflow](../images/n8n/55-08-thehive-alert-list.png)
 
-![TheHive response confirming the new alert fields](images/n8n/55-09-thehive-created-alert-response.png)
+![TheHive response confirming the new alert fields](../images/n8n/55-09-thehive-created-alert-response.png)
 
 In the current first version, the alert description is still a temporary note. The next small improvement is to put the MISP match and the finished Cortex report into that description.
 

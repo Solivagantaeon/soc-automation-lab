@@ -36,6 +36,6 @@ Suricata provides network IDS telemetry on the OPNsense firewall (Proxmox VM **9
 ### 3.5 Evidence and references
 
 - Existing screenshot: [`docs/images/suricata/04-suricata-alert.png`](../../docs/images/suricata/04-suricata-alert.png)
-- Network details: [lab setup](../../infrastructure/architecture/lab-setup.md)
+- Network details: [lab setup](../../infrastructure/lab-setup.md)
 
 ---

@@ -83,7 +83,7 @@ The event pages are also captured separately:
 
 ### n8n triage workflow (issue #69)
 
-The MISP branch of the n8n triage workflow searches the normalized alert observables and returns matching attributes in `misp.unique_indicators`, together with `misp.attribute_count`. It runs alongside the Cortex enrichment branch. The n8n query requests event tags with `includeEventTags: true`. The summary merges event and attribute tags and counts each attribute identity once. Multiple attributes in the same event may legitimately have the same value. The [regression results](../../docs/regression-evidence/poc-live-workflow-after-bug-fix.md) show how Decision and TheHive used these fields.
+The MISP branch of the n8n triage workflow searches the normalized alert observables and returns matching attributes in `misp.unique_indicators`, together with `misp.attribute_count`. It runs alongside the Cortex enrichment branch. The n8n query requests event tags with `includeEventTags: true`. The summary merges event and attribute tags and counts each attribute identity once. Multiple attributes in the same event may legitimately have the same value. The [regression results](../../docs/validation/regression-after-bug-fixes.md) show how Decision and TheHive used these fields.
 
 ![MISP search requesting event tags for the normalized observable values](../../docs/images/n8n/96-misp-event-tags-search.png)
 
@@ -156,4 +156,4 @@ MISP returned two attributes for `1.1.1.1`. Both had `to_ids: false`; one carrie
 - v0.1 lookup tests with all observable types (issue #10): [`soar/shuffle/docs/misp-lookup.md`](../../soar/shuffle/docs/misp-lookup.md)
 - Issues: [#10](https://github.com/Solivagantaeon/soc-automation-lab/issues/10) (v0.1, archived), [#69](https://github.com/Solivagantaeon/soc-automation-lab/issues/69) (n8n)
 - ADR: [0003 – n8n triage workflow](../../docs/decisions/0003-n8n-triage-workflow.md)
-- Lab hosts: [lab setup](../../infrastructure/architecture/lab-setup.md)
+- Lab hosts: [lab setup](../../infrastructure/lab-setup.md)

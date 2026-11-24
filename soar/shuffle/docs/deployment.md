@@ -45,6 +45,6 @@ Open the Shuffle UI over HTTPS and inspect the workflow editor and **Runtime Loc
 
 - ![Shuffle triage workflow](../../../docs/images/shuffle/06-shuffle-running.png)
 - Shuffle workflow documentation: [`soar/shuffle/README.md`](../README.md)
-- Architecture workflow: [architecture](../../../infrastructure/architecture/architecture.md)
+- Architecture workflow: [architecture](../../../docs/architecture/architecture.md)
 
 ---
