@@ -133,13 +133,13 @@ Expected: HTTP 200 with the TheHive version (`5.8.0-1`).
 
 ![The created alert with severity, markings, and four observables](../../docs/images/n8n/73-thehive-alert-result.png)
 
-**Proof of concept with live Wazuh alerts (issue #92, 2026-11-15).** Three scenarios, one per decision: the benign alert was closed automatically and nothing reached TheHive; the unclear alert reached TheHive for analyst review with `8.8.8.8` attached; the EICAR alert reached TheHive as malicious with three hashes, two marked malicious. Full write-up: [`docs/poc-live-workflow.md`](../../docs/poc-live-workflow.md).
+**Proof of concept with live Wazuh alerts (issue #92, 2026-11-15).** Three scenarios, one per decision: the benign alert was closed automatically and nothing reached TheHive; the unclear alert reached TheHive for analyst review with `8.8.8.8` attached; the EICAR alert reached TheHive as malicious with three hashes, two marked malicious. Full write-up: [`docs/validation/poc-live-workflow.md`](../../docs/validation/poc-live-workflow.md).
 
 ![TheHive alert for scenario 3](../../docs/images/thehive/92-s3-thehive-alert.png)
 
 ![TheHive observables for scenario 3](../../docs/images/thehive/92-s3-thehive-observables.png)
 
-**Regression checks (issues #93–#98).** One alert per Wazuh event after the Cortex loop fix, and conflicting evidence for one IP kept visible on the observable: [`docs/regression-evidence/poc-live-workflow-after-bug-fix.md`](../../docs/regression-evidence/poc-live-workflow-after-bug-fix.md).
+**Regression checks (issues #93–#98).** One alert per Wazuh event after the Cortex loop fix, and conflicting evidence for one IP kept visible on the observable: [`docs/validation/regression-after-bug-fixes.md`](../../docs/validation/regression-after-bug-fixes.md).
 
 ![TheHive observable verdicts](../../docs/images/thehive/97-observable-verdicts.png)
 

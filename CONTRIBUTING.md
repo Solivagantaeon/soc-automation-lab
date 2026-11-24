@@ -96,8 +96,12 @@ On Windows type `python` instead of `python3`. Look at the diff yourself anyway 
 | Sample alerts for testing | `samples/alerts/` (synthetic or anonymised) |
 | Normalised alerts and enrichment results | `samples/normalized/` |
 | Alert-funnel measurements | `metrics/` |
+| Lab infrastructure (Proxmox, VLANs, VMs, build order) | `infrastructure/` |
+| How the pipeline works (architecture, alert schema) | `docs/architecture/` |
 | Architecture decisions | `docs/decisions/` (ADR format, copy `0000-template.md`) |
+| Research and tool comparisons | `docs/research/` |
 | Step-by-step instructions | `docs/runbooks/` |
+| Test runs and evidence (end-to-end tests, PoC, regression checks) | `docs/validation/` |
 | Screenshots | `docs/images/<component>/` (check them with `check_images.py` and by eye!) |
 
 ## 6. Component README

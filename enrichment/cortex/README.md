@@ -189,4 +189,4 @@ The workflow summary reported `processing.status: complete`, with no pending or 
 
 - Issues: [#9 — IOC enrichment](https://github.com/Solivagantaeon/soc-automation-lab/issues/9) (v0.1, archived), [#69](https://github.com/Solivagantaeon/soc-automation-lab/issues/69) (n8n)
 - ADR: [0003 – n8n triage workflow](../../docs/decisions/0003-n8n-triage-workflow.md)
-- Lab hosts: [lab setup](../../infrastructure/architecture/lab-setup.md)
+- Lab hosts: [lab setup](../../infrastructure/lab-setup.md)

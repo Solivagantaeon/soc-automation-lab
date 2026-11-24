@@ -79,7 +79,7 @@ Expected result: a JSON response listing manager daemon statuses (authenticated 
 
 - **Time synchronization:** a domain-controller time-zone/clock offset was addressed by making OPNsense the NTP source, synchronizing the DC and its domain members, and updating Linux time sources. See [Issue #5](https://github.com/Solivagantaeon/soc-automation-lab/issues/5) and its runbook. Correct timestamps are required for reliable cross-platform correlation.
 - **Indexer/API troubleshooting:** previous test environments exhibited indexer authorization/shard and dashboard-API connectivity symptoms. The documented operational baseline is the clean single-node installation on VM 203, with its services active.
-- **Rule-based forwarding:** Wazuh-to-Shuffle filtering uses rule IDs rather than severity alone; this preserves low-level Suricata alerts such as rule `86601` for the intended workflows. See the [architecture decisions](../../infrastructure/architecture/architecture.md#key-design-decisions).
+- **Rule-based forwarding:** Wazuh-to-Shuffle filtering uses rule IDs rather than severity alone; this preserves low-level Suricata alerts such as rule `86601` for the intended workflows. See the [architecture decisions](../../docs/architecture/architecture.md#key-design-decisions).
 
 ### 2.6 Evidence and related files
 
