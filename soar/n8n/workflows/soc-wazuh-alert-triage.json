@@ -1,0 +1,3936 @@
+{
+  "name": "SOC - Wazuh alert triage",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "88e5acd0-27fd-46fb-b147-5b1401d88fc6",
+        "authentication": "headerAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.2,
+      "position": [
+        -1056,
+        -32
+      ],
+      "id": "9a455b6d-cb6b-4d49-ae7b-7643924a2734",
+      "name": "Webhook",
+      "webhookId": "88e5acd0-27fd-46fb-b147-5b1401d88fc6",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "operation": "search",
+        "useJson": true,
+        "jsonOutput": "={{ {\n  \"value\": $json.observables.map(observable => observable.data),\n  \"includeEventTags\": true\n} }}"
+      },
+      "type": "n8n-nodes-base.misp",
+      "typeVersion": 1,
+      "position": [
+        1168,
+        -448
+      ],
+      "id": "eca4589d-01ff-47a5-94cd-e87758c80dc7",
+      "name": "Get a filtered list of attributes",
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 2000,
+      "credentials": {},
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "alertFields": {
+          "mappingMode": "autoMapInputData",
+          "value": {
+            "follow": false,
+            "flag": false,
+            "title": "={{ ('Wazuh [' + $json.alert.rule.id + '] ' + $json.alert.rule.description + ' - ' + $json.alert.agent.name).replace(/[\\r\\n]/g, ' ').slice(0, 512) }}",
+            "description": "={{ JSON.stringify($json, null, 2) }}",
+            "type": "Wazuh alert",
+            "sourceRef": "={{ $json.alert.id }}",
+            "source": "Wazuh",
+            "severity": 2,
+            "tlp": 2,
+            "pap": 2,
+            "summary": "={{ 'Rule ' + $json.alert.rule.id + ' (level ' + $json.alert.rule.level + ') on ' + $json.alert.agent.name + '; enrichment: ' + $json.processing.status }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "displayName": "Title",
+              "id": "title",
+              "type": "string",
+              "removed": false,
+              "required": true,
+              "display": true,
+              "defaultMatch": false
+            },
+            {
+              "displayName": "Description",
+              "id": "description",
+              "type": "string",
+              "removed": false,
+              "required": true,
+              "display": true,
+              "defaultMatch": false
+            },
+            {
+              "displayName": "Type",
+              "id": "type",
+              "type": "string",
+              "removed": false,
+              "required": true,
+              "display": true,
+              "defaultMatch": false
+            },
+            {
+              "displayName": "Source",
+              "id": "source",
+              "type": "string",
+              "removed": false,
+              "required": true,
+              "display": true,
+              "defaultMatch": false
+            },
+            {
+              "displayName": "Source Reference",
+              "id": "sourceRef",
+              "type": "string",
+              "removed": false,
+              "required": true,
+              "display": true,
+              "defaultMatch": false
+            },
+            {
+              "displayName": "External Link",
+              "id": "externalLink",
+              "type": "string",
+              "removed": false,
+              "required": false,
+              "display": true,
+              "defaultMatch": false
+            },
+            {
+              "displayName": "Severity (Severity of information)",
+              "id": "severity",
+              "type": "options",
+              "options": [
+                {
+                  "name": "Low",
+                  "value": 1
+                },
+                {
+                  "name": "Medium",
+                  "value": 2
+                },
+                {
+                  "name": "High",
+                  "value": 3
+                },
+                {
+                  "name": "Critical",
+                  "value": 4
+                }
+              ],
+              "removed": false,
+              "required": false,
+              "display": true,
+              "defaultMatch": false
+            },
+            {
+              "displayName": "Date",
+              "id": "date",
+              "type": "dateTime",
+              "removed": false,
+              "required": false,
+              "display": true,
+              "defaultMatch": false
+            },
+            {
+              "displayName": "Tags",
+              "id": "tags",
+              "type": "string",
+              "removed": false,
+              "required": false,
+              "display": true,
+              "defaultMatch": false
+            },
+            {
+              "displayName": "Follow",
+              "id": "follow",
+              "type": "boolean",
+              "removed": false,
+              "required": false,
+              "display": true,
+              "defaultMatch": false
+            },
+            {
+              "displayName": "Flag",
+              "id": "flag",
+              "type": "boolean",
+              "removed": false,
+              "required": false,
+              "display": true,
+              "defaultMatch": false
+            },
+            {
+              "displayName": "TLP (Confidentiality of information)",
+              "id": "tlp",
+              "type": "options",
+              "options": [
+                {
+                  "name": "White",
+                  "value": 0
+                },
+                {
+                  "name": "Green",
+                  "value": 1
+                },
+                {
+                  "name": "Amber",
+                  "value": 2
+                },
+                {
+                  "name": "Red",
+                  "value": 3
+                }
+              ],
+              "removed": false,
+              "required": false,
+              "display": true,
+              "defaultMatch": false
+            },
+            {
+              "displayName": "PAP (Level of exposure of information)",
+              "id": "pap",
+              "type": "options",
+              "options": [
+                {
+                  "name": "White",
+                  "value": 0
+                },
+                {
+                  "name": "Green",
+                  "value": 1
+                },
+                {
+                  "name": "Amber",
+                  "value": 2
+                },
+                {
+                  "name": "Red",
+                  "value": 3
+                }
+              ],
+              "removed": false,
+              "required": false,
+              "display": true,
+              "defaultMatch": false
+            },
+            {
+              "displayName": "Summary",
+              "id": "summary",
+              "type": "string",
+              "removed": false,
+              "required": false,
+              "display": true,
+              "defaultMatch": false
+            },
+            {
+              "displayName": "Status",
+              "id": "status",
+              "type": "options",
+              "removed": false,
+              "required": false,
+              "display": true,
+              "defaultMatch": false,
+              "options": [
+                {
+                  "name": "Duplicate",
+                  "value": "Duplicate",
+                  "description": "Stage: Closed"
+                },
+                {
+                  "name": "FalsePositive",
+                  "value": "FalsePositive",
+                  "description": "Stage: Closed"
+                },
+                {
+                  "name": "Ignored",
+                  "value": "Ignored",
+                  "description": "Stage: Closed"
+                },
+                {
+                  "name": "Imported",
+                  "value": "Imported",
+                  "description": "Stage: Imported"
+                },
+                {
+                  "name": "InProgress",
+                  "value": "InProgress",
+                  "description": "Stage: InProgress"
+                },
+                {
+                  "name": "New",
+                  "value": "New",
+                  "description": "Stage: New"
+                },
+                {
+                  "name": "Pending",
+                  "value": "Pending",
+                  "description": "Stage: InProgress"
+                }
+              ]
+            },
+            {
+              "displayName": "Case Template",
+              "id": "caseTemplate",
+              "type": "options",
+              "removed": false,
+              "required": false,
+              "display": true,
+              "defaultMatch": false,
+              "options": [
+                {
+                  "name": "MISP",
+                  "value": "MISPEvent"
+                }
+              ]
+            },
+            {
+              "displayName": "Custom Field: BusinesUnit",
+              "id": "customFields.businessunit",
+              "required": false,
+              "display": true,
+              "type": "options",
+              "defaultMatch": false,
+              "options": [
+                {
+                  "name": "VIP",
+                  "value": "VIP"
+                },
+                {
+                  "name": "HR",
+                  "value": "HR"
+                },
+                {
+                  "name": "Security",
+                  "value": "Security"
+                },
+                {
+                  "name": "Sys Administrators",
+                  "value": "Sys Administrators"
+                },
+                {
+                  "name": "Developers",
+                  "value": "Developers"
+                },
+                {
+                  "name": "Sales",
+                  "value": "Sales"
+                },
+                {
+                  "name": "Marketing",
+                  "value": "Marketing"
+                },
+                {
+                  "name": "Procurement",
+                  "value": "Procurement"
+                },
+                {
+                  "name": "Legal",
+                  "value": "Legal"
+                }
+              ],
+              "removed": false
+            },
+            {
+              "displayName": "Custom Field: SLA",
+              "id": "customFields.sla",
+              "required": false,
+              "display": true,
+              "type": "options",
+              "defaultMatch": false,
+              "options": [
+                {
+                  "name": 4,
+                  "value": 4
+                },
+                {
+                  "name": 8,
+                  "value": 8
+                },
+                {
+                  "name": 12,
+                  "value": 12
+                },
+                {
+                  "name": 24,
+                  "value": 24
+                }
+              ],
+              "removed": false
+            },
+            {
+              "displayName": "Custom Field: Hits",
+              "id": "customFields.hits",
+              "required": false,
+              "display": true,
+              "type": "integer",
+              "defaultMatch": false,
+              "removed": false
+            },
+            {
+              "displayName": "Custom Field: Contact",
+              "id": "customFields.contact",
+              "required": false,
+              "display": true,
+              "type": "string",
+              "defaultMatch": false,
+              "removed": false
+            },
+            {
+              "displayName": "Custom Field: BusinessImpact",
+              "id": "customFields.businessimpact",
+              "required": false,
+              "display": true,
+              "type": "options",
+              "defaultMatch": false,
+              "options": [
+                {
+                  "name": "Critical",
+                  "value": "Critical"
+                },
+                {
+                  "name": "High",
+                  "value": "High"
+                },
+                {
+                  "name": "Medium",
+                  "value": "Medium"
+                },
+                {
+                  "name": "Low",
+                  "value": "Low"
+                }
+              ],
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "n8n-nodes-base.theHiveProject",
+      "typeVersion": 1,
+      "position": [
+        4640,
+        592
+      ],
+      "id": "74536bfd-c206-40fe-ade8-b4f1ca64c62b",
+      "name": "Create an alert",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * SOC - Wazuh Alert Normalization\n * Stage: Normalize (#67)\n * Version: 1.2\n *\n * Supported input formats:\n * - Raw Wazuh alert\n * - Elasticsearch document (_source)\n * - Shuffle wrapper (all_fields)\n *\n * Output:\n * - Unified alert metadata\n * - Typed observables\n * - Primary observable\n * - Deduplication key\n *\n * n8n Code node:\n * Mode: Run Once for All Items\n */\n\n// ============================================================\n// 1. INPUT\n// ============================================================\n\nconst items = $input.all();\n\n// ============================================================\n// 2. HELPERS\n// ============================================================\n\nfunction get(obj, path) {\n  return path.split('.').reduce(\n    (value, key) => value == null ? undefined : value[key],\n    obj\n  );\n}\n\nfunction normalizePath(value) {\n  return typeof value === 'string'\n    ? value.replace(/\\\\\\\\/g, '\\\\')\n    : value;\n}\n\n// IPv4 validation\nfunction isIPv4(value) {\n  if (typeof value !== 'string') return false;\n\n  const parts = value.split('.');\n\n  return parts.length === 4 && parts.every(part =>\n    /^\\d{1,3}$/.test(part) &&\n    Number(part) >= 0 &&\n    Number(part) <= 255\n  );\n}\n\n// IPv6 validation, including compressed and IPv4-mapped forms\nfunction isIPv6(value) {\n  if (typeof value !== 'string' || !value.includes(':')) {\n    return false;\n  }\n\n  let ip = value.toLowerCase();\n\n  // Zone identifiers are not handled\n  if (ip.includes('%')) return false;\n\n  // Convert an embedded IPv4 tail into two IPv6 groups\n  if (ip.includes('.')) {\n    const lastColon = ip.lastIndexOf(':');\n\n    if (lastColon === -1 ||\n        !isIPv4(ip.slice(lastColon + 1))) {\n      return false;\n    }\n\n    ip = ip.slice(0, lastColon) + ':0:0';\n  }\n\n  const doubleColon = ip.indexOf('::');\n\n  if (doubleColon !== -1) {\n    // Only one :: is allowed\n    if (ip.indexOf('::', doubleColon + 2) !== -1) {\n      return false;\n    }\n\n    const parts = ip.split('::');\n\n    const left = parts[0]\n      ? parts[0].split(':')\n      : [];\n\n    const right = parts[1]\n      ? parts[1].split(':')\n      : [];\n\n    const groups = [...left, ...right];\n\n    if (!groups.every(group => /^[0-9a-f]{1,4}$/i.test(group))) {\n      return false;\n    }\n\n    // :: must replace at least one group\n    return groups.length < 8;\n  }\n\n  const groups = ip.split(':');\n\n  return groups.length === 8 &&\n    groups.every(group => /^[0-9a-f]{1,4}$/i.test(group));\n}\n\nfunction isIP(value) {\n  return isIPv4(value) || isIPv6(value);\n}\n\n// Private, loopback and link-local IP detection\nfunction isPrivateIP(ip) {\n  if (isIPv4(ip)) {\n    const p = ip.split('.').map(Number);\n\n    return p[0] === 10 ||\n      p[0] === 127 ||\n      (p[0] === 172 && p[1] >= 16 && p[1] <= 31) ||\n      (p[0] === 192 && p[1] === 168) ||\n      (p[0] === 169 && p[1] === 254);\n  }\n\n  if (isIPv6(ip)) {\n    const value = ip.toLowerCase();\n\n    return value === '::' ||\n      value === '::1' ||\n      /^f[cd]/i.test(value) ||\n      /^fe[89ab]/i.test(value);\n  }\n\n  return false;\n}\n\n// Domain validation\nfunction isDomain(value) {\n  if (typeof value !== 'string') return false;\n\n  const domain = value.toLowerCase().replace(/\\.$/, '');\n\n  if (domain.length > 253 || domain.includes('://')) {\n    return false;\n  }\n\n  if (isIP(domain)) return false;\n\n  return /^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\\.)+[a-z]{2,63}$/i.test(domain);\n}\n\n// Hash validation\nfunction isValidHash(value) {\n  return typeof value === 'string' &&\n    (\n      /^[a-f0-9]{32}$/i.test(value) ||\n      /^[a-f0-9]{40}$/i.test(value) ||\n      /^[a-f0-9]{64}$/i.test(value)\n    );\n}\n\n// Windows Registry detection\nfunction isRegistryPath(value) {\n  return typeof value === 'string' &&\n    /^(HKEY_|HKLM\\\\|HKCU\\\\|HKCR\\\\|HKU\\\\|HKCC\\\\)/i.test(value);\n}\n\n// ============================================================\n// 3. NORMALIZATION\n// ============================================================\n\nfunction normalizeAlert(root) {\n\n  const body = root.body ?? root;\n\n  // Detect input format\n  const alert =\n    body._source ??\n    body.all_fields ??\n    body;\n\n  if (!alert.rule || alert.rule.id === undefined) {\n    throw new Error(\n      'Invalid Wazuh alert: missing rule.id'\n    );\n  }\n\n  const observables = [];\n  const seen = new Set();\n\n  // ----------------------------------------------------------\n  // Add observable with deduplication\n  // ----------------------------------------------------------\n\n  function add(dataType, value, field, extra = {}) {\n    if (value === undefined || value === null) return;\n\n    const data = String(value).trim();\n\n    if (!data || data === '-' || data === '(null)') {\n      return;\n    }\n\n    const key = `${dataType}|${data.toLowerCase()}`;\n\n    if (seen.has(key)) return;\n\n    seen.add(key);\n\n    observables.push({\n      dataType,\n      data,\n      field,\n      internal: false,\n      ...extra\n    });\n  }\n\n  // ==========================================================\n  // 4. IP ADDRESSES\n  // ==========================================================\n\n  const ipFields = [\n    'data.srcip',\n    'data.src_ip',\n    'data.dstip',\n    'data.dest_ip',\n    'data.win.eventdata.sourceIp',\n    'data.win.eventdata.destinationIp',\n    'data.win.eventdata.ipAddress',\n    'agent.ip'\n  ];\n\n  for (const field of ipFields) {\n    const value = get(alert, field);\n\n    if (typeof value === 'string' && isIP(value)) {\n      add('ip', value, field, {\n        internal: isPrivateIP(value)\n      });\n    }\n  }\n\n  // ==========================================================\n  // 5. DOMAINS\n  // ==========================================================\n\n  const domainFields = [\n    'data.domain',\n    'data.win.eventdata.queryName',\n    'data.dns.rrname',\n    'data.http.hostname',\n    'data.tls.sni'\n  ];\n\n  for (const field of domainFields) {\n    const value = get(alert, field);\n\n    if (typeof value === 'string' && isDomain(value)) {\n      const domain = value.toLowerCase().replace(/\\.$/, '');\n\n      add('domain', domain, field, {\n        internal: /\\.(lab|local|lan|internal|localdomain)$/.test(domain)\n      });\n    }\n  }\n\n  // ==========================================================\n  // 6. URLS\n  // ==========================================================\n\n  const httpHost = get(alert, 'data.http.hostname');\n\n  for (const field of [\n    'data.url',\n    'data.http.url'\n  ]) {\n    const value = get(alert, field);\n\n    if (typeof value !== 'string' || !value.trim()) {\n      continue;\n    }\n\n    if (/^https?:\\/\\//i.test(value)) {\n      add('url', value, field);\n\n      try {\n        const hostname = new URL(value)\n          .hostname\n          .toLowerCase()\n          .replace(/\\.$/, '');\n\n        if (isDomain(hostname)) {\n          add('domain', hostname, `${field}#hostname`, {\n            internal: /\\.(lab|local|lan|internal|localdomain)$/.test(hostname)\n          });\n        }\n      } catch {\n        // Keep the URL observable if hostname parsing fails.\n      }\n\n    } else if (\n      field === 'data.http.url' &&\n      typeof httpHost === 'string'\n    ) {\n      add(\n        'url',\n        `http://${httpHost}${value.startsWith('/') ? '' : '/'}${value}`,\n        field\n      );\n\n    } else {\n      add('uri_path', value, field);\n    }\n  }\n\n  // ==========================================================\n  // 7. HASHES\n  // ==========================================================\n\n  const hashes = get(alert, 'data.win.eventdata.hashes');\n\n  if (typeof hashes === 'string') {\n    for (const part of hashes.split(',')) {\n      const separator = part.indexOf('=');\n\n      if (separator === -1) continue;\n\n      const algorithm = part\n        .slice(0, separator)\n        .trim()\n        .toUpperCase();\n\n      const value = part\n        .slice(separator + 1)\n        .trim()\n        .toLowerCase();\n\n      const lengths = {\n        MD5: 32,\n        SHA1: 40,\n        SHA256: 64\n      };\n\n      if (\n        lengths[algorithm] === value.length &&\n        isValidHash(value)\n      ) {\n        add(\n          'hash',\n          value,\n          'data.win.eventdata.hashes',\n          { algorithm }\n        );\n      }\n    }\n  }\n\n  // Syscheck hashes\n  for (const [field, algorithm] of [\n    ['syscheck.sha256_after', 'SHA256'],\n    ['syscheck.sha1_after', 'SHA1'],\n    ['syscheck.md5_after', 'MD5'],\n    ['syscheck.sha256_before', 'SHA256'],\n    ['syscheck.sha1_before', 'SHA1'],\n    ['syscheck.md5_before', 'MD5']\n  ]) {\n    const value = get(alert, field);\n\n    if (\n      typeof value === 'string' &&\n      isValidHash(value)\n    ) {\n      add('hash', value.toLowerCase(), field, {\n        algorithm\n      });\n    }\n  }\n\n  // ==========================================================\n  // 8. FILENAMES AND FILE PATHS\n  // ==========================================================\n\n  for (const field of [\n    'data.win.eventdata.image',\n    'data.win.eventdata.targetFilename',\n    'syscheck.path'\n  ]) {\n    const value = normalizePath(get(alert, field));\n\n    if (typeof value !== 'string' || !value.trim()) {\n      continue;\n    }\n\n    // Registry paths are handled separately\n    if (isRegistryPath(value)) continue;\n\n    const filename = value.split(/[\\\\/]/).pop();\n\n    // Accept filenames with and without extensions\n    if (filename) {\n      add('filename', filename, field, {\n        path: value\n      });\n    }\n  }\n\n  // ==========================================================\n  // 9. WINDOWS REGISTRY\n  // ==========================================================\n\n  const registryPath = normalizePath(\n    get(alert, 'syscheck.path')\n  );\n\n  if (isRegistryPath(registryPath)) {\n    add(\n      'registry_key',\n      registryPath,\n      'syscheck.path',\n      { internal: true }\n    );\n  }\n\n  // ==========================================================\n  // 10. USER ACCOUNTS\n  // ==========================================================\n\n  const userFields = [\n    'data.win.eventdata.user',\n    'data.win.eventdata.targetUserName',\n    'data.srcuser',\n    'data.dstuser',\n    'syscheck.uname_after'\n  ];\n\n  for (const field of userFields) {\n    const value = normalizePath(get(alert, field));\n\n    if (typeof value === 'string') {\n      add('other', value, field, {\n        kind: 'user',\n        internal: true\n      });\n    }\n  }\n\n  // ==========================================================\n  // 11. USER-AGENT\n  // ==========================================================\n\n  const userAgentFields = [\n    'data.http.http_user_agent',\n    'data.http.user_agent'\n  ];\n\n  for (const field of userAgentFields) {\n    const value = get(alert, field);\n\n    if (typeof value === 'string') {\n      add('user-agent', value, field);\n    }\n  }\n\n  // ==========================================================\n  // 12. HOSTNAME\n  // ==========================================================\n\n  if (alert.agent?.name) {\n    add(\n      'hostname',\n      alert.agent.name,\n      'agent.name',\n      { internal: true }\n    );\n  }\n\n  // ==========================================================\n  // 13. PRIMARY OBSERVABLE\n  // ==========================================================\n\n  const pick = predicate =>\n    observables.find(predicate)?.data;\n\n  const primary =\n    pick(o => o.dataType === 'ip' && !o.internal) ??\n    pick(o => o.dataType === 'hash') ??\n    pick(o => o.dataType === 'domain' && !o.internal) ??\n    pick(o => o.dataType === 'filename') ??\n    pick(o => o.dataType === 'registry_key') ??\n    pick(o => o.dataType === 'uri_path') ??\n    '-';\n\n  // ==========================================================\n  // 14. DEDUPLICATION KEY\n  // ==========================================================\n\n  const ruleId = String(alert.rule.id);\n\n  const agentId = String(\n    alert.agent?.id ?? 'na'\n  );\n\n  const signatureId =\n    get(alert, 'data.alert.signature_id') ?? '';\n\n  const dedupKey = [\n    'soc:dedup',\n    ruleId,\n    signatureId,\n    agentId,\n    primary\n  ].join(':').slice(0, 300);\n\n  // ==========================================================\n  // 15. NORMALIZED OUTPUT\n  // ==========================================================\n\n  const mitre = alert.rule.mitre ?? {};\n\n  const sourceFormat =\n    body._source || root._source\n      ? 'elasticsearch'\n      : body.all_fields\n        ? 'shuffle-wrapper'\n        : 'raw';\n\n  return {\n    alert_id:\n      alert.id ??\n      body._id ??\n      root._id ??\n      null,\n\n    timestamp: alert.timestamp ?? null,\n\n    manager: alert.manager?.name ?? 'wazuh',\n\n    source_format: sourceFormat,\n\n    rule: {\n      id: ruleId,\n      level: Number(alert.rule.level ?? 0),\n      description: alert.rule.description ?? '',\n      groups: alert.rule.groups ?? [],\n      mitre_ids: mitre.id ?? [],\n      mitre_tactics: mitre.tactic ?? [],\n      mitre_techniques: mitre.technique ?? [],\n      firedtimes: alert.rule.firedtimes ?? null\n    },\n\n    agent: {\n      id: agentId,\n      name: alert.agent?.name ?? 'unknown',\n      ip: alert.agent?.ip ?? null\n    },\n\n    location: alert.location ?? null,\n\n    decoder: alert.decoder?.name ?? null,\n\n    syscheck: alert.syscheck ?? null,\n\n    signature: get(alert, 'data.alert.signature') ?? null,\n\n    command_line: normalizePath(\n      get(alert, 'data.win.eventdata.commandLine')\n    ) ?? null,\n\n    full_log:\n      typeof alert.full_log === 'string'\n        ? alert.full_log.slice(0, 2000)\n        : null,\n\n    observables,\n\n    primary_observable: primary,\n\n    dedup_key: dedupKey\n  };\n}\n\n// ============================================================\n// 16. PROCESS ALL INPUT ITEMS\n// ============================================================\n\nreturn items.map(item => ({\n  json: normalizeAlert(item.json)\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -800,
+        -32
+      ],
+      "id": "9e001c0f-7fc3-46b6-83b7-0ba15dfe040b",
+      "name": "Normalize Alert"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "observables",
+        "include": "allOtherFields",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1.1,
+      "position": [
+        -832,
+        496
+      ],
+      "id": "9c1eadc2-4564-415d-a2b9-75fbc6e992df",
+      "name": "Split Cortex Observables"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "3f8889ae-642b-4b00-92a3-70dff19e0550",
+              "leftValue": "={{ (() => {\n  const o = $json.observables;\n  if (!o || o.dataType !== 'ip' || o.internal !== false) return false;\n\n  const value = String(o.data ?? '');\n  if (!/^(0|[1-9]\\d{0,2})(\\.(0|[1-9]\\d{0,2})){3}$/.test(value)) return false;\n\n  const [a, b, c, d] = value.split('.').map(Number);\n  if ([a, b, c, d].some(n => n > 255)) return false;\n\n  const special =\n    a === 0 || a === 10 || a === 127 || a >= 224 ||\n    (a === 100 && b >= 64 && b <= 127) ||\n    (a === 169 && b === 254) ||\n    (a === 172 && b >= 16 && b <= 31) ||\n    (a === 192 && b === 0 && (c === 0 || c === 2)) ||\n    (a === 192 && b === 88 && c === 99) ||\n    (a === 192 && b === 168) ||\n    (a === 198 && (b === 18 || b === 19)) ||\n    (a === 198 && b === 51 && c === 100) ||\n    (a === 203 && b === 0 && c === 113);\n\n  return !special;\n})() }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        352,
+        464
+      ],
+      "id": "9d05b6a9-2c48-4be9-8cfb-fdc1889feead",
+      "name": "Filter Cortex-Eligible IPs"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 4
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.observables.dataType }}",
+                    "rightValue": "domain",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "8fb7ef73-ca4a-4390-ba72-c55a0e9cd39a"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 4
+                },
+                "conditions": [
+                  {
+                    "id": "fce03295-2cfd-4634-8419-263388a3a4d1",
+                    "leftValue": "={{ $json.observables.dataType }}",
+                    "rightValue": "ip",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 4
+                },
+                "conditions": [
+                  {
+                    "id": "05f7c2f4-13f2-4972-8247-79bcdcc97936",
+                    "leftValue": "={{ $json.observables.dataType }}",
+                    "rightValue": "hash",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 4
+                },
+                "conditions": [
+                  {
+                    "id": "bcd13a8f-6741-4e38-b4d8-267cdc5e8ea9",
+                    "leftValue": "={{ $json.observables.dataType }}",
+                    "rightValue": "url",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.5,
+      "position": [
+        -32,
+        400
+      ],
+      "id": "9e834d0f-b5cd-496d-83d6-aa88f4eec934",
+      "name": "router of types"
+    },
+    {
+      "parameters": {
+        "analyzer": "4aa2b359cf93d5a4aeb193b622a9c3ae::AbuseIPDB_2_0",
+        "observableType": "ip",
+        "observableValue": "={{ $json.value }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.cortex",
+      "typeVersion": 1,
+      "position": [
+        720,
+        240
+      ],
+      "id": "029e5144-235b-4069-8147-08341061d65c",
+      "name": "Execute AbuseIPDB",
+      "retryOnFail": true,
+      "waitBetweenTries": 2000,
+      "credentials": {},
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "analyzer": "d9f8559b7d64c7d2c9b0483d543d8dc7::Maltiverse_Report_1_0",
+        "observableType": "={{ $json.observables.dataType }}",
+        "observableValue": "={{ $json.observables.data }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.cortex",
+      "typeVersion": 1,
+      "position": [
+        656,
+        -96
+      ],
+      "id": "4393b2b7-81f6-4d8e-bd91-ece44c834df6",
+      "name": "Execute Maltiverse",
+      "retryOnFail": true,
+      "waitBetweenTries": 2000,
+      "maxTries": 5,
+      "credentials": {},
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "resource": "job",
+        "operation": "report",
+        "jobId": "={{ $json._id ?? $json.id }}"
+      },
+      "type": "n8n-nodes-base.cortex",
+      "typeVersion": 1,
+      "position": [
+        1040,
+        112
+      ],
+      "id": "e59181a5-2414-48e1-bbc6-40c1c32aec86",
+      "name": "Get a report AbuseIPBD",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000,
+      "credentials": {},
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "resource": "job",
+        "operation": "report",
+        "jobId": "={{ $json._id ?? $json.id }}"
+      },
+      "type": "n8n-nodes-base.cortex",
+      "typeVersion": 1,
+      "position": [
+        1024,
+        -224
+      ],
+      "id": "1b6707ab-c7ac-47cf-bebb-7092822689f2",
+      "name": "Get a report  Maltiverse",
+      "retryOnFail": true,
+      "waitBetweenTries": 3000,
+      "maxTries": 5,
+      "credentials": {},
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "analyzer": "1c99a5a0bce3f2209ba114e93645c139::TeamCymruMHR_1_0",
+        "observableType": "hash",
+        "observableValue": "={{ $json.observables.data }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.cortex",
+      "typeVersion": 1,
+      "position": [
+        800,
+        832
+      ],
+      "id": "5bd8291d-2980-423f-aeac-e78596f69797",
+      "name": "Execute TeamCymru",
+      "retryOnFail": true,
+      "waitBetweenTries": 2000,
+      "credentials": {},
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "resource": "job",
+        "operation": "report",
+        "jobId": "={{ $json._id ?? $json.id }}"
+      },
+      "type": "n8n-nodes-base.cortex",
+      "typeVersion": 1,
+      "position": [
+        1216,
+        704
+      ],
+      "id": "03821eed-2ad4-44a6-95e2-cd5228e08986",
+      "name": "Get a report TeamCymru",
+      "retryOnFail": true,
+      "waitBetweenTries": 3000,
+      "credentials": {},
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "resource": "job",
+        "operation": "report",
+        "jobId": "={{ $json._id ?? $json.id }}"
+      },
+      "type": "n8n-nodes-base.cortex",
+      "typeVersion": 1,
+      "position": [
+        1280,
+        1408
+      ],
+      "id": "17ad84c7-a0b9-4be9-a8cf-ab06ef8e6d56",
+      "name": "Get a report UnshortenLink",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000,
+      "credentials": {},
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "analyzer": "df18bbe9f80a034840df4a60d0111991::CIRCLHashlookup_1_1",
+        "observableType": "={{ $json.observables.dataType }}",
+        "observableValue": "={{ $json.observables.data }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.cortex",
+      "typeVersion": 1,
+      "position": [
+        800,
+        1152
+      ],
+      "id": "e66a8be5-e143-43b0-8cc1-66ce7e008bee",
+      "name": "Execute CirclHash",
+      "retryOnFail": true,
+      "waitBetweenTries": 2000,
+      "credentials": {},
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "resource": "job",
+        "operation": "report",
+        "jobId": "={{ $json._id ?? $json.id }}"
+      },
+      "type": "n8n-nodes-base.cortex",
+      "typeVersion": 1,
+      "position": [
+        1232,
+        1040
+      ],
+      "id": "d577f63c-e77c-4619-acec-20d0736e620d",
+      "name": "Get a report CirclHash",
+      "retryOnFail": true,
+      "waitBetweenTries": 3000,
+      "credentials": {},
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "numberInputs": 9
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2704,
+        352
+      ],
+      "id": "6eebb4c3-c931-4f24-861f-cd7056cbfd19",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = $input.all().map(item => item.json ?? {});\nconst errorRows = rows.filter(item => item.service && item.error !== undefined);\n\nlet alert = {};\ntry {\n  alert = $('Normalize Alert').first().json ?? {};\n} catch {}\n\nfunction clean(obj) {\n  return Object.fromEntries(\n    Object.entries(obj).filter(([, value]) =>\n      value !== undefined &&\n      value !== null &&\n      value !== '' &&\n      !(Array.isArray(value) && value.length === 0)\n    )\n  );\n}\n\nfunction compactObservable(item) {\n  if (typeof item === 'string') {\n    return { value: item };\n  }\n\n  return clean({\n    type: item.type ?? item.dataType ?? item.kind,\n    value: item.data ?? item.value ?? item.observable ?? item.ioc,\n    field: item.field ?? item.source_field ?? item.key,\n    internal: item.internal ?? item.is_internal,\n    cortex_eligible: item.cortex_eligible,\n  });\n}\n\nfunction getTagNames(...tagLists) {\n  const names = [];\n  const seen = new Set();\n\n  for (const tagList of tagLists) {\n    const entries = Array.isArray(tagList)\n      ? tagList\n      : tagList === undefined || tagList === null\n        ? []\n        : [tagList];\n\n    for (const tag of entries) {\n      const name = typeof tag === 'string'\n        ? tag\n        : tag?.name;\n\n      if (typeof name !== 'string' || name.trim() === '') {\n        continue;\n      }\n\n      const trimmedName = name.trim();\n      const key = trimmedName.toLowerCase();\n\n      if (!seen.has(key)) {\n        seen.add(key);\n        names.push(trimmedName);\n      }\n    }\n  }\n\n  return names;\n}\n\nconst rawObservables = Array.isArray(alert.observables)\n  ? alert.observables\n  : [];\n\nconst observables = rawObservables.map(compactObservable);\n\nconst isAnalyzerRow = item =>\n  Boolean(\n    item.workerName ||\n    item.workerDefinitionId ||\n    item.analyzerName\n  );\n\nconst mispRows = rows.filter(item =>\n  item.Event && item.value !== undefined\n);\n\nconst cortexRows = rows.filter(isAnalyzerRow);\n\nconst skippedIpRows = rows.filter(item => {\n  if (item.record_type === 'cortex_skipped') {\n    return true;\n  }\n\n  if (item.Event || isAnalyzerRow(item)) {\n    return false;\n  }\n\n  const type = String(\n    item.data_type ?? item.dataType ?? item.type ?? ''\n  ).toLowerCase();\n\n  const value =\n    item.observable ??\n    item.value ??\n    item.data;\n\n  return type.includes('ip') && value !== undefined && value !== null;\n});\n\n// Deduplicate repeated MISP references by attribute UUID, then ID.\n// If neither exists, use event ID + attribute type + value.\nconst uniqueMispRowsByKey = new Map();\n\nfor (const item of mispRows) {\n  const uuid = String(item.uuid ?? '').trim();\n  const attributeId = String(item.id ?? '').trim();\n  const eventId = String(item.Event?.id ?? '').trim();\n  const type = String(item.type ?? 'unknown').trim();\n  const value = String(item.value ?? '').trim();\n\n  const attributeKey = uuid\n    ? `uuid:${uuid.toLowerCase()}`\n    : attributeId\n      ? `id:${attributeId}`\n      : `fallback:${eventId}\\u0000${type.toLowerCase()}\\u0000${value}`;\n\n  const tags = getTagNames(\n    item.Tag,\n    item.Event?.Tag,\n    item.Event?.Tags\n  );\n\n  const existing = uniqueMispRowsByKey.get(attributeKey);\n\n  if (existing) {\n    existing.tags = getTagNames(existing.tags, tags);\n  } else {\n    uniqueMispRowsByKey.set(attributeKey, {\n      item,\n      tags,\n    });\n  }\n}\n\nconst uniqueMispRows = [...uniqueMispRowsByKey.values()];\nconst groupedMisp = new Map();\n\nfor (const { item, tags } of uniqueMispRows) {\n  const type = item.type ?? 'unknown';\n  const value = item.value ?? '';\n  const key = `${type}\\u0000${value}`;\n\n  if (!groupedMisp.has(key)) {\n    groupedMisp.set(key, {\n      type,\n      value,\n      attributes: [],\n    });\n  }\n\n  const threatLevel = item.Event?.ThreatLevel;\n\n  groupedMisp.get(key).attributes.push(clean({\n    uuid: item.uuid,\n    id: item.id,\n    comment: item.comment,\n    to_ids: item.to_ids,\n    disable_correlation: item.disable_correlation,\n    event: clean({\n      id: item.Event?.id,\n      title: item.Event?.info,\n      date: item.Event?.date,\n      threat_level:\n        typeof threatLevel === 'object'\n          ? threatLevel?.name\n          : threatLevel,\n    }),\n    tags,\n  }));\n}\n\nfunction getCortexSummary(item) {\n  const report = item.report;\n\n  if (!report || typeof report !== 'object') {\n    return undefined;\n  }\n\n  const full = report.full ?? {};\n\n  const analyzer = String(\n    item.workerName ??\n    item.workerDefinitionId ??\n    item.analyzerName ??\n    ''\n  ).toLowerCase();\n\n  if (analyzer.includes('abuseipdb')) {\n    const result = full.values?.[0] ?? {};\n    const data = result.data ?? result;\n    const categories =\n      result.category_counts ??\n      full.category_counts ??\n      [];\n    const freshness =\n      result.freshness ??\n      full.freshness ??\n      {};\n\n    return clean({\n      whitelisted: data.isWhitelisted,\n      abuse_confidence_score: data.abuseConfidenceScore,\n      usage: data.usageType,\n      country: data.countryName,\n      country_code: data.countryCode,\n      isp: data.isp,\n      total_reports: data.totalReports,\n      last_reported_at: data.lastReportedAt,\n      reports_last_24h: freshness.last24h,\n      reports_last_7d: freshness.last7d,\n      top_categories: categories\n        .slice()\n        .sort((a, b) => (b.count ?? 0) - (a.count ?? 0))\n        .slice(0, 3)\n        .map(category => clean({\n          name: category.category,\n          count: category.count,\n        })),\n    });\n  }\n\n  if (analyzer.includes('maxmind')) {\n    const country =\n      full.country ??\n      full.registered_country ??\n      {};\n\n    const continent = full.continent ?? {};\n\n    return clean({\n      country: country.name,\n      country_code: country.iso_code,\n      continent: continent.name,\n      ip: full.traits?.ip_address,\n    });\n  }\n\n  if (analyzer.includes('maltiverse')) {\n    const blacklist = Array.isArray(full.blacklist)\n      ? full.blacklist\n      : [];\n\n    const keywords =\n      /malicious|compromis|malware|phish|botnet|ransomware|cobalt.?strike|rat|backdoor|trojan|infostealer|exploit|gamarue|mirai|emotet|adware|banker|virut|scam|fraud/i;\n\n    const historicalMatches = blacklist.filter(entry => {\n      const labels = Array.isArray(entry.labels)\n        ? entry.labels\n        : [];\n\n      const benign = labels.some(label =>\n        String(label).toLowerCase() === 'benign'\n      );\n\n      const threatLabel = labels.some(label =>\n        /malicious|compromised|malware/i.test(String(label))\n      );\n\n      const threatDescription = keywords.test(\n        String(entry.description ?? '')\n      );\n\n      return !benign && (threatLabel || threatDescription);\n    });\n\n    const examples = historicalMatches\n      .slice()\n      .sort((a, b) =>\n        (Date.parse(b.last_seen ?? '') || 0) -\n        (Date.parse(a.last_seen ?? '') || 0)\n      )\n      .slice(0, 3)\n      .map(entry => clean({\n        description: entry.description,\n        source: entry.source,\n        last_seen: entry.last_seen,\n      }));\n\n    return clean({\n      classification: full.classification,\n      country_code: full.asn_country_code ?? full.country_code,\n      asn_cidr: full.asn_cidr,\n      historical_matches: {\n        count: historicalMatches.length,\n        examples,\n      },\n    });\n  }\n\n  const taxonomies = (report.summary?.taxonomies ?? []).map(taxonomy =>\n    clean({\n      level: taxonomy.level,\n      namespace: taxonomy.namespace,\n      predicate: taxonomy.predicate,\n      value:\n        typeof taxonomy.value === 'string' &&\n        taxonomy.value.toLowerCase() === 'unkown'\n          ? 'unknown'\n          : taxonomy.value,\n    })\n  );\n\n  let message = full.message ?? full.status;\n\n  if (\n    typeof message === 'string' &&\n    /^no record found for /i.test(message)\n  ) {\n    message = 'No record found';\n  }\n\n  return clean({\n    taxonomies,\n    message,\n  });\n}\n\nconst cortexResults = cortexRows.map(item => {\n  const rawStatus = String(item.status ?? '').toLowerCase();\n  const report = item.report;\n\n  let status = rawStatus || 'unknown';\n\n  if (status === 'success') {\n    status = 'complete';\n  }\n\n  if (['waiting', 'inprogress', 'running'].includes(status)) {\n    status = 'pending';\n  }\n\n  if (['failure', 'failed', 'error'].includes(status)) {\n    status = 'failed';\n  }\n\n  if (report && typeof report === 'object' && report.success === false) {\n    status = 'failed';\n  }\n\n  const summary = getCortexSummary(item);\n\n  return clean({\n    analyzer:\n      item.workerName ??\n      item.workerDefinitionId ??\n      item.analyzerName,\n    observable: item.data,\n    data_type: item.dataType,\n    status,\n    summary:\n      summary && Object.keys(summary).length > 0\n        ? summary\n        : undefined,\n  });\n});\n\nconst enrichedIpValues = new Set(\n  cortexRows\n    .filter(item =>\n      String(item.dataType ?? '').toLowerCase() === 'ip'\n    )\n    .map(item => String(item.data ?? ''))\n);\n\nconst ipWithoutCortexResult = observables.filter(item =>\n  String(item.type ?? '').toLowerCase().includes('ip') &&\n  item.value !== undefined &&\n  !enrichedIpValues.has(String(item.value))\n);\n\nconst skippedByFilterMap = new Map();\n\nfunction addSkipped(item) {\n  const value = item.value;\n\n  if (value === undefined || value === null || value === '') {\n    return;\n  }\n\n  const type = String(item.type ?? 'unknown');\n  const key = `${type.toLowerCase()}\\u0000${String(value)}`;\n\n  skippedByFilterMap.set(key, clean({\n    type,\n    value,\n    field: item.field,\n    internal: item.internal,\n    reason: item.reason,\n  }));\n}\n\nfor (const item of ipWithoutCortexResult) {\n  const isInternal =\n    item.internal === true ||\n    String(item.internal).toLowerCase() === 'true';\n\n  addSkipped({\n    type: item.type ?? 'ip',\n    value: item.value,\n    field: item.field,\n    internal: item.internal,\n    reason: isInternal\n      ? 'Internal IP; external Cortex lookup skipped'\n      : 'No Cortex result for this IP',\n  });\n}\n\nfor (const item of skippedIpRows) {\n  const value =\n    item.observable ??\n    item.value ??\n    item.data;\n\n  if (value === undefined || value === null || value === '') {\n    continue;\n  }\n\n  const normalizedObservable = observables.find(\n    observable => String(observable.value) === String(value)\n  );\n\n  const internal =\n    item.internal ??\n    item.is_internal ??\n    normalizedObservable?.internal;\n\n  const isInternal =\n    internal === true ||\n    String(internal).toLowerCase() === 'true';\n\n  addSkipped({\n    type:\n      item.data_type ??\n      item.dataType ??\n      item.type ??\n      normalizedObservable?.type ??\n      'ip',\n    value,\n    field: item.field ?? normalizedObservable?.field,\n    internal,\n    reason:\n      item.reason ??\n      (\n        isInternal\n          ? 'Internal IP; external Cortex lookup skipped'\n          : 'Excluded by Cortex eligibility filter'\n      ),\n  });\n}\n\nconst skippedByFilter = [...skippedByFilterMap.values()];\n\nconst pending = cortexResults\n  .filter(result => result.status === 'pending')\n  .map(result => ({\n    analyzer: result.analyzer,\n    observable: result.observable,\n    status: result.status,\n  }));\n\nconst failed = [\n  ...cortexResults\n    .filter(result => result.status === 'failed')\n    .map(result => ({\n      analyzer: result.analyzer,\n      observable: result.observable,\n      status: result.status,\n    })),\n  ...errorRows.map(item => ({\n    service: item.service,\n    node: item.node,\n    observable: item.observable,\n    error: item.error,\n  })),\n];\n\nconst rule = alert.rule ?? {};\nconst agent = alert.agent ?? {};\nconst syscheck = alert.syscheck ?? {};\n\nreturn [{\n  json: {\n    alert: clean({\n      id: alert.alert_id ?? alert.id,\n      timestamp: alert.timestamp,\n      manager: alert.manager,\n      source_format: alert.source_format,\n      tlp: alert.tlp,\n      rule: clean({\n        id: rule.id,\n        level: rule.level,\n        description: rule.description,\n      }),\n      agent: clean({\n        id: agent.id,\n        name: agent.name,\n        ip: agent.ip,\n      }),\n      groups: alert.groups,\n      mitre: clean({\n        ids: alert.mitre_ids,\n        tactics: alert.mitre_tactics,\n        techniques: alert.mitre_techniques,\n      }),\n      syscheck: clean({\n        path: syscheck.path,\n        event: syscheck.event,\n        sha256_before: syscheck.sha256_before,\n        sha256_after: syscheck.sha256_after,\n      }),\n      observables,\n    }),\n\n    misp: {\n      attribute_count: uniqueMispRows.length,\n      unique_indicators: [...groupedMisp.values()],\n    },\n\n    cortex: {\n      results: cortexResults,\n      skipped_by_filter: skippedByFilter,\n    },\n\n    processing: {\n      status: pending.length > 0\n        ? 'partial'\n        : failed.length > 0\n          ? 'complete_with_errors'\n          : 'complete',\n      pending,\n      failed,\n    },\n  },\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2944,
+        464
+      ],
+      "id": "87d58f89-d695-42af-ad4c-4e7cbe46182f",
+      "name": "Summary Enrichments"
+    },
+    {
+      "parameters": {
+        "analyzer": "debba8cb39b988d5f01f48c2c22f83d7::VirusTotal_GetReport_3_1",
+        "observableType": "={{ $json.observables.dataType }}",
+        "observableValue": "={{ $json.observables.data }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.cortex",
+      "typeVersion": 1,
+      "position": [
+        880,
+        1520
+      ],
+      "id": "0228a323-4a86-4419-85dc-41da43ee0186",
+      "name": "Execute VirusTotal",
+      "retryOnFail": true,
+      "waitBetweenTries": 2000,
+      "credentials": {},
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2144,
+        1488
+      ],
+      "id": "5f23f3b8-1b70-4048-a4d7-8fcae8de5d4b",
+      "name": "MergeVirusTotal"
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2128,
+        1120
+      ],
+      "id": "ffc5857a-6696-4b29-b4e7-45e64cc9302d",
+      "name": "MergeCirclHash"
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2128,
+        784
+      ],
+      "id": "a085c320-d1c3-459c-8b36-a1318dfe4059",
+      "name": "MergeTeamCymru"
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1856,
+        -128
+      ],
+      "id": "3fd7c0b8-145d-4b05-84c4-9fab0c5c8668",
+      "name": "MergeMaltiverse"
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1840,
+        208
+      ],
+      "id": "98b9f7c6-ddcb-490e-97e8-55eb36763192",
+      "name": "MergeAbusIPBD"
+    },
+    {
+      "parameters": {
+        "amount": 2
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1664,
+        1360
+      ],
+      "id": "c2f11cf4-972b-47a7-b3e1-0191c2525f47",
+      "name": "WaitVirus",
+      "webhookId": "d5b841d3-ab91-4bb0-823e-b79a41df4a7a"
+    },
+    {
+      "parameters": {
+        "amount": 2
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1648,
+        992
+      ],
+      "id": "e5643614-d852-4560-86dd-cfa02f4ef653",
+      "name": "WaitCircl",
+      "webhookId": "22a0740c-059e-4f0f-ba7c-0784b4e82021"
+    },
+    {
+      "parameters": {
+        "amount": 2
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1600,
+        672
+      ],
+      "id": "774e8dee-ce2a-408e-be49-71d0abe613f9",
+      "name": "WaitCymru",
+      "webhookId": "04939cb6-131b-42d6-9597-c91fb089c3e7"
+    },
+    {
+      "parameters": {
+        "amount": 2
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1408,
+        -256
+      ],
+      "id": "d74806ae-1d4e-4eb2-b974-b3bea87c6047",
+      "name": "WaitMalti",
+      "webhookId": "91525bc9-a6b6-41d4-98b5-03c991eaa431"
+    },
+    {
+      "parameters": {
+        "amount": 2
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1408,
+        80
+      ],
+      "id": "2f84d65b-6876-49ab-a588-0f2abbfe08ba",
+      "name": "WaitAbuse",
+      "webhookId": "27cb7c96-2fdc-420f-baa6-1a9e4b2e8190"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "7209ad3d-6082-49d6-a391-b21a04bbc749",
+              "leftValue": "={{ $runIndex < 6 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        1584,
+        80
+      ],
+      "id": "d216e480-4d1d-4fbc-98c3-4c526000b1f0",
+      "name": "Abuse limit not reached?"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "7209ad3d-6082-49d6-a391-b21a04bbc749",
+              "leftValue": "={{ $runIndex < 6 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        1760,
+        672
+      ],
+      "id": "057a3151-3f27-44d8-963b-330038eabc52",
+      "name": "Cymru limit not reached?"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "7209ad3d-6082-49d6-a391-b21a04bbc749",
+              "leftValue": "={{ $runIndex < 6 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        1568,
+        -256
+      ],
+      "id": "a2ffd563-c6b9-4daa-89bc-02680077f867",
+      "name": "Malti limit not reached?"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "7209ad3d-6082-49d6-a391-b21a04bbc749",
+              "leftValue": "={{ $runIndex < 6 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        1808,
+        992
+      ],
+      "id": "af103fd4-b32e-4268-95bc-d237d6bcaae7",
+      "name": "Circl limit not reached?"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "7209ad3d-6082-49d6-a391-b21a04bbc749",
+              "leftValue": "={{ $runIndex < 6 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        1824,
+        1360
+      ],
+      "id": "3c74c5c9-ddd5-47d2-8a8d-0065aab0f54c",
+      "name": "Virus limit not reached?"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "bc0ff093-506e-4c52-ba64-67a572f04cec",
+              "leftValue": "={{ ['waiting', 'inprogress'].includes(String($json.status ?? '').toLowerCase()) ||\n   (typeof $json.report === 'string' &&\n    ['waiting', 'inprogress'].includes($json.report.toLowerCase())) }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        1472,
+        1392
+      ],
+      "id": "5fa3601b-76f9-461d-9b24-16740db663bf",
+      "name": "Report virus still waiting?"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "bc0ff093-506e-4c52-ba64-67a572f04cec",
+              "leftValue": "={{ ['waiting', 'inprogress'].includes(String($json.status ?? '').toLowerCase()) ||\n   (typeof $json.report === 'string' &&\n    ['waiting', 'inprogress'].includes($json.report.toLowerCase())) }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        1456,
+        1024
+      ],
+      "id": "50576060-92a0-4e81-9c98-60aed3f614e8",
+      "name": "Report Circl still waiting?"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "bc0ff093-506e-4c52-ba64-67a572f04cec",
+              "leftValue": "={{ ['waiting', 'inprogress'].includes(String($json.status ?? '').toLowerCase()) ||\n   (typeof $json.report === 'string' &&\n    ['waiting', 'inprogress'].includes($json.report.toLowerCase())) }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        1408,
+        688
+      ],
+      "id": "8d3178db-c25d-420b-a7cd-e76ea4babd3f",
+      "name": "Report Cymru still waiting?"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "bc0ff093-506e-4c52-ba64-67a572f04cec",
+              "leftValue": "={{ ['waiting', 'inprogress'].includes(String($json.status ?? '').toLowerCase()) ||\n   (typeof $json.report === 'string' &&\n    ['waiting', 'inprogress'].includes($json.report.toLowerCase())) }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        1216,
+        -224
+      ],
+      "id": "e85d6757-16da-4241-91de-be3a896b3d7d",
+      "name": "Report Malti still waiting?"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "bc0ff093-506e-4c52-ba64-67a572f04cec",
+              "leftValue": "={{ ['waiting', 'inprogress'].includes(String($json.status ?? '').toLowerCase()) ||\n   (typeof $json.report === 'string' &&\n    ['waiting', 'inprogress'].includes($json.report.toLowerCase())) }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        1216,
+        96
+      ],
+      "id": "836c7d09-1bab-4e23-9581-b1b7cd94be24",
+      "name": "Report Abuse still waiting?"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst seen = new Map();\nconst output = [];\n\nfunction isInternal(value) {\n  return value === true || String(value ?? '').toLowerCase() === 'true';\n}\n\nfor (const item of items) {\n  const observable = item.json ?? {};\n\n  const nested =\n    observable.observables &&\n    typeof observable.observables === 'object' &&\n    !Array.isArray(observable.observables)\n      ? observable.observables\n      : {};\n\n  const type = String(\n    observable.type ?? nested.type ?? nested.dataType ?? ''\n  ).trim().toLowerCase();\n\n  let value = String(\n    observable.value ?? nested.value ?? nested.data ?? ''\n  ).trim();\n\n  const field = observable.field ?? nested.field;\n  const internal = isInternal(observable.internal ?? nested.internal);\n\n  const fields = [\n    ...(Array.isArray(observable.fields) ? observable.fields : []),\n    ...(Array.isArray(nested.fields) ? nested.fields : []),\n    field,\n  ].filter(\n    (candidate) =>\n      typeof candidate === 'string' && candidate.trim() !== ''\n  );\n\n  if (type === 'hash') {\n    value = value\n      .replace(/^(?:MD5|SHA-?1|SHA-?256|SHA-?512)\\s*=\\s*/i, '')\n      .replace(/\\s+/g, '')\n      .toLowerCase();\n  } else if (type === 'ip') {\n    value = value.toLowerCase();\n  } else if (type === 'domain') {\n    value = value.replace(/\\.$/, '').toLowerCase();\n  }\n\n  const normalizedJson = {\n    ...observable,\n    type,\n    value,\n    field,\n    internal,\n    fields: [...new Set(fields.map((candidate) => candidate.trim()))],\n  };\n\n  if (!type || !value) {\n    output.push({ ...item, json: normalizedJson });\n    continue;\n  }\n\n  const key = `${type}:${value}`;\n\n  if (!seen.has(key)) {\n    const normalizedItem = { ...item, json: normalizedJson };\n    seen.set(key, normalizedItem);\n    output.push(normalizedItem);\n    continue;\n  }\n\n  const existing = seen.get(key);\n\n  existing.json.internal =\n    isInternal(existing.json.internal) || internal;\n\n  existing.json.fields = [\n    ...new Set([\n      ...(existing.json.fields ?? []),\n      ...normalizedJson.fields,\n    ]),\n  ];\n}\n\nreturn output;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -672,
+        496
+      ],
+      "id": "94c629ec-7cc4-48c8-8a63-a8a574fa5b99",
+      "name": "Dedupe Cortex Observables"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const INTERNAL_DOMAIN_SUFFIXES = [\n  'lab',\n  'local',\n  'lan',\n  'internal',\n  'localdomain',\n  'localhost',\n  'test',\n  'invalid',\n  'home.arpa',\n];\n\nfunction parseIPv4(value) {\n  const parts = String(value).split('.');\n\n  if (\n    parts.length !== 4 ||\n    parts.some((part) => !/^\\d{1,3}$/.test(part))\n  ) {\n    return null;\n  }\n\n  const numbers = parts.map(Number);\n\n  if (numbers.some((part) => part < 0 || part > 255)) {\n    return null;\n  }\n\n  return numbers;\n}\n\nfunction isNonPublicIPv4(parts) {\n  const [a, b, c] = parts;\n\n  return (\n    a === 0 ||\n    a === 10 ||\n    a === 127 ||\n    (a === 100 && b >= 64 && b <= 127) ||\n    (a === 169 && b === 254) ||\n    (a === 172 && b >= 16 && b <= 31) ||\n    (a === 192 && b === 0 && c === 0) ||\n    (a === 192 && b === 0 && c === 2) ||\n    (a === 192 && b === 88 && c === 99) ||\n    (a === 192 && b === 168) ||\n    (a === 198 && (b === 18 || b === 19)) ||\n    (a === 198 && b === 51 && c === 100) ||\n    (a === 203 && b === 0 && c === 113) ||\n    a >= 224\n  );\n}\n\nfunction isNonPublicOrInvalidIPv6(value) {\n  const address = String(value)\n    .replace(/^\\[|\\]$/g, '')\n    .split('%')[0]\n    .toLowerCase();\n\n  if (!address.includes(':')) return true;\n\n  const doubleColonCount = (address.match(/::/g) ?? []).length;\n  const groups = address.split(':').filter(Boolean);\n\n  if (\n    doubleColonCount > 1 ||\n    address.includes('.') ||\n    groups.some((group) => !/^[0-9a-f]{1,4}$/.test(group)) ||\n    (doubleColonCount === 0 && groups.length !== 8) ||\n    (doubleColonCount === 1 && groups.length >= 8)\n  ) {\n    return true;\n  }\n\n  const firstGroup = groups[0];\n  if (!firstGroup) return true;\n\n  const first = Number.parseInt(firstGroup, 16);\n\n  // Allow only IPv6 global-unicast space (2000::/3).\n  if (first < 0x2000 || first > 0x3fff) return true;\n\n  // Documentation-only IPv6 range.\n  if (/^2001:db8(?::|$)/.test(address)) return true;\n\n  return false;\n}\n\nfunction hostSkipReason(rawHost) {\n  let host = String(rawHost ?? '')\n    .trim()\n    .replace(/^\\[|\\]$/g, '');\n\n  if (!host) return 'Missing URL host';\n\n  if (host.includes(':')) {\n    return isNonPublicOrInvalidIPv6(host)\n      ? 'Non-public or invalid IPv6 host'\n      : null;\n  }\n\n  if (/[\\/?#@\\s\\\\]/.test(host)) {\n    return 'Invalid hostname';\n  }\n\n  host = host.replace(/\\.$/, '').toLowerCase();\n\n  const ipv4 = parseIPv4(host);\n\n  if (ipv4) {\n    return isNonPublicIPv4(ipv4) ? 'Non-public IPv4 host' : null;\n  }\n\n  if (/^[\\d.]+$/.test(host)) {\n    return 'Invalid or non-public IP host';\n  }\n\n  if (!host.includes('.')) {\n    return 'Single-label or local hostname';\n  }\n\n  const labels = host.split('.');\n\n  if (\n    labels.some(\n      (label) =>\n        !label ||\n        label.length > 63 ||\n        !/^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/.test(label),\n    )\n  ) {\n    return 'Invalid hostname';\n  }\n\n  if (\n    INTERNAL_DOMAIN_SUFFIXES.some(\n      (suffix) => host === suffix || host.endsWith(`.${suffix}`),\n    )\n  ) {\n    return 'Local or internal domain suffix';\n  }\n\n  return null;\n}\n\nfunction urlSkipReason(value) {\n  const input = String(value ?? '').trim();\n\n  if (!input || /[\\s\\\\]/.test(input)) {\n    return 'Invalid URL';\n  }\n\n  const schemeMatch = input.match(/^([a-z][a-z0-9+.-]*):\\/\\//i);\n\n  if (!schemeMatch) {\n    return 'Invalid URL';\n  }\n\n  const scheme = schemeMatch[1].toLowerCase();\n\n  if (!['http', 'https'].includes(scheme)) {\n    return 'Unsupported URL scheme';\n  }\n\n  const authority = input\n    .slice(schemeMatch[0].length)\n    .split(/[/?#]/, 1)[0];\n\n  if (!authority) {\n    return 'Missing URL host';\n  }\n\n  if (authority.includes('@')) {\n    return 'URL contains credentials';\n  }\n\n  let host;\n\n  function isValidPort(port) {\n    return /^\\d{1,5}$/.test(port) && Number(port) <= 65535;\n  }\n\n  if (authority.startsWith('[')) {\n    const closingBracket = authority.indexOf(']');\n\n    if (closingBracket < 0) {\n      return 'Invalid URL';\n    }\n\n    host = authority.slice(1, closingBracket);\n    const portSuffix = authority.slice(closingBracket + 1);\n\n    if (\n      portSuffix &&\n      (!portSuffix.startsWith(':') ||\n        !isValidPort(portSuffix.slice(1)))\n    ) {\n      return 'Invalid URL';\n    }\n  } else {\n    const colonCount = (authority.match(/:/g) ?? []).length;\n\n    if (colonCount > 1) {\n      return 'Invalid URL';\n    }\n\n    const colonIndex = authority.lastIndexOf(':');\n\n    if (colonIndex >= 0) {\n      host = authority.slice(0, colonIndex);\n      const port = authority.slice(colonIndex + 1);\n\n      if (!isValidPort(port)) {\n        return 'Invalid URL';\n      }\n    } else {\n      host = authority;\n    }\n  }\n\n  return hostSkipReason(host);\n}\n\nfunction ipSkipReason(value) {\n  const candidate = String(value ?? '')\n    .trim()\n    .replace(/^\\[|\\]$/g, '');\n\n  const ipv4 = parseIPv4(candidate);\n\n  if (ipv4) {\n    return isNonPublicIPv4(ipv4) ? 'Non-public IPv4 address' : null;\n  }\n\n  if (candidate.includes(':')) {\n    return isNonPublicOrInvalidIPv6(candidate)\n      ? 'Non-public or invalid IPv6 address'\n      : null;\n  }\n\n  return 'Invalid IP address';\n}\n\nconst observable = $json ?? {};\nconst type = String(observable.type ?? '').trim().toLowerCase();\nconst value = String(observable.value ?? '').trim();\n\nlet reason = null;\n\nif (!type || !value) {\n  reason = 'Missing observable type or value';\n} else if (\n  observable.internal === true ||\n  String(observable.internal).toLowerCase() === 'true'\n) {\n  reason = 'Marked internal by normalization';\n} else if (type === 'ip') {\n  reason = ipSkipReason(value);\n} else if (type === 'domain') {\n  reason = hostSkipReason(value);\n} else if (type === 'url') {\n  reason = urlSkipReason(value);\n} else if (type !== 'hash') {\n  reason = 'Unsupported Cortex observable type';\n}\n\nreturn {\n  json: {\n    ...observable,\n    type,\n    value,\n    cortex_eligible: reason === null,\n    cortex_skip_reason: reason,\n  },\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -496,
+        496
+      ],
+      "id": "7765500c-049d-428d-b298-6b0925394704",
+      "name": "Cortex Eligibility"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "0ce18448-3e09-4944-94e9-c0f889b94a00",
+              "leftValue": "={{ $json.cortex_eligible }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        -352,
+        496
+      ],
+      "id": "9c2a5ce1-bbbb-4244-9358-c4b212fdda25",
+      "name": "Cortex eligible?"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0abe1294-ed6b-4e76-bb79-8e63c43f17ed",
+              "name": "record_type",
+              "value": "cortex_skipped",
+              "type": "string"
+            },
+            {
+              "id": "11134513-0ca0-4590-a838-1cbd22752177",
+              "name": "type",
+              "value": "={{ $json.type || $json.observables?.type || $json.observables?.dataType || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "41473e1b-561e-48e9-8c37-7190a5b9d43d",
+              "name": "value",
+              "value": "={{ $json.value || $json.observables?.value || $json.observables?.data || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "7f51f670-479b-4230-9e95-db7d82f8bd49",
+              "name": "field",
+              "value": "={{ $json.field || $json.observables?.field || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "5b5a2329-1aa4-47e4-925e-c6b33f39bf4a",
+              "name": "internal",
+              "value": "={{ $json.internal === true || $json.observables?.internal === true }}",
+              "type": "boolean"
+            },
+            {
+              "id": "ba1e64f3-37c2-4a1b-963e-224242ee8be1",
+              "name": "reason",
+              "value": "={{ $json.cortex_skip_reason }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -32,
+        592
+      ],
+      "id": "089ebd00-0995-4d53-8988-f7957a50ae74",
+      "name": "Mark Cortex skipped"
+    },
+    {
+      "parameters": {
+        "jsCode": "const SERVICE_NAME = 'Maltiverse';\n\nreturn $input.all().map(input => {\n  const item = input.json;\n  const observable = typeof item?.primary_observable === 'string'\n    ? item.primary_observable\n    : item?.observables?.find(o => o.internal === false)?.data ?? '';\n\n  return {\n    json: {\n      service:    SERVICE_NAME,\n      node:       $prevNode.name,\n      observable: observable,\n      error:      item?.error?.message ?? item?.error ?? 'unknown',\n      timestamp:  new Date().toISOString(),\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1168,
+        -80
+      ],
+      "id": "7198c7a8-a2d6-4880-9401-748bf435455c",
+      "name": "Error Formatter - Maltiverse"
+    },
+    {
+      "parameters": {
+        "jsCode": "const SERVICE_NAME = 'AbuseIPDB';\n\nreturn $input.all().map(input => {\n  const item = input.json;\n  const observable = typeof item?.primary_observable === 'string'\n    ? item.primary_observable\n    : item?.observables?.find(o => o.internal === false)?.data ?? '';\n\n  return {\n    json: {\n      service:    SERVICE_NAME,\n      node:       $prevNode.name,\n      observable: observable,\n      error:      item?.error?.message ?? item?.error ?? 'unknown',\n      timestamp:  new Date().toISOString(),\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1408,
+        256
+      ],
+      "id": "14f72b5a-dd99-4f9d-8298-1bebf7fd8205",
+      "name": "Error Formatter - AbuseIDPB"
+    },
+    {
+      "parameters": {
+        "jsCode": "const SERVICE_NAME = 'TeamCymru';\n\nreturn $input.all().map(input => {\n  const item = input.json;\n  const observable = typeof item?.primary_observable === 'string'\n    ? item.primary_observable\n    : item?.observables?.find(o => o.internal === false)?.data ?? '';\n\n  return {\n    json: {\n      service:    SERVICE_NAME,\n      node:       $prevNode.name,\n      observable: observable,\n      error:      item?.error?.message ?? item?.error ?? 'unknown',\n      timestamp:  new Date().toISOString(),\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1408,
+        848
+      ],
+      "id": "67a16d1f-22c1-4c26-ba13-531f4a006741",
+      "name": "Error Formatter - TeamCymru"
+    },
+    {
+      "parameters": {
+        "jsCode": "const SERVICE_NAME = 'CirclHash';\n\nreturn $input.all().map(input => {\n  const item = input.json;\n  const observable = typeof item?.primary_observable === 'string'\n    ? item.primary_observable\n    : item?.observables?.find(o => o.internal === false)?.data ?? '';\n\n  return {\n    json: {\n      service:    SERVICE_NAME,\n      node:       $prevNode.name,\n      observable: observable,\n      error:      item?.error?.message ?? item?.error ?? 'unknown',\n      timestamp:  new Date().toISOString(),\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1456,
+        1168
+      ],
+      "id": "4cfe4285-beb8-4075-8327-be01eb3b866b",
+      "name": "Error Formatter - CirclHash"
+    },
+    {
+      "parameters": {
+        "jsCode": "const SERVICE_NAME = 'VirusTotal';\n\nreturn $input.all().map(input => {\n  const item = input.json;\n  const observable = typeof item?.primary_observable === 'string'\n    ? item.primary_observable\n    : item?.observables?.find(o => o.internal === false)?.data ?? '';\n\n  return {\n    json: {\n      service:    SERVICE_NAME,\n      node:       $prevNode.name,\n      observable: observable,\n      error:      item?.error?.message ?? item?.error ?? 'unknown',\n      timestamp:  new Date().toISOString(),\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1456,
+        1536
+      ],
+      "id": "98277e11-468e-4f3d-83f9-c07dc214d421",
+      "name": "Error Formatter - VirusTotal"
+    },
+    {
+      "parameters": {
+        "jsCode": "const SERVICE_NAME = 'MISP';\n\nreturn $input.all().map(input => {\n  const item = input.json;\n  const observable = typeof item?.primary_observable === 'string'\n    ? item.primary_observable\n    : item?.observables?.find(o => o.internal === false)?.data ?? '';\n\n  return {\n    json: {\n      service:    SERVICE_NAME,\n      node:       $prevNode.name,\n      observable: observable,\n      error:      item?.error?.message ?? item?.error ?? 'unknown',\n      timestamp:  new Date().toISOString(),\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1168,
+        -576
+      ],
+      "id": "90a87ae3-aaca-4bef-83de-8e073c475ecb",
+      "name": "Error Formatter - MISP"
+    },
+    {
+      "parameters": {
+        "jsCode": "const WINDOW_MS = 7 * 60 * 1000; // dedup window, 7 minutes\n\n// temp for time\nconst now = Date.now();\n\n// data from n8n\nconst store = $getWorkflowStaticData('global');\n\n// take store.dedup if store.dedup void take empty {}\nstore.dedup = store.dedup ?? {};\n\n// if alert has been seen in WINDOWS_MS delete \nfor (const [k, v] of Object.entries(store.dedup)) {\n  if (now - v.first_seen > WINDOW_MS) delete store.dedup[k];\n}\n\n\nreturn $input.all().map(item => {\n  const key = item.json.dedup_key;\n  const hit = store.dedup[key];\n\n  if (hit) {\n    hit.count++;\n    return { json: { ...item.json, is_duplicate: true,\n      duplicate_count: hit.count, first_seen: hit.first_seen } };\n  }\n\n  store.dedup[key] = { first_seen: now, count: 1 };\n  return { json: { ...item.json, is_duplicate: false, duplicate_count: 1 } };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -576,
+        -32
+      ],
+      "id": "2e6fbfc8-d1a3-4044-ac85-604ed236c9ba",
+      "name": "Deduplication"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "cfb97cf5-7f9a-4c0c-b398-e3cb3f969b54",
+              "leftValue": "={{ $json.is_duplicate }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        -352,
+        -32
+      ],
+      "id": "bf1544e6-fb52-45a4-a57a-cf3497febf6c",
+      "name": "New Alert?"
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * SOC - Alert Scoring\n * Stage: Scoring (after \"Summary Enrichments\", before \"Create an alert\")\n * Version: 0.2.2\n *\n * Input:  output of Summary Enrichments (alert, misp, cortex, processing)\n *         optionally with a \"scoring_config\" field added by an upstream\n *         \"Scoring Config\" node (Edit Fields / Set node)\n * Output: the same object (without scoring_config) plus a \"scoring\" field\n *\n * n8n Code node:\n * Mode: Run Once for All Items\n *\n * Principles:\n * - all weights and switches live in the config (DEFAULT_CONFIG below is\n *   the fallback; the upstream node overrides any part of it)\n * - the config is validated: wrong types, unknown keys and inconsistent\n *   bands are reported in scoring.config_warnings and defaults are used\n * - each source contributes one entry (the max over all observables)\n * - missing data (error/pending) is NOT treated as \"clean\":\n *   it lowers \"coverage\", and low coverage blocks a false-positive verdict\n * - a disabled source is ignored completely (points and coverage)\n * - an item without the expected enrichment data is never scored as clean:\n *   its verdict is needs_review and input_problems explains why\n * - CIRCL \"known\" cancels a hash's weak Team Cymru MHR detections and adds\n *   the known-good discount, but a strong MHR detection overrides CIRCL\n */\n\nconst DEFAULT_CONFIG = {\n  version: '0.2',\n\n  rule_level_multiplier: 2, // Wazuh rule level 0-15 -> 0-30 points\n\n  // below this coverage, a low score is not accepted as a false positive\n  min_coverage_for_fp: 0.6,\n\n  // score thresholds for the verdict (high > medium > low)\n  bands: { high: 70, medium: 40, low: 20 },\n\n  sources: {\n    misp: { enabled: true, to_ids: 30, match: 15 },\n\n    abuseipdb: {\n      enabled: true,\n      whitelisted: -10,\n      tiers: [\n        { min: 75, points: 25 },\n        { min: 25, points: 12 },\n      ],\n    },\n\n    maltiverse: {\n      enabled: true,\n      malicious: 20,\n      suspicious: 10,\n      historical_only: 5, // historical matches exist, but classification is not malicious\n      whitelist: -5,\n    },\n\n    virustotal: {\n      enabled: true,\n      tiers: [\n        { min: 10, points: 25 },\n        { min: 3, points: 15 },\n        { min: 1, points: 8 },\n      ],\n    },\n\n    teamcymru: {\n      enabled: true,\n      // MHR detections of a hash known in CIRCL are ignored, unless the\n      // detection is strong (see sources.circl.known_good_unless_mhr_pct)\n      ignore_when_circl_known: true,\n      tiers: [\n        { min: 50, points: 15 },\n        { min: 20, points: 8 },\n      ],\n    },\n\n    circl: {\n      enabled: true,\n      known_good: -10,\n      // a CIRCL-known hash keeps its known-good status only while its MHR\n      // detection is below this percentage (a value above 100 turns the\n      // exception off)\n      known_good_unless_mhr_pct: 50,\n    },\n  },\n};\n\n// ------------------------------------------------------------\n// Config loading and validation\n// ------------------------------------------------------------\n\nfunction isPlainObject(value) {\n  return value !== null && typeof value === 'object' && !Array.isArray(value);\n}\n\nfunction validTiers(value) {\n  return Array.isArray(value) &&\n    value.length > 0 &&\n    value.every(t =>\n      isPlainObject(t) &&\n      Number.isFinite(Number(t.min)) &&\n      Number.isFinite(Number(t.points))\n    );\n}\n\n// Merges \"override\" over \"defaults\". Every key is checked against the\n// type of its default; invalid values keep the default and add a warning.\nfunction mergeConfig(defaults, override, path, warnings) {\n  const out = {};\n  const prefix = path ? `${path}.` : '';\n\n  for (const key of Object.keys(defaults)) {\n    const def = defaults[key];\n    const where = `${prefix}${key}`;\n\n    const provided =\n      isPlainObject(override) &&\n      Object.prototype.hasOwnProperty.call(override, key);\n\n    if (!provided) {\n      out[key] = def;\n      continue;\n    }\n\n    const val = override[key];\n\n    if (isPlainObject(def)) {\n      if (isPlainObject(val)) {\n        out[key] = mergeConfig(def, val, where, warnings);\n      } else {\n        warnings.push(`${where}: expected an object, default used`);\n        out[key] = def;\n      }\n    } else if (Array.isArray(def)) {\n      if (validTiers(val)) {\n        out[key] = val.map(t => ({\n          min: Number(t.min),\n          points: Number(t.points),\n        }));\n      } else {\n        warnings.push(`${where}: expected a non-empty list of {min, points}, default used`);\n        out[key] = def;\n      }\n    } else if (typeof def === 'boolean') {\n      if (typeof val === 'boolean') {\n        out[key] = val;\n      } else {\n        warnings.push(`${where}: expected true or false, default used`);\n        out[key] = def;\n      }\n    } else if (typeof def === 'number') {\n      // numeric strings are accepted (expressions in n8n often return text)\n      const n = typeof val === 'string' && val.trim() !== '' ? Number(val) : val;\n\n      if (typeof n === 'number' && Number.isFinite(n)) {\n        out[key] = n;\n      } else {\n        warnings.push(`${where}: expected a number, default used`);\n        out[key] = def;\n      }\n    } else {\n      out[key] = val; // plain string such as \"version\"\n    }\n  }\n\n  // unknown keys are most likely typos, so they are reported\n  if (isPlainObject(override)) {\n    for (const key of Object.keys(override)) {\n      if (!Object.prototype.hasOwnProperty.call(defaults, key)) {\n        warnings.push(`${prefix}${key}: unknown setting ignored`);\n      }\n    }\n  }\n\n  return out;\n}\n\nfunction buildConfig(override) {\n  const warnings = [];\n\n  if (override !== undefined && override !== null && !isPlainObject(override)) {\n    warnings.push('scoring_config: expected an object, defaults used');\n    override = undefined;\n  }\n\n  const cfg = mergeConfig(DEFAULT_CONFIG, override, '', warnings);\n\n  const { high, medium, low } = cfg.bands;\n\n  if (!(high > medium && medium > low)) {\n    warnings.push('bands: must satisfy high > medium > low, defaults used');\n    cfg.bands = DEFAULT_CONFIG.bands;\n  }\n\n  if (cfg.min_coverage_for_fp < 0 || cfg.min_coverage_for_fp > 1) {\n    warnings.push('min_coverage_for_fp: must be between 0 and 1, default used');\n    cfg.min_coverage_for_fp = DEFAULT_CONFIG.min_coverage_for_fp;\n  }\n\n  // tiers are evaluated from the highest \"min\" to the lowest, so the\n  // order in which the user wrote them does not matter\n  for (const name of ['abuseipdb', 'virustotal', 'teamcymru']) {\n    cfg.sources[name] = {\n      ...cfg.sources[name],\n      tiers: [...cfg.sources[name].tiers].sort((a, b) => b.min - a.min),\n    };\n  }\n\n  return { cfg, warnings };\n}\n\n// ------------------------------------------------------------\n// Helpers\n// ------------------------------------------------------------\n\n// Maps analyzer names (e.g. \"TeamCymruMHR_1_0\") and error-row\n// service names (e.g. \"TeamCymru\") to one common key.\nconst SERVICES = [\n  ['abuseipdb', /abuseipdb/i],\n  ['maltiverse', /maltiverse/i],\n  ['virustotal', /virustotal/i],\n  ['teamcymru', /teamcymru/i],\n  ['circl', /circl/i],\n  ['maxmind', /maxmind/i],\n  ['misp', /misp/i],\n];\n\nfunction serviceKey(name) {\n  const text = String(name ?? '');\n\n  for (const [key, re] of SERVICES) {\n    if (re.test(text)) return key;\n  }\n\n  return text.toLowerCase() || 'unknown';\n}\n\n// Tiers must already be sorted from the highest \"min\" to the lowest\n// (buildConfig takes care of that).\nfunction tier(value, tiers) {\n  for (const t of tiers) {\n    if (value >= t.min) return t.points;\n  }\n\n  return 0;\n}\n\n// Finds a Cortex taxonomy entry by predicate (case-insensitive).\nfunction taxonomy(summary, predicate) {\n  return (summary?.taxonomies ?? []).find(\n    t => String(t.predicate).toLowerCase() === predicate.toLowerCase()\n  );\n}\n\n// Checks that the item looks like a Summary Enrichments output.\n// Without these fields a score of 0 would only mean \"no data\", not \"clean\".\nfunction checkInput(data) {\n  const problems = [];\n\n  const level = data.alert?.rule?.level;\n\n  if (level === undefined || level === null || !Number.isFinite(Number(level))) {\n    problems.push('alert.rule.level is missing');\n  }\n\n  if (!Array.isArray(data.cortex?.results)) {\n    problems.push('cortex.results is missing');\n  }\n\n  if (!isPlainObject(data.processing)) {\n    problems.push('processing is missing');\n  }\n\n  return problems;\n}\n\n// ------------------------------------------------------------\n// Scoring of a single alert\n// ------------------------------------------------------------\n\nfunction scoreAlert(data, cfg, configWarnings, inputProblems) {\n  const alert = data.alert ?? {};\n  const results = data.cortex?.results ?? [];\n  const processing = data.processing ?? {};\n  const src = cfg.sources;\n\n  // sources without a config entry (e.g. maxmind) are always active\n  const active = key => src[key]?.enabled !== false;\n\n  // point candidates: { source, points, reason, observable }\n  const candidates = [];\n\n  function add(source, points, reason, observable) {\n    candidates.push({ source, points, reason, observable });\n  }\n\n  // --- 1. Wazuh rule level --------------------------------------\n  const level = Number(alert.rule?.level ?? 0);\n\n  const rulePoints = Math.round(\n    Math.min(Math.max(level, 0), 15) * cfg.rule_level_multiplier\n  );\n\n  // --- 2. Known-good hashes (CIRCL) -----------------------------\n  // Team Cymru MHR detection per hash, needed to check CIRCL \"known\" hashes\n  const mhrPct = new Map();\n\n  if (active('teamcymru')) {\n    for (const r of results) {\n      if (r.status !== 'complete') continue;\n      if (serviceKey(r.analyzer) !== 'teamcymru') continue;\n\n      const pct = Number(taxonomy(r.summary, 'detection_pct')?.value);\n\n      if (Number.isFinite(pct)) {\n        const key = String(r.observable);\n\n        mhrPct.set(key, Math.max(pct, mhrPct.get(key) ?? 0));\n      }\n    }\n  }\n\n  const knownGood = new Set();\n\n  if (active('circl')) {\n    for (const r of results) {\n      if (r.status !== 'complete') continue;\n      if (serviceKey(r.analyzer) !== 'circl') continue;\n\n      const t = taxonomy(r.summary, 'Result');\n\n      if (String(t?.value).toLowerCase() === 'known') {\n        const pct = mhrPct.get(String(r.observable));\n\n        // a strong MHR detection overrides the known-good status\n        if (pct !== undefined && pct >= src.circl.known_good_unless_mhr_pct) {\n          add(\n            'circl',\n            0,\n            `known in CIRCL, but MHR detection ${pct}% overrides known-good`,\n            r.observable\n          );\n          continue;\n        }\n\n        knownGood.add(String(r.observable));\n\n        add(\n          'circl',\n          src.circl.known_good,\n          'hash known in CIRCL hashlookup (known-good)',\n          r.observable\n        );\n      }\n    }\n  }\n\n  // --- 3. Cortex analyzer results -------------------------------\n  for (const r of results) {\n    if (r.status !== 'complete') continue;\n\n    const key = serviceKey(r.analyzer);\n\n    if (!active(key)) continue;\n\n    const s = r.summary ?? {};\n    const obs = r.observable;\n\n    if (key === 'abuseipdb') {\n      if (s.whitelisted === true) {\n        add('abuseipdb', src.abuseipdb.whitelisted, 'IP whitelisted in AbuseIPDB', obs);\n      } else {\n        const score = Number(s.abuse_confidence_score ?? 0);\n\n        add(\n          'abuseipdb',\n          tier(score, src.abuseipdb.tiers),\n          `abuse confidence ${score}`,\n          obs\n        );\n      }\n    }\n\n    if (key === 'maltiverse') {\n      const cls = String(s.classification ?? '').toLowerCase();\n      const hist = Number(s.historical_matches?.count ?? 0);\n\n      if (cls === 'malicious') {\n        add('maltiverse', src.maltiverse.malicious, 'classification: malicious', obs);\n      } else if (cls === 'suspicious') {\n        add('maltiverse', src.maltiverse.suspicious, 'classification: suspicious', obs);\n      } else if (cls === 'whitelist') {\n        add('maltiverse', src.maltiverse.whitelist, 'classification: whitelist', obs);\n      } else if (hist > 0) {\n        add(\n          'maltiverse',\n          src.maltiverse.historical_only,\n          `historical matches: ${hist}`,\n          obs\n        );\n      } else {\n        add('maltiverse', 0, `classification: ${cls || 'none'}`, obs);\n      }\n    }\n\n    if (key === 'virustotal') {\n      // taxonomy value looks like \"2/91\" (malicious engines / total engines)\n      const t = taxonomy(s, 'GetReport');\n      const m = /^(\\d+)\\s*\\/\\s*(\\d+)$/.exec(String(t?.value ?? ''));\n\n      if (m) {\n        add(\n          'virustotal',\n          tier(Number(m[1]), src.virustotal.tiers),\n          `VirusTotal ${m[1]}/${m[2]} engines`,\n          obs\n        );\n      } else {\n        add('virustotal', 0, 'VirusTotal: no parsable result', obs);\n      }\n    }\n\n    if (key === 'teamcymru') {\n      if (src.teamcymru.ignore_when_circl_known && knownGood.has(String(obs))) {\n        add(\n          'teamcymru',\n          0,\n          'MHR detections ignored: hash is known-good in CIRCL',\n          obs\n        );\n        continue;\n      }\n\n      const pct = Number(taxonomy(s, 'detection_pct')?.value);\n\n      if (Number.isFinite(pct)) {\n        add(\n          'teamcymru',\n          tier(pct, src.teamcymru.tiers),\n          `MHR detection ${pct}%`,\n          obs\n        );\n      } else {\n        add('teamcymru', 0, 'MHR: no record', obs);\n      }\n    }\n  }\n\n  // --- 4. MISP ---------------------------------------------------\n  if (active('misp')) {\n    let mispPoints = 0;\n    let mispReason = null;\n\n    for (const ind of data.misp?.unique_indicators ?? []) {\n      const attrs = ind.attributes ?? [];\n      const hasToIds = attrs.some(a => a.to_ids === true);\n      const points = hasToIds ? src.misp.to_ids : src.misp.match;\n\n      if (points > mispPoints) {\n        mispPoints = points;\n\n        mispReason = hasToIds\n          ? `MISP hit (to_ids) for ${ind.value}`\n          : `MISP hit for ${ind.value}`;\n      }\n    }\n\n    if (mispPoints > 0) {\n      add('misp', mispPoints, mispReason, undefined);\n    }\n  }\n\n  // --- 5. One entry per source (max points) ----------------------\n  const bySource = new Map();\n\n  for (const c of candidates) {\n    const current = bySource.get(c.source);\n\n    if (!current || c.points > current.points) {\n      bySource.set(c.source, c);\n    }\n  }\n\n  const breakdown = [\n    {\n      source: 'rule_level',\n      points: rulePoints,\n      reason: `rule level ${level}`,\n    },\n    ...[...bySource.values()].map(c => ({\n      source: c.source,\n      points: c.points,\n      reason: c.reason,\n      observable: c.observable,\n    })),\n  ];\n\n  const raw = breakdown.reduce((sum, b) => sum + b.points, 0);\n  const score = Math.max(0, Math.min(100, Math.round(raw)));\n\n  // --- 6. Coverage: how many sources actually answered -----------\n  const state = new Map(); // key -> { ok, failed }\n\n  function mark(key, field) {\n    if (!active(key)) return; // disabled sources do not affect coverage\n\n    if (!state.has(key)) state.set(key, { ok: false, failed: false });\n    state.get(key)[field] = true;\n  }\n\n  for (const r of results) {\n    if (r.status === 'complete') mark(serviceKey(r.analyzer), 'ok');\n  }\n\n  for (const f of processing.failed ?? []) {\n    mark(serviceKey(f.service ?? f.analyzer), 'failed');\n  }\n\n  // pending analyzers have no result yet, so they count as not answered\n  for (const p of processing.pending ?? []) {\n    mark(serviceKey(p.analyzer), 'failed');\n  }\n\n  // MISP without an error means the query ran (even with 0 hits)\n  if (!state.has('misp')) mark('misp', 'ok');\n\n  const sources = { ok: [], partial: [], failed: [] };\n\n  for (const [key, st] of state) {\n    if (st.ok && st.failed) sources.partial.push(key);\n    else if (st.ok) sources.ok.push(key);\n    else sources.failed.push(key);\n  }\n\n  const total =\n    sources.ok.length +\n    sources.partial.length +\n    sources.failed.length;\n\n  let coverage = total === 0\n    ? 0\n    : Number(\n        (\n          (sources.ok.length + 0.5 * sources.partial.length) / total\n        ).toFixed(2)\n      );\n\n  // --- 7. Verdict ------------------------------------------------\n  const { high, medium, low } = cfg.bands;\n\n  let verdict =\n    score >= high ? 'high' :\n    score >= medium ? 'medium' :\n    score >= low ? 'low' :\n    'likely_false_positive';\n\n  // missing data never closes an alert as a false positive\n  if (\n    (verdict === 'likely_false_positive' || verdict === 'low') &&\n    coverage < cfg.min_coverage_for_fp\n  ) {\n    verdict = 'needs_review';\n  }\n\n  // an item without enrichment data is never reported as clean\n  if (inputProblems.length > 0) {\n    verdict = 'needs_review';\n    coverage = 0;\n  }\n\n  return {\n    score,\n    verdict,\n    coverage,\n    sources,\n    breakdown,\n    config_version: cfg.version,\n    ...(configWarnings.length > 0\n      ? { config_warnings: configWarnings }\n      : {}),\n    ...(inputProblems.length > 0\n      ? { input_problems: inputProblems }\n      : {}),\n  };\n}\n\n// ------------------------------------------------------------\n// Process all input items\n// ------------------------------------------------------------\n\nreturn $input.all().map(item => {\n  // the config travels with the item and is removed from the output\n  const { scoring_config, ...rest } = item.json;\n\n  const { cfg, warnings } = buildConfig(scoring_config);\n\n  return {\n    json: {\n      ...rest,\n      scoring: scoreAlert(rest, cfg, warnings, checkInput(rest)),\n    },\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3328,
+        464
+      ],
+      "id": "55e6865d-bf7e-4200-8b35-39286e0c0ec0",
+      "name": "Scoring"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"scoring_config\": {\n    \"version\": \"0.2\",\n    \"rule_level_multiplier\": 2,\n    \"min_coverage_for_fp\": 0.6,\n    \"bands\": {\n      \"high\": 70,\n      \"medium\": 40,\n      \"low\": 20\n    },\n    \"sources\": {\n      \"misp\": {\n        \"enabled\": true,\n        \"to_ids\": 30,\n        \"match\": 15\n      },\n      \"abuseipdb\": {\n        \"enabled\": true,\n        \"whitelisted\": -10,\n        \"tiers\": [\n          { \"min\": 75, \"points\": 25 },\n          { \"min\": 25, \"points\": 12 }\n        ]\n      },\n      \"maltiverse\": {\n        \"enabled\": true,\n        \"malicious\": 20,\n        \"suspicious\": 10,\n        \"historical_only\": 5,\n        \"whitelist\": -5\n      },\n      \"virustotal\": {\n        \"enabled\": true,\n        \"tiers\": [\n          { \"min\": 10, \"points\": 25 },\n          { \"min\": 3, \"points\": 15 },\n          { \"min\": 1, \"points\": 8 }\n        ]\n      },\n      \"teamcymru\": {\n        \"enabled\": true,\n        \"ignore_when_circl_known\": true,\n        \"tiers\": [\n          { \"min\": 50, \"points\": 15 },\n          { \"min\": 20, \"points\": 8 }\n        ]\n      },\n      \"circl\": {\n        \"enabled\": true,\n        \"known_good\": -10,\n        \"known_good_unless_mhr_pct\": 50\n      }\n    }\n  }\n}",
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        3136,
+        464
+      ],
+      "id": "0832c2c0-7890-484f-9953-0d14dc4c3a0d",
+      "name": "Scoring Config"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "nXF1iW1rHNDeqCAL",
+          "mode": "list",
+          "cachedResultName": "soc_asset_inventory",
+          "cachedResultUrl": "/projects/8Qplg8E2x33pSFIo/datatables/nXF1iW1rHNDeqCAL"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "agent_id",
+              "keyValue": "={{$json.alert.agent.id}}"
+            },
+            {
+              "keyName": "agent_name",
+              "keyValue": "={{ $json.alert.agent.name }}"
+            }
+          ]
+        },
+        "returnAll": "={{ true }}"
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        3520,
+        464
+      ],
+      "id": "a75432aa-1722-492a-a056-afd217e382a5",
+      "name": "Lookup Asset",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * SOC n8n Decision stage\n * Input: rows returned by Lookup Asset\n * Reads the scoring result from the node named \"Scoring\".\n *\n * Outcomes:\n * - closed\n * - analyst_review\n * - malicious\n */\n\nconst lookupItems = $input.all().map(item => item.json ?? {});\n\nlet scored = {};\ntry {\n  scored = $('Scoring').first().json ?? {};\n} catch {\n  scored = {};\n}\n\nconst alert = scored.alert ?? {};\nconst agent = alert.agent ?? {};\nconst scoring = scored.scoring ?? {};\nconst processing = scored.processing ?? {};\n\nfunction asArray(value) {\n  return Array.isArray(value) ? value : [];\n}\n\nfunction isTrue(value) {\n  return value === true || value === 1 || String(value).toLowerCase() === 'true';\n}\n\nfunction normalizedName(value) {\n  return String(value ?? '').trim().toLowerCase();\n}\n\n// Match the lookup result against both the Wazuh agent ID and name.\n// An unknown or duplicate entry must never authorize auto-closure.\nconst matchingAssets = lookupItems.filter(row =>\n  row.agent_id !== undefined &&\n  row.agent_name !== undefined &&\n  String(row.agent_id) === String(agent.id ?? '') &&\n  normalizedName(row.agent_name) === normalizedName(agent.name)\n);\n\nconst asset = matchingAssets.length === 1 ? matchingAssets[0] : null;\n\n// Find MISP tags kept by Summary Enrichments.\nconst indicators = asArray(scored.misp?.unique_indicators);\nconst attributes = indicators.flatMap(indicator =>\n  asArray(indicator.attributes)\n);\nconst mispTags = new Set(\n  attributes\n    .flatMap(attribute => asArray(attribute.tags))\n    .map(tag => String(tag).toLowerCase())\n);\n\nconst hasMaliciousMispTag = mispTags.has('soc-lab:malicious');\nconst hasBenignMispTag = mispTags.has('soc-lab:benign');\n\nconst cortexResults = asArray(scored.cortex?.results);\n\nfunction taxonomyValue(result, predicate) {\n  const taxonomies = asArray(result.summary?.taxonomies);\n  const found = taxonomies.find(item =>\n    String(item.predicate ?? '').toLowerCase() === predicate.toLowerCase()\n  );\n  return found?.value;\n}\n\nconst maliciousSignals = [];\n\nif (hasMaliciousMispTag) {\n  maliciousSignals.push('MISP tag: soc-lab:malicious');\n}\n\nconst maltiverseMalicious = cortexResults.some(result =>\n  result.status === 'complete' &&\n  /maltiverse/i.test(String(result.analyzer ?? '')) &&\n  String(result.summary?.classification ?? '').toLowerCase() === 'malicious'\n);\n\nif (maltiverseMalicious) {\n  maliciousSignals.push('Maltiverse classification: malicious');\n}\n\nconst strongMhrDetection = cortexResults.some(result => {\n  if (result.status !== 'complete') return false;\n  if (!/teamcymru/i.test(String(result.analyzer ?? ''))) return false;\n\n  const detection = Number(taxonomyValue(result, 'detection_pct'));\n  return Number.isFinite(detection) && detection >= 50;\n});\n\nif (strongMhrDetection) {\n  maliciousSignals.push('Team Cymru MHR detection is at least 50%');\n}\n\nconst strongVirusTotalDetection = cortexResults.some(result => {\n  if (result.status !== 'complete') return false;\n  if (!/virustotal/i.test(String(result.analyzer ?? ''))) return false;\n\n  const value = String(taxonomyValue(result, 'GetReport') ?? '');\n  const match = /^(\\d+)\\s*\\/\\s*(\\d+)$/.exec(value);\n  return Boolean(match) && Number(match[1]) >= 10;\n});\n\nif (strongVirusTotalDetection) {\n  maliciousSignals.push('VirusTotal reports at least 10 detections');\n}\n\nconst score = Number(scoring.score);\nconst coverage = Number(scoring.coverage);\nconst verdict = String(scoring.verdict ?? '');\nconst validScoring =\n  Number.isFinite(score) &&\n  Number.isFinite(coverage) &&\n  verdict.length > 0;\n\nconst observableTypes = new Set(['ip', 'domain', 'url', 'hash']);\nconst hasEligibleObservable = asArray(alert.observables).some(observable => {\n  const type = String(observable.type ?? '').toLowerCase();\n  const internal = isTrue(observable.internal);\n\n  return (\n    observable.value !== undefined &&\n    observable.value !== null &&\n    String(observable.value) !== '' &&\n    observableTypes.has(type) &&\n    !internal\n  );\n});\n\nconst failed = asArray(processing.failed);\nconst pending = asArray(processing.pending);\nconst sourceState = scoring.sources ?? {};\nconst partialSources = asArray(sourceState.partial);\nconst failedSources = asArray(sourceState.failed);\nconst inputProblems = asArray(scoring.input_problems);\nconst configWarnings = asArray(scoring.config_warnings);\nconst breakdown = asArray(scoring.breakdown);\n\n// VirusTotal NotFoundError or another unparseable result is not a clean verdict.\nconst unclearVirusTotalResult = breakdown.some(item =>\n  item.source === 'virustotal' &&\n  /no parsable result/i.test(String(item.reason ?? ''))\n);\n\nconst analysisComplete =\n  validScoring &&\n  processing.status === 'complete' &&\n  coverage === 1 &&\n  failed.length === 0 &&\n  pending.length === 0 &&\n  partialSources.length === 0 &&\n  failedSources.length === 0 &&\n  inputProblems.length === 0 &&\n  configWarnings.length === 0 &&\n  !unclearVirusTotalResult;\n\nconst conflict =\n  hasBenignMispTag &&\n  (maliciousSignals.length > 0 || (validScoring && score >= 40));\n\nconst assetAllowed = isTrue(asset?.auto_close_allowed);\nconst assetIsCritical =\n  String(asset?.criticality ?? '').toLowerCase() === 'critical';\n\nlet outcome = 'analyst_review';\nlet reasonCode = 'default_review';\nconst reasons = [];\n\nif (!validScoring) {\n  reasonCode = 'missing_scoring_data';\n  reasons.push('Scoring data is missing or invalid.');\n} else if (!hasEligibleObservable) {\n  reasonCode = 'no_eligible_observable';\n  reasons.push('No eligible external observable was found.');\n} else if (conflict) {\n  reasonCode = 'conflicting_evidence';\n  reasons.push('Benign and malicious or elevated-risk evidence conflict.');\n} else if (!analysisComplete) {\n  reasonCode = 'incomplete_analysis';\n  reasons.push('Enrichment is incomplete, unavailable, or has an unclear result.');\n} else if (maliciousSignals.length > 0) {\n  outcome = 'malicious';\n  reasonCode = 'malicious_evidence';\n  reasons.push(...maliciousSignals);\n} else if (verdict === 'high') {\n  outcome = 'malicious';\n  reasonCode = 'high_scoring_verdict';\n  reasons.push(\n    'The complete analysis produced a high scoring verdict. This is automated routing, not analyst confirmation.'\n  );\n} else if (verdict === 'likely_false_positive') {\n  if (matchingAssets.length !== 1) {\n    reasonCode = 'asset_not_found_or_ambiguous';\n    reasons.push('The agent has no single exact match in the asset inventory.');\n  } else if (assetIsCritical) {\n    reasonCode = 'critical_asset';\n    reasons.push('Critical assets are not eligible for automatic closure.');\n  } else if (!assetAllowed) {\n    reasonCode = 'asset_not_allowlisted';\n    reasons.push('The asset inventory does not allow automatic closure for this agent.');\n  } else {\n    outcome = 'closed';\n    reasonCode = 'complete_low_risk_analysis';\n    reasons.push(\n      'The complete analysis produced a likely-false-positive verdict and the asset inventory allows automatic closure.'\n    );\n  }\n} else {\n  reasonCode = 'analyst_review_required';\n  reasons.push(`Scoring verdict \"${verdict}\" requires analyst review.`);\n}\n\nreturn [{\n  json: {\n    ...scored,\n\n    asset_inventory: {\n      lookup_status:\n        matchingAssets.length === 1\n          ? 'matched'\n          : matchingAssets.length > 1\n            ? 'ambiguous'\n            : 'not_found',\n      agent_id: asset?.agent_id ?? agent.id ?? null,\n      agent_name: asset?.agent_name ?? agent.name ?? null,\n      asset_type: asset?.asset_type ?? 'unknown',\n      criticality: asset?.criticality ?? 'unknown',\n      auto_close_allowed: assetAllowed,\n      reason: asset?.reason ?? null,\n      last_reviewed: asset?.last_reviewed ?? null,\n    },\n\n    decision: {\n      policy_version: '0.1',\n      outcome,\n      reason_code: reasonCode,\n      reasons,\n      score: validScoring ? score : null,\n      verdict: verdict || 'unknown',\n      coverage: Number.isFinite(coverage) ? coverage : null,\n      analysis_complete: analysisComplete,\n      malicious_signals: maliciousSignals,\n      has_benign_misp_tag: hasBenignMispTag,\n    },\n  },\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3744,
+        464
+      ],
+      "id": "3a03299d-7152-472f-a216-fe9ecb2a4f86",
+      "name": "Decision"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "b5e0461c-df23-4ce0-8aa2-82c86b8fb016",
+              "leftValue": "={{ $json.decision.outcome }}",
+              "rightValue": "closed",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        3968,
+        464
+      ],
+      "id": "5e6e5a8c-1fe3-414c-92fe-56ce9d485b46",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "content": "## From TRUE \nskip TheHive and go to Audit/Counters",
+        "height": 128,
+        "width": 214
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        4064,
+        32
+      ],
+      "typeVersion": 1,
+      "id": "d22a1d2e-c44b-4e65-bb69-8c7c860e67ad",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * SOC n8n TheHive alert builder\n * Input: output from the Decision node for analyst_review or malicious.\n * Reads the detailed normalized event from \"Normalize Alert\" and the\n * handling policy from \"Apply TheHive Handling Policy\".\n * Output: top-level TheHive alert fields for the native node's auto-map mode,\n * plus `thehive_observables` for a separate Observable -> Create node.\n *\n * Closed decisions must bypass this node and the TheHive HTTP Request node.\n */\n\nconst items = $input.all();\n\nlet normalized = {};\ntry {\n  normalized = $('Normalize Alert').first().json ?? {};\n} catch {\n  normalized = {};\n}\n\nlet handlingPolicyFromNode = {};\ntry {\n  handlingPolicyFromNode = $('Apply TheHive Handling Policy').first().json?.thehive_policy ?? {};\n} catch {\n  handlingPolicyFromNode = {};\n}\n\nfunction asArray(value) {\n  return Array.isArray(value) ? value : [];\n}\n\nfunction text(value, fallback = 'Not provided') {\n  if (value === undefined || value === null || String(value).trim() === '') {\n    return fallback;\n  }\n  return String(value).trim();\n}\n\nfunction isTrue(value) {\n  return value === true ||\n    value === 1 ||\n    ['true', '1'].includes(String(value ?? '').trim().toLowerCase());\n}\n\nfunction normalizedValue(value) {\n  return String(value ?? '').trim().toLowerCase();\n}\n\nfunction safeJson(value) {\n  try {\n    return JSON.stringify(value);\n  } catch {\n    return String(value);\n  }\n}\n\nfunction truncate(value, max = 500) {\n  const result = String(value ?? '');\n  return result.length > max ? result.slice(0, max) + '…' : result;\n}\n\nfunction dateText(value) {\n  if (value === undefined || value === null || value === '') return 'Not available';\n  const parsed = typeof value === 'number' ? value : Date.parse(value);\n  return Number.isFinite(parsed) ? new Date(parsed).toISOString() : 'Not available';\n}\n\nfunction formatSummary(summary) {\n  if (!summary || typeof summary !== 'object') return 'No report summary returned';\n\n  const entries = Object.entries(summary).map(([key, value]) => {\n    if (Array.isArray(value)) {\n      const compact = value.map(item => {\n        if (item && typeof item === 'object') {\n          const label = item.predicate ?? item.name ?? item.type ?? 'item';\n          const detail = item.value ?? item.count ?? item.description ?? item;\n          return `${label}=${safeJson(detail)}`;\n        }\n        return String(item);\n      }).join(', ');\n      return `${key}: ${compact || 'none'}`;\n    }\n    if (value && typeof value === 'object') return `${key}: ${safeJson(value)}`;\n    return `${key}: ${String(value)}`;\n  });\n\n  return truncate(entries.join('; ') || 'No report summary returned', 900);\n}\n\nfunction taxonomyValue(result, predicate) {\n  const taxonomies = asArray(result.summary?.taxonomies);\n  const match = taxonomies.find(item =>\n    String(item.predicate ?? '').toLowerCase() === predicate.toLowerCase()\n  );\n  return match?.value;\n}\n\nfunction isStrongVirusTotalDetection(result) {\n  const raw = String(taxonomyValue(result, 'GetReport') ?? '');\n  const match = /^(\\d+)\\s*\\/\\s*(\\d+)$/.exec(raw);\n  return Boolean(match) && Number(match[1]) >= 10;\n}\n\nfunction observableEvidence(value, mispIndicators, cortexResults) {\n  const key = normalizedValue(value);\n  const matchingIndicators = mispIndicators.filter(indicator =>\n    normalizedValue(indicator.value) === key\n  );\n  const attributes = matchingIndicators.flatMap(indicator => asArray(indicator.attributes));\n  const tags = new Set(attributes.flatMap(attribute =>\n    asArray(attribute.tags).map(tag => String(tag).toLowerCase())\n  ));\n\n  const malicious = [];\n  const benign = [];\n\n  if (attributes.some(attribute => isTrue(attribute.to_ids))) {\n    malicious.push('MISP attribute to_ids: true');\n  }\n\n  if (tags.has('soc-lab:malicious')) malicious.push('MISP tag soc-lab:malicious');\n  if (tags.has('soc-lab:benign')) benign.push('MISP tag soc-lab:benign');\n\n  for (const result of cortexResults) {\n    if (normalizedValue(result.observable) !== key || result.status !== 'complete') continue;\n\n    const analyzer = String(result.analyzer ?? '').toLowerCase();\n    const summary = result.summary ?? {};\n    const classification = String(summary.classification ?? '').toLowerCase();\n\n    if (analyzer.includes('maltiverse')) {\n      if (classification === 'malicious') malicious.push('Maltiverse classification malicious');\n      if (classification === 'whitelist' || classification === 'benign') {\n        benign.push(`Maltiverse classification ${classification}`);\n      }\n    }\n\n    if (analyzer.includes('abuseipdb') && summary.whitelisted === true) {\n      benign.push('AbuseIPDB marked the IP as whitelisted');\n    }\n\n    if (analyzer.includes('teamcymru')) {\n      const detection = Number(taxonomyValue(result, 'detection_pct'));\n      if (Number.isFinite(detection) && detection >= 50) {\n        malicious.push(`Team Cymru MHR detection ${detection}%`);\n      }\n    }\n\n    if (analyzer.includes('virustotal') && isStrongVirusTotalDetection(result)) {\n      malicious.push(`VirusTotal ${taxonomyValue(result, 'GetReport')} detections`);\n    }\n  }\n\n  let verdict = 'unknown';\n  if (malicious.length > 0 && benign.length === 0) verdict = 'malicious';\n  if (benign.length > 0 && malicious.length === 0) verdict = 'benign';\n\n  const allEvidence = [...malicious, ...benign];\n  const note = allEvidence.length > 0\n    ? allEvidence.join('; ')\n    : 'No decisive source verdict; treat as unknown';\n\n  return { verdict, note };\n}\n\nfunction toTheHiveObservable(observable, mispIndicators, cortexResults, tlp, pap) {\n  const type = String(observable.type ?? observable.dataType ?? '').toLowerCase();\n  const value = text(observable.value ?? observable.data, '');\n  const supportedTypes = new Set(['ip', 'domain', 'url', 'hash']);\n  if (!value || !supportedTypes.has(type) || isTrue(observable.internal)) return null;\n\n  const evidence = observableEvidence(value, mispIndicators, cortexResults);\n  const message = [\n    `Source field: ${text(observable.field, 'Not recorded')}`,\n    `IOC verdict: ${evidence.verdict}`,\n    `Evidence: ${evidence.note}`,\n  ].join('\\n');\n\n  return {\n    dataType: type,\n    data: value,\n    message,\n    tags: [`ioc-verdict:${evidence.verdict}`],\n    tlp,\n    pap,\n    ioc: true,\n  };\n}\n\nfunction classifySeverity(outcome, decision, asset) {\n  const verdict = String(decision.verdict ?? '').toLowerCase();\n  const score = Number(decision.score);\n  const criticalAsset = String(asset.criticality ?? '').toLowerCase() === 'critical';\n  const complete = decision.analysis_complete === true;\n\n  if (outcome === 'malicious') {\n    if (criticalAsset) {\n      return { value: 4, label: 'CRITICAL', reason: 'Malicious outcome affects an asset marked critical.' };\n    }\n    if (complete && Number.isFinite(score) && score >= 90) {\n      return { value: 4, label: 'CRITICAL', reason: 'Complete analysis produced a malicious outcome with score 90 or higher.' };\n    }\n    return { value: 3, label: 'HIGH', reason: 'Decision classified the alert as malicious.' };\n  }\n\n  if (criticalAsset) {\n    return { value: 3, label: 'HIGH', reason: 'The affected asset is marked critical and the alert requires analyst review.' };\n  }\n  if (!complete || !Number.isFinite(score)) {\n    return { value: 2, label: 'MEDIUM', reason: 'Analysis is incomplete or the score is unavailable; keep the alert for analyst review.' };\n  }\n  if (verdict === 'high' || score >= 70) {\n    return { value: 3, label: 'HIGH', reason: 'Complete analysis produced a high verdict or score of 70 or higher.' };\n  }\n  if (verdict === 'medium' || score >= 40) {\n    return { value: 2, label: 'MEDIUM', reason: 'Complete analysis produced a medium verdict or score from 40 to 69.' };\n  }\n  if ((verdict === 'low' || verdict === 'likely_false_positive') && score < 40) {\n    return { value: 1, label: 'LOW', reason: 'Complete low-risk analysis produced a low or likely-false-positive verdict below 40.' };\n  }\n  return { value: 2, label: 'MEDIUM', reason: 'The decision does not match a defined low, medium, or high severity rule.' };\n}\n\nfunction buildDescription(item, normalizedAlert, outcome, tlp, pap, observables, policy, severityInfo) {\n  const alert = item.alert ?? {};\n  const decision = item.decision ?? {};\n  const scoring = item.scoring ?? {};\n  const processing = item.processing ?? {};\n  const asset = item.asset_inventory ?? {};\n  const rule = normalizedAlert.rule ?? alert.rule ?? {};\n  const agent = normalizedAlert.agent ?? alert.agent ?? {};\n  const userValues = asArray(normalizedAlert.observables)\n    .filter(observable => observable.kind === 'user')\n    .map(observable => observable.data ?? observable.value)\n    .filter(Boolean);\n  const cortexResults = asArray(item.cortex?.results);\n  const mispIndicators = asArray(item.misp?.unique_indicators);\n  const mitreIds = asArray(rule.mitre_ids ?? alert.mitre?.ids);\n  const mitreTactics = asArray(rule.mitre_tactics ?? alert.mitre?.tactics);\n  const mitreTechniques = asArray(rule.mitre_techniques ?? alert.mitre?.techniques);\n  const failed = asArray(processing.failed);\n  const pending = asArray(processing.pending);\n  let dedup = {};\n  try {\n    dedup = $('Dedup').first().json ?? {};\n  } catch {\n    dedup = {};\n  }\n  const firstSeen = alert.timestamp ?? normalizedAlert.timestamp;\n  const lastSeen = alert.timestamp ?? normalizedAlert.timestamp;\n  const duplicateCount = Number(dedup.duplicate_count);\n  const relatedAlertCount = Number.isInteger(duplicateCount) && duplicateCount > 0\n    ? duplicateCount\n    : 1;\n\n  const nextStep = outcome === 'malicious'\n    ? 'Review the listed evidence and affected host, then determine containment or escalation under the SOC response procedure. This is an automated classification, not analyst confirmation.'\n    : decision.analysis_complete !== true\n      ? 'Review the failed or pending sources before treating any observable as benign. Use the evidence recorded here to continue analyst triage.'\n      : String(asset.criticality ?? '').toLowerCase() === 'critical'\n        ? 'Prioritize this critical asset. Automatic closure is blocked for this asset.'\n        : 'Review the scoring result and source evidence, then record the analyst decision in TheHive.';\n\n  const lines = [\n    'SOC AUTOMATED TRIAGE — WAZUH → N8N → THEHIVE',\n    '',\n    '[AUTOMATED DECISION]',\n    `Outcome: ${text(outcome)}`,\n    `TheHive severity: ${severityInfo.label} (${severityInfo.value})`,\n    `Severity rationale: ${severityInfo.reason}`,\n    `Reason code: ${text(decision.reason_code)}`,\n    `Reason: ${asArray(decision.reasons).map(String).join('; ') || 'Not provided'}`,\n    `Score: ${text(decision.score ?? scoring.score, 'Unknown')}`,\n    `Verdict: ${text(decision.verdict ?? scoring.verdict, 'Unknown')}`,\n    `Coverage: ${text(decision.coverage ?? scoring.coverage, 'Unknown')}`,\n    `Analysis complete: ${decision.analysis_complete === true ? 'yes' : 'no'}`,\n    `Recommended next step: ${nextStep}`,\n    '',\n    '[ASSET]',\n    `Host: ${text(agent.name)}`,\n    `Agent ID: ${text(agent.id)}`,\n    `Agent IP: ${text(agent.ip)}`,\n    `Asset type: ${text(asset.asset_type, 'Unknown')}`,\n    `Criticality: ${text(asset.criticality, 'Unknown')}`,\n    `Auto-close allowed: ${asset.auto_close_allowed === true ? 'yes' : 'no'}`,\n    `Inventory reason: ${text(asset.reason)}`,\n    `User: ${userValues.length > 0 ? [...new Set(userValues.map(String))].join(', ') : 'Not present in the normalized event'}`,\n    '',\n    '[SOURCE ALERT]',\n    `Source: Wazuh (${text(alert.source_format ?? normalizedAlert.source_format)})`,\n    `Source alert ID: ${text(alert.id ?? alert.alert_id ?? normalizedAlert.alert_id)}`,\n    `Timestamp: ${text(alert.timestamp ?? normalizedAlert.timestamp)}`,\n    `Manager: ${text(alert.manager ?? normalizedAlert.manager)}`,\n    `Rule ID: ${text(rule.id)}`,\n    `Wazuh rule level: ${text(rule.level, 'Unknown')}`,\n    `Rule description: ${text(rule.description)}`,\n    `First seen: ${dateText(firstSeen)}`,\n    `Last seen: ${dateText(lastSeen)}`,\n    `Alert count in the current Dedup window: ${relatedAlertCount}`,\n    `Rule groups: ${asArray(rule.groups).join(', ') || 'Not provided'}`,\n    `Wazuh firedtimes: ${text(rule.firedtimes, 'Not provided; this is not a correlated-alert count')}`,\n    `Location: ${text(normalizedAlert.location)}`,\n    `Decoder: ${text(normalizedAlert.decoder)}`,\n    `Signature: ${text(normalizedAlert.signature)}`,\n    `Command line: ${text(normalizedAlert.command_line)}`,\n    `File path: ${text(normalizedAlert.syscheck?.path)}`,\n    `MITRE ATT&CK IDs: ${mitreIds.join(', ') || 'None recorded'}`,\n    `MITRE tactics: ${mitreTactics.join(', ') || 'None recorded'}`,\n    `MITRE techniques: ${mitreTechniques.join(', ') || 'None recorded'}`,\n    '',\n    '[OBSERVABLES]',\n    ...(observables.length > 0\n      ? observables.map(observable =>\n          `${observable.dataType}: ${observable.data} — ${observable.tags[0].replace('ioc-verdict:', '')}; ${observable.message.split('\\n').slice(1).join('; ')}`\n        )\n      : ['No eligible external IP, domain, URL, or hash was present.']),\n    '',\n    '[MISP REFERENCES]',\n    ...(mispIndicators.length > 0\n      ? mispIndicators.flatMap(indicator => {\n          const attrs = asArray(indicator.attributes);\n          return attrs.map(attribute => {\n            const event = attribute.event ?? {};\n            return `${text(indicator.type, 'IOC')} ${text(indicator.value)} — event ${text(event.id, 'ID unavailable')} (${text(event.title, 'title unavailable')}); to_ids=${text(attribute.to_ids, 'unknown')}; tags=${asArray(attribute.tags).join(', ') || 'none'}; comment=${text(attribute.comment, 'none')}`;\n          });\n        })\n      : ['No matching MISP attributes.']),\n    '',\n    '[CORTEX RESULTS]',\n    ...(cortexResults.length > 0\n      ? cortexResults.map(result =>\n          `${text(result.analyzer)} for ${text(result.observable)} [${text(result.status)}]: ${formatSummary(result.summary)}`\n        )\n      : ['No Cortex results recorded.']),\n    '',\n    '[UNAVAILABLE OR PENDING SOURCES]',\n    ...(failed.length > 0\n      ? failed.map(entry =>\n          `Failed: ${text(entry.service ?? entry.analyzer)}; observable=${text(entry.observable)}; node=${text(entry.node)}; error=${truncate(text(entry.error, entry.status ?? 'No error detail'), 300)}`\n        )\n      : ['Failed: none']),\n    ...(pending.length > 0\n      ? pending.map(entry => `Pending: ${text(entry.analyzer)}; observable=${text(entry.observable)}`)\n      : ['Pending: none']),\n    '',\n    `[THEHIVE MARKINGS] TLP=${tlp}; PAP=${pap}`,\n    `[HANDLING POLICY] Context=${text(policy.context, 'unspecified')}; applied at=${text(policy.application_stage, 'unspecified')}; earlier Cortex gate enforced=${policy.enrichment_gate_enforced === true ? 'yes' : 'no'}`,\n    ...asArray(policy.reasons).map(reason => `Policy: ${text(reason)}`),\n  ];\n\n  return lines.join('\\n');\n}\n\nreturn items.map(itemData => {\n  const item = itemData.json ?? {};\n  const decision = item.decision ?? {};\n  const outcome = String(decision.outcome ?? '');\n\n  if (!['analyst_review', 'malicious'].includes(outcome)) {\n    throw new Error(`Build TheHive Alert only accepts analyst_review or malicious; received \"${outcome || 'missing'}\".`);\n  }\n\n  const alert = item.alert ?? {};\n  const rule = normalized.rule ?? alert.rule ?? {};\n  const agent = normalized.agent ?? alert.agent ?? {};\n  const sourceRef = text(alert.id ?? alert.alert_id ?? normalized.alert_id, '');\n\n  if (!sourceRef) throw new Error('Cannot create TheHive alert: Wazuh source alert ID is missing.');\n  if (sourceRef.length > 128) throw new Error('Cannot create TheHive alert: sourceRef exceeds TheHive’s 128-character limit.');\n\n  // Read the pre-enrichment policy by node name. This remains authoritative\n  // even if downstream Merge nodes drop the policy object from their items.\n  const policy = Number.isInteger(Number(handlingPolicyFromNode.tlp))\n    ? handlingPolicyFromNode\n    : item.thehive_policy ?? {};\n  const tlpValue = Number(policy.tlp);\n  const papValue = Number(policy.pap);\n  if (!Number.isInteger(tlpValue) || tlpValue < 0 || tlpValue > 4) {\n    throw new Error(`Missing or invalid TheHive TLP from Apply TheHive Handling Policy: ${policy.tlp}`);\n  }\n  if (!Number.isInteger(papValue) || papValue < 0 || papValue > 3) {\n    throw new Error(`Missing or invalid TheHive PAP from Apply TheHive Handling Policy: ${policy.pap}`);\n  }\n  const tlp = tlpValue;\n  const pap = papValue;\n  const mispIndicators = asArray(item.misp?.unique_indicators);\n  const cortexResults = asArray(item.cortex?.results);\n  const sourceObservables = asArray(alert.observables).length > 0\n    ? alert.observables\n    : asArray(normalized.observables);\n\n  const unique = new Map();\n  for (const observable of sourceObservables) {\n    const thehiveObservable = toTheHiveObservable(observable, mispIndicators, cortexResults, tlp, pap);\n    if (!thehiveObservable) continue;\n    const key = `${thehiveObservable.dataType}\\u0000${normalizedValue(thehiveObservable.data)}`;\n    if (!unique.has(key)) unique.set(key, thehiveObservable);\n  }\n  const observables = [...unique.values()];\n\n  const asset = item.asset_inventory ?? {};\n  const score = decision.score ?? item.scoring?.score;\n  const verdict = text(decision.verdict ?? item.scoring?.verdict, 'unknown');\n  const host = text(agent.name, 'unknown-host');\n  const sourceIp = text(normalized.source_ip, '');\n  const sampleIoc = observables.find(observable => observable.dataType === 'ip')?.data;\n  const subject = text(rule.description, 'Wazuh alert');\n  const lead = outcome === 'malicious' ? 'Malicious evidence' : 'Analyst review';\n  const location = sourceIp\n    ? ` from ${sourceIp}`\n    : sampleIoc\n      ? ` (IOC ${sampleIoc})`\n      : '';\n  const title = truncate(`${lead} on ${host}${location}: ${subject}`, 512);\n  const tags = [\n    'auto-triage',\n    'source:wazuh',\n    `decision:${outcome}`,\n    `verdict:${String(verdict).toLowerCase().replace(/[^a-z0-9_-]/g, '_')}`,\n    `severity:${classifySeverity(outcome, decision, asset).label.toLowerCase()}`,\n    decision.analysis_complete === true ? 'analysis:complete' : 'incomplete-analysis',\n  ];\n  if (String(asset.criticality ?? '').toLowerCase() === 'critical') tags.push('asset:critical');\n\n  const timestamp = alert.timestamp ?? normalized.timestamp;\n  const parsedDate = timestamp ? Date.parse(timestamp) : NaN;\n  const severityInfo = classifySeverity(outcome, decision, asset);\n  const description = buildDescription(item, normalized, outcome, tlp, pap, observables, policy, severityInfo);\n  const summary = truncate(\n    `${outcome}; ${text(decision.reason_code)}; score=${text(score, 'unknown')}; verdict=${verdict}; analysis_complete=${decision.analysis_complete === true}`,\n    1000\n  );\n\n  const thehiveFields = {\n    type: 'external',\n    source: 'Wazuh',\n    sourceRef,\n    title,\n    summary,\n    description,\n    severity: severityInfo.value,\n    tlp,\n    pap,\n    tags: [...new Set(tags)],\n    follow: false,\n    flag: outcome === 'malicious',\n  };\n  if (Number.isFinite(parsedDate)) thehiveFields.date = new Date(parsedDate).toISOString();\n\n  return {\n    json: {\n      ...item,\n      ...thehiveFields,\n      // Keep these out of the Alert node's static Observables collection.\n      // The native Observable/Create node will add one item at a time after\n      // the alert exists, preserving every supported IOC and its own evidence.\n      thehive_observables: observables,\n    },\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4432,
+        592
+      ],
+      "id": "e6f4ff4b-2f18-4316-948e-0c570d007337",
+      "name": "Build TheHive Alert"
+    },
+    {
+      "parameters": {
+        "jsCode": "const createdAlerts = $input.all();\nconst builtAlerts = $('Build TheHive Alert').all();\n\nreturn createdAlerts.flatMap((created, index) => {\n  const alertId = created.json._id ?? created.json.id;\n\n  if (!alertId) {\n    throw new Error('Create an alert did not return an alert ID.');\n  }\n\n  const observables =\n    builtAlerts[index]?.json?.thehive_observables ?? [];\n\n  return observables.map(observable => ({\n    json: {\n      ...observable,\n      alertId,\n    },\n  }));\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4832,
+        592
+      ],
+      "id": "2d5a1b48-1694-468d-915b-59dd1d80b69c",
+      "name": "Prepare TheHive Observables"
+    },
+    {
+      "parameters": {
+        "resource": "observable",
+        "createIn": "alert",
+        "id": {
+          "__rl": true,
+          "value": "={{ $json.alertId }}",
+          "mode": "id"
+        },
+        "dataType": "={{ $json.dataType }}",
+        "data": "={{ $json.data }}",
+        "observableFields": {
+          "mappingMode": "autoMapInputData",
+          "value": {
+            "ioc": false,
+            "sighted": false,
+            "ignoreSimilarity": false,
+            "isZip": false
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "displayName": "Start Date",
+              "id": "startDate",
+              "type": "dateTime",
+              "removed": false,
+              "required": false,
+              "display": true,
+              "defaultMatch": false
+            },
+            {
+              "displayName": "Description",
+              "id": "message",
+              "type": "string",
+              "removed": false,
+              "required": false,
+              "display": true,
+              "defaultMatch": false
+            },
+            {
+              "displayName": "Tags",
+              "id": "tags",
+              "type": "string",
+              "removed": false,
+              "required": false,
+              "display": true,
+              "defaultMatch": false
+            },
+            {
+              "displayName": "TLP (Confidentiality of information)",
+              "id": "tlp",
+              "type": "options",
+              "options": [
+                {
+                  "name": "White",
+                  "value": 0
+                },
+                {
+                  "name": "Green",
+                  "value": 1
+                },
+                {
+                  "name": "Amber",
+                  "value": 2
+                },
+                {
+                  "name": "Red",
+                  "value": 3
+                }
+              ],
+              "removed": false,
+              "required": false,
+              "display": true,
+              "defaultMatch": false
+            },
+            {
+              "displayName": "PAP (Level of exposure of information)",
+              "id": "pap",
+              "type": "options",
+              "options": [
+                {
+                  "name": "White",
+                  "value": 0
+                },
+                {
+                  "name": "Green",
+                  "value": 1
+                },
+                {
+                  "name": "Amber",
+                  "value": 2
+                },
+                {
+                  "name": "Red",
+                  "value": 3
+                }
+              ],
+              "removed": false,
+              "required": false,
+              "display": true,
+              "defaultMatch": false
+            },
+            {
+              "displayName": "IOC",
+              "id": "ioc",
+              "type": "boolean",
+              "removed": false,
+              "required": false,
+              "display": true,
+              "defaultMatch": false
+            },
+            {
+              "displayName": "Sighted",
+              "id": "sighted",
+              "type": "boolean",
+              "removed": false,
+              "required": false,
+              "display": true,
+              "defaultMatch": false
+            },
+            {
+              "displayName": "Sighted At",
+              "id": "sightedAt",
+              "type": "dateTime",
+              "removed": false,
+              "required": false,
+              "display": true,
+              "defaultMatch": false
+            },
+            {
+              "displayName": "Ignore Similarity",
+              "id": "ignoreSimilarity",
+              "type": "boolean",
+              "removed": false,
+              "required": false,
+              "display": true,
+              "defaultMatch": false
+            },
+            {
+              "displayName": "Is Zip",
+              "id": "isZip",
+              "type": "boolean",
+              "removed": false,
+              "required": false,
+              "display": true,
+              "defaultMatch": false
+            },
+            {
+              "displayName": "Zip Password",
+              "id": "zipPassword",
+              "type": "string",
+              "removed": false,
+              "required": false,
+              "display": true,
+              "defaultMatch": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "n8n-nodes-base.theHiveProject",
+      "typeVersion": 1,
+      "position": [
+        5056,
+        592
+      ],
+      "id": "173deb41-c81c-4660-8a11-25a8fdfb4a52",
+      "name": "Create an observable",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * SOC n8n handling policy for TheHive and external enrichment.\n *\n * Place on the non-closed route after `Decision`/`Route to TheHive?` and before\n * `Build TheHive Alert`. This node assigns TheHive markings only.\n * The exact `soc-lab-test` Wazuh rule group identifies synthetic lab traffic.\n * Other alerts default to TLP:AMBER and PAP:AMBER until an upstream marking\n * says otherwise.\n *\n * TLP controls disclosure; PAP controls permitted use/actions. Neither is\n * inferred from alert severity or from the other marking.\n */\n\nconst items = $input.all();\n\nlet webhookEvent = {};\ntry {\n  const webhookOutput = $('Webhook').first().json ?? {};\n  let body = webhookOutput.body ?? webhookOutput;\n  if (typeof body === 'string') {\n    try { body = JSON.parse(body); } catch { body = {}; }\n  }\n  if (Array.isArray(body)) body = body[0] ?? {};\n  webhookEvent = body && typeof body === 'object' ? body : {};\n} catch {\n  webhookEvent = {};\n}\n\nconst TLP = { CLEAR: 0, GREEN: 1, AMBER: 2, AMBER_STRICT: 3, RED: 4 };\nconst PAP = { CLEAR: 0, GREEN: 1, AMBER: 2, RED: 3 };\n\nfunction asArray(value) {\n  return Array.isArray(value) ? value : [];\n}\n\nfunction normalizeLabel(value) {\n  return String(value ?? '')\n    .trim()\n    .toLowerCase()\n    .replace(/^tlp\\s*:?\\s*/, '')\n    .replace(/^pap\\s*:?\\s*/, '')\n    .replace(/[\\s_-]+/g, '');\n}\n\nfunction parseTlp(value) {\n  if (Number.isInteger(value) && value >= 0 && value <= 4) return value;\n  const label = normalizeLabel(value);\n  const values = {\n    clear: TLP.CLEAR,\n    white: TLP.CLEAR,\n    '0': TLP.CLEAR,\n    green: TLP.GREEN,\n    '1': TLP.GREEN,\n    amber: TLP.AMBER,\n    '2': TLP.AMBER,\n    'amber+strict': TLP.AMBER_STRICT,\n    amberstrict: TLP.AMBER_STRICT,\n    '3': TLP.AMBER_STRICT,\n    red: TLP.RED,\n    '4': TLP.RED,\n  };\n  return Object.prototype.hasOwnProperty.call(values, label) ? values[label] : null;\n}\n\nfunction parsePap(value) {\n  if (Number.isInteger(value) && value >= 0 && value <= 3) return value;\n  const label = normalizeLabel(value);\n  const values = {\n    clear: PAP.CLEAR,\n    white: PAP.CLEAR,\n    '0': PAP.CLEAR,\n    green: PAP.GREEN,\n    '1': PAP.GREEN,\n    amber: PAP.AMBER,\n    '2': PAP.AMBER,\n    red: PAP.RED,\n    '3': PAP.RED,\n  };\n  return Object.prototype.hasOwnProperty.call(values, label) ? values[label] : null;\n}\n\nfunction collectMarkings(root, kind, sourceEvent) {\n  const alert = root.alert ?? root;\n  const sourceAlert = sourceEvent.alert ?? sourceEvent;\n  const observables = asArray(alert.observables ?? root.observables);\n  const values = [\n    root[kind],\n    root.markings?.[kind],\n    root.handling_policy?.[kind],\n    root.thehive_policy?.[kind],\n    alert[kind],\n    alert.markings?.[kind],\n    alert.handling_policy?.[kind],\n    alert.thehive_policy?.[kind],\n    alert.data?.[kind],\n    sourceEvent[kind],\n    sourceEvent.markings?.[kind],\n    sourceEvent.data?.[kind],\n    sourceAlert[kind],\n    sourceAlert.markings?.[kind],\n    ...observables.flatMap(observable => [\n      observable[kind],\n      observable.markings?.[kind],\n    ]),\n  ];\n\n  const tagCollections = [\n    root.tags,\n    alert.tags,\n    sourceEvent.tags,\n    sourceAlert.tags,\n    ...observables.map(observable => observable.tags),\n  ];\n  for (const tags of tagCollections) {\n    for (const tag of asArray(tags)) {\n      const text = String(tag ?? '').trim();\n      const match = new RegExp(`^${kind}\\\\s*:\\\\s*(.+)$`, 'i').exec(text);\n      if (match) values.push(match[1]);\n    }\n  }\n\n  const parsed = values.map(kind === 'tlp' ? parseTlp : parsePap).filter(Number.isInteger);\n  // The most restrictive explicit marking applies to the whole alert.\n  return parsed.length > 0 ? Math.max(...parsed) : null;\n}\n\nfunction getRuleGroups(root, sourceEvent) {\n  const alert = root.alert ?? root;\n  const sourceAlert = sourceEvent.alert ?? sourceEvent;\n  const groups = [\n    ...asArray(alert.rule?.groups),\n    ...asArray(root.rule?.groups),\n    ...asArray(alert.groups),\n    ...asArray(root.groups),\n    ...asArray(sourceAlert.rule?.groups),\n    ...asArray(sourceEvent.rule?.groups),\n    ...asArray(sourceAlert.groups),\n    ...asArray(sourceEvent.groups),\n  ];\n  return [...new Set(groups.map(value => String(value).trim().toLowerCase()).filter(Boolean))];\n}\n\nfunction tlpLabel(value) {\n  return ['CLEAR', 'GREEN', 'AMBER', 'AMBER+STRICT', 'RED'][value];\n}\n\nfunction papLabel(value) {\n  return ['CLEAR', 'GREEN', 'AMBER', 'RED'][value];\n}\n\nreturn items.map(itemData => {\n  const root = itemData.json ?? {};\n  const groups = getRuleGroups(root, webhookEvent);\n  const syntheticLab = groups.includes('soc-lab-test');\n\n  const explicitTlp = collectMarkings(root, 'tlp', webhookEvent);\n  const explicitPap = collectMarkings(root, 'pap', webhookEvent);\n  const tlp = explicitTlp ?? (syntheticLab ? TLP.CLEAR : TLP.AMBER);\n  // This workflow performs passive online reputation lookups, so AMBER is the\n  // default PAP. An explicit PAP:RED blocks those online Cortex lookups.\n  const pap = explicitPap ?? PAP.AMBER;\n\n  const reasons = [];\n  reasons.push(explicitTlp === null\n    ? syntheticLab\n      ? 'No source TLP was supplied; exact soc-lab-test group uses TLP:CLEAR for synthetic data.'\n      : 'No source TLP was supplied; client or unclassified data defaults to TLP:AMBER.'\n    : `Inherited the most restrictive explicit TLP marking (${tlpLabel(tlp)}).`);\n  reasons.push(explicitPap === null\n    ? 'No source PAP was supplied; PAP:AMBER matches passive online reputation lookups.'\n    : `Inherited the most restrictive explicit PAP marking (${papLabel(pap)}).`);\n  reasons.push('This node runs after enrichment and applies TheHive markings; it cannot block Cortex requests already completed in this execution.');\n\n  return {\n    json: {\n      ...root,\n      thehive_policy: {\n        version: '0.1',\n        context: syntheticLab ? 'synthetic_lab' : 'client_or_unclassified',\n        tlp,\n        tlp_label: tlpLabel(tlp),\n        pap,\n        pap_label: papLabel(pap),\n        application_stage: 'post_decision',\n        enrichment_gate_enforced: false,\n        reasons,\n      },\n    },\n  };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4208,
+        592
+      ],
+      "id": "afe96785-60a1-4d58-82f8-6f9de280b6ed",
+      "name": "Apply TheHive Handling Policy"
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "Sz6KNOYxWVwRSCAD",
+          "mode": "list",
+          "cachedResultName": "SOC_Counters",
+          "cachedResultUrl": "/projects/8Qplg8E2x33pSFIo/datatables/Sz6KNOYxWVwRSCAD"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "execution_id": "={{ $execution.id }}",
+            "alert_id": "={{ $('Normalize Alert').first().json.alert_id }}",
+            "stage": "deduplication",
+            "outcome": "new",
+            "counted_at": "={{ $now.toISO() }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "execution_id",
+              "displayName": "execution_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "alert_id",
+              "displayName": "alert_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "stage",
+              "displayName": "stage",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "outcome",
+              "displayName": "outcome",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "counted_at",
+              "displayName": "counted_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        -112,
+        -192
+      ],
+      "id": "af70d5e3-1820-431d-aa2f-ff4bfadd5e5e",
+      "name": "Count - Dedup New"
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "Sz6KNOYxWVwRSCAD",
+          "mode": "list",
+          "cachedResultName": "SOC_Counters",
+          "cachedResultUrl": "/projects/8Qplg8E2x33pSFIo/datatables/Sz6KNOYxWVwRSCAD"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "execution_id": "={{ $execution.id }}",
+            "alert_id": "={{ $('Normalize Alert').first().json.alert_id }}",
+            "stage": "deduplication",
+            "outcome": "duplicate",
+            "counted_at": "={{ $now.toISO() }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "execution_id",
+              "displayName": "execution_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "alert_id",
+              "displayName": "alert_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "stage",
+              "displayName": "stage",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "outcome",
+              "displayName": "outcome",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "counted_at",
+              "displayName": "counted_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        -112,
+        64
+      ],
+      "id": "64dfe878-c93f-4435-8619-8c6f85950900",
+      "name": "Count - Dedup Duplicate"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst items = $input.all();\n\nreturn items.map(item => {\n  const data = item.json ?? {};\n\n  const cortexResults = data.cortex?.results ?? [];\n  const skipped = data.cortex?.skipped_by_filter ?? [];\n  const processing = data.processing ?? {};\n\n  const total = cortexResults.length;\n\n  const completed = cortexResults.filter(\n    result => result.status === 'complete'\n  ).length;\n\n  const failed = cortexResults.filter(\n    result => result.status === 'failed' || result.status === 'error'\n  ).length;\n\n  const pending = processing.pending?.length ?? 0;\n\n  const skippedCount = skipped.length;\n\n  const analyzerCounts = {};\n\n  for (const result of cortexResults) {\n    const name = result.analyzer ?? 'unknown';\n    analyzerCounts[name] = (analyzerCounts[name] ?? 0) + 1;\n  }\n\n  return {\n    json: {\n      ...data,\n      cortex_summary: {\n        total,\n        completed,\n        failed,\n        pending,\n        skipped: skippedCount,\n        analyzer_counts: analyzerCounts,\n        processing_status: processing.status ?? 'unknown'\n      }\n    }\n  };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3152,
+        272
+      ],
+      "id": "5be6d224-ebce-405a-bdda-056b9ad48ef3",
+      "name": "Count Cortex Results"
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "Sz6KNOYxWVwRSCAD",
+          "mode": "list",
+          "cachedResultName": "SOC_Counters",
+          "cachedResultUrl": "/projects/8Qplg8E2x33pSFIo/datatables/Sz6KNOYxWVwRSCAD"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "execution_id": "={{ $execution.id }}",
+            "alert_id": "={{ $('Normalize Alert').first().json.alert_id }}",
+            "stage": "thehive_skipped",
+            "outcome": "skipped",
+            "counted_at": "={{ $now.toISO() }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "execution_id",
+              "displayName": "execution_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "alert_id",
+              "displayName": "alert_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "stage",
+              "displayName": "stage",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "outcome",
+              "displayName": "outcome",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "counted_at",
+              "displayName": "counted_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        4208,
+        448
+      ],
+      "id": "fd4cb64a-07ab-436b-bfd3-22ce8ab5ddc5",
+      "name": "Count - TheHive Skipped"
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "Sz6KNOYxWVwRSCAD",
+          "mode": "list",
+          "cachedResultName": "SOC_Counters",
+          "cachedResultUrl": "/projects/8Qplg8E2x33pSFIo/datatables/Sz6KNOYxWVwRSCAD"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "execution_id": "={{ $execution.id }}",
+            "alert_id": "={{ $('Normalize Alert').first().json.alert_id }}",
+            "stage": "thehive_alert_created",
+            "outcome": "created",
+            "counted_at": "=\t{{ $now.toISO() }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "execution_id",
+              "displayName": "execution_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "alert_id",
+              "displayName": "alert_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "stage",
+              "displayName": "stage",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "outcome",
+              "displayName": "outcome",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "counted_at",
+              "displayName": "counted_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        4832,
+        448
+      ],
+      "id": "ff71d36e-4163-447e-a5a6-8a57e604aea6",
+      "name": "Count - TheHive Alert Created"
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "Sz6KNOYxWVwRSCAD",
+          "mode": "list",
+          "cachedResultName": "SOC_Counters",
+          "cachedResultUrl": "/projects/8Qplg8E2x33pSFIo/datatables/Sz6KNOYxWVwRSCAD"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "execution_id": "={{ $execution.id }}",
+            "alert_id": "={{ $json.alert?.id ?? $json.alert_id ?? $json.id }}",
+            "stage": "cortex",
+            "outcome": "={{ $json.cortex_summary.pending > 0 ? 'pending' : $json.cortex_summary.failed > 0 ? ($json.cortex_summary.completed > 0 ? 'partial' : 'failed') : ($json.cortex_summary.completed > 0 ? 'completed' : 'skipped') }}",
+            "counted_at": "={{ $now.toISO() }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "execution_id",
+              "displayName": "execution_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "alert_id",
+              "displayName": "alert_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "stage",
+              "displayName": "stage",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "outcome",
+              "displayName": "outcome",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "counted_at",
+              "displayName": "counted_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        3392,
+        272
+      ],
+      "id": "8b147efb-ee16-4131-9659-3f15f6b45370",
+      "name": "Count - Cortex Results"
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "Sz6KNOYxWVwRSCAD",
+          "mode": "list",
+          "cachedResultName": "SOC_Counters",
+          "cachedResultUrl": "/projects/8Qplg8E2x33pSFIo/datatables/Sz6KNOYxWVwRSCAD"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "execution_id": "={{ $execution.id }}",
+            "alert_id": "={{ $json.body?.id ?? $json.id }}",
+            "stage": "raw",
+            "outcome": "received",
+            "counted_at": "={{ $now.toISO() }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "execution_id",
+              "displayName": "execution_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "alert_id",
+              "displayName": "alert_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "stage",
+              "displayName": "stage",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "outcome",
+              "displayName": "outcome",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "counted_at",
+              "displayName": "counted_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        -800,
+        -208
+      ],
+      "id": "63ebeaa9-b68d-437e-bdf1-b1ff10b7a9b4",
+      "name": "Count - Raw Alert"
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "Sz6KNOYxWVwRSCAD",
+          "mode": "list",
+          "cachedResultName": "SOC_Counters",
+          "cachedResultUrl": "/projects/8Qplg8E2x33pSFIo/datatables/Sz6KNOYxWVwRSCAD"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "execution_id": "={{ $execution.id }}",
+            "alert_id": "={{ $json.alert_id }}",
+            "stage": "normalized",
+            "outcome": "success",
+            "counted_at": "={{ $now.toISO() }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "execution_id",
+              "displayName": "execution_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "alert_id",
+              "displayName": "alert_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "stage",
+              "displayName": "stage",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "outcome",
+              "displayName": "outcome",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "counted_at",
+              "displayName": "counted_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        -576,
+        -208
+      ],
+      "id": "7d953e20-f91b-448e-8d1a-a85e0f9c69ed",
+      "name": "Count - Normalized Alert"
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "cejwAkMmCvGsUnIp",
+          "mode": "list",
+          "cachedResultName": "SOC_Audit",
+          "cachedResultUrl": "/projects/8Qplg8E2x33pSFIo/datatables/cejwAkMmCvGsUnIp"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "analysis_complete": "={{ $json.decision.analysis_complete }}",
+            "execution_id": "={{ $execution.id }}",
+            "alert_id": "={{ $json.alert?.id ?? $('Normalize Alert').first().json.alert_id }}",
+            "decision_outcome": "={{ $json.decision.outcome }}",
+            "reason_code": "={{ $json.decision.reason_code }}",
+            "reasons": "={{ JSON.stringify($json.decision.reasons) }}",
+            "score": "={{ $json.decision.score }}",
+            "verdict": "={{ $json.decision.verdict }}",
+            "coverage": "={{ $json.decision.coverage }}",
+            "recorded_at": "={{ $now.toISO() }}",
+            "policy_version": "={{ $json.decision.policy_version }}",
+            "asset_inventory": "={{ JSON.stringify($json.asset_inventory) }}",
+            "malicious_signals": "={{ JSON.stringify($json.decision.malicious_signals) }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "execution_id",
+              "displayName": "execution_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "alert_id",
+              "displayName": "alert_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "decision_outcome",
+              "displayName": "decision_outcome",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "reason_code",
+              "displayName": "reason_code",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "reasons",
+              "displayName": "reasons",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "score",
+              "displayName": "score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "verdict",
+              "displayName": "verdict",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "coverage",
+              "displayName": "coverage",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "analysis_complete",
+              "displayName": "analysis_complete",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "malicious_signals",
+              "displayName": "malicious_signals",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "asset_inventory",
+              "displayName": "asset_inventory",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "policy_version",
+              "displayName": "policy_version",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "recorded_at",
+              "displayName": "recorded_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        4208,
+        304
+      ],
+      "id": "bc8e0cf6-f8b2-4e6e-9192-146105a5666c",
+      "name": "Audit - Record Decision"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "3e8b736a-052d-4086-8821-783313cf29bb",
+              "leftValue": "={{ $json.decision.outcome }}",
+              "rightValue": "closed",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        3968,
+        320
+      ],
+      "id": "ee3ed9e2-d6a9-4212-9946-a5c3e8b961a5",
+      "name": "If1",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "amount": 2
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1088,
+        1408
+      ],
+      "id": "940476d4-8e2f-4e55-bb57-8fd3c14367df",
+      "name": "WaitVirus1",
+      "webhookId": "d5b841d3-ab91-4bb0-823e-b79a41df4a7a"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        352,
+        1504
+      ],
+      "id": "01be1304-0f43-4e75-9164-2b793c19ad2c",
+      "name": "Loop Over Items Virus"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        352,
+        1072
+      ],
+      "id": "9c225be8-67f1-4a6c-9cd4-4d67c41e004f",
+      "name": "Loop Over Items Circl"
+    },
+    {
+      "parameters": {
+        "amount": 2
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1024,
+        1040
+      ],
+      "id": "495586e6-ceec-4cbd-aa3f-9e9a76a4943b",
+      "name": "WaitCircl1",
+      "webhookId": "22a0740c-059e-4f0f-ba7c-0784b4e82021"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        368,
+        752
+      ],
+      "id": "417df72b-0c47-4297-80b7-d5f109308ae9",
+      "name": "Loop Over Items TeamCymru"
+    },
+    {
+      "parameters": {
+        "amount": 2
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1024,
+        704
+      ],
+      "id": "3bea848f-14fa-4fb0-9244-16ed24422661",
+      "name": "WaitCymru1",
+      "webhookId": "04939cb6-131b-42d6-9597-c91fb089c3e7"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        368,
+        240
+      ],
+      "id": "84430f95-09b8-43c2-b4d6-95484b401d94",
+      "name": "Loop Over Items Abuse"
+    },
+    {
+      "parameters": {
+        "amount": 2
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        896,
+        128
+      ],
+      "id": "8591c82c-3125-4afe-9a90-221f72445447",
+      "name": "WaitAbuse1",
+      "webhookId": "27cb7c96-2fdc-420f-baa6-1a9e4b2e8190"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        384,
+        -112
+      ],
+      "id": "3bce84a6-0d68-4eff-b4d3-2a9c02044aa2",
+      "name": "Loop Over Items Multiverse"
+    },
+    {
+      "parameters": {
+        "amount": 2
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        832,
+        -224
+      ],
+      "id": "4ed93626-6d3f-4abe-b736-dc04dd3e52ee",
+      "name": "WaitMalti1",
+      "webhookId": "91525bc9-a6b6-41d4-98b5-03c991eaa431"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Normalize Alert",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Count - Raw Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a filtered list of attributes": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Error Formatter - MISP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Alert": {
+      "main": [
+        [
+          {
+            "node": "Deduplication",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Count - Normalized Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Cortex Observables": {
+      "main": [
+        [
+          {
+            "node": "Dedupe Cortex Observables",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Cortex-Eligible IPs": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items Abuse",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "router of types": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items Multiverse",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Filter Cortex-Eligible IPs",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over Items Circl",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Loop Over Items TeamCymru",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over Items Virus",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute AbuseIPDB": {
+      "main": [
+        [
+          {
+            "node": "WaitAbuse1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Error Formatter - AbuseIDPB",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Maltiverse": {
+      "main": [
+        [
+          {
+            "node": "WaitMalti1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Error Formatter - Maltiverse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a report AbuseIPBD": {
+      "main": [
+        [
+          {
+            "node": "Report Abuse still waiting?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Error Formatter - AbuseIDPB",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute TeamCymru": {
+      "main": [
+        [
+          {
+            "node": "WaitCymru1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Error Formatter - TeamCymru",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute CirclHash": {
+      "main": [
+        [
+          {
+            "node": "WaitCircl1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Error Formatter - CirclHash",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a report  Maltiverse": {
+      "main": [
+        [
+          {
+            "node": "Report Malti still waiting?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Error Formatter - Maltiverse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a report TeamCymru": {
+      "main": [
+        [
+          {
+            "node": "Report Cymru still waiting?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Error Formatter - TeamCymru",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a report CirclHash": {
+      "main": [
+        [
+          {
+            "node": "Report Circl still waiting?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Error Formatter - CirclHash",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a report UnshortenLink": {
+      "main": [
+        [
+          {
+            "node": "Report virus still waiting?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Error Formatter - VirusTotal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Summary Enrichments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Summary Enrichments": {
+      "main": [
+        [
+          {
+            "node": "Scoring Config",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Count Cortex Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute VirusTotal": {
+      "main": [
+        [
+          {
+            "node": "WaitVirus1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Error Formatter - VirusTotal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MergeVirusTotal": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items Virus",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MergeCirclHash": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items Circl",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MergeTeamCymru": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items TeamCymru",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MergeMaltiverse": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items Multiverse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MergeAbusIPBD": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items Abuse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WaitVirus": {
+      "main": [
+        [
+          {
+            "node": "Virus limit not reached?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WaitCircl": {
+      "main": [
+        [
+          {
+            "node": "Circl limit not reached?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WaitCymru": {
+      "main": [
+        [
+          {
+            "node": "Cymru limit not reached?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WaitMalti": {
+      "main": [
+        [
+          {
+            "node": "Malti limit not reached?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WaitAbuse": {
+      "main": [
+        [
+          {
+            "node": "Abuse limit not reached?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Abuse limit not reached?": {
+      "main": [
+        [
+          {
+            "node": "Get a report AbuseIPBD",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "MergeAbusIPBD",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cymru limit not reached?": {
+      "main": [
+        [
+          {
+            "node": "Get a report TeamCymru",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "MergeTeamCymru",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Malti limit not reached?": {
+      "main": [
+        [
+          {
+            "node": "Get a report  Maltiverse",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "MergeMaltiverse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Circl limit not reached?": {
+      "main": [
+        [
+          {
+            "node": "Get a report CirclHash",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "MergeCirclHash",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Virus limit not reached?": {
+      "main": [
+        [
+          {
+            "node": "Get a report UnshortenLink",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "MergeVirusTotal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Report virus still waiting?": {
+      "main": [
+        [
+          {
+            "node": "WaitVirus",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "MergeVirusTotal",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Report Circl still waiting?": {
+      "main": [
+        [
+          {
+            "node": "WaitCircl",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "MergeCirclHash",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Report Cymru still waiting?": {
+      "main": [
+        [
+          {
+            "node": "WaitCymru",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "MergeTeamCymru",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Report Malti still waiting?": {
+      "main": [
+        [
+          {
+            "node": "WaitMalti",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "MergeMaltiverse",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Report Abuse still waiting?": {
+      "main": [
+        [
+          {
+            "node": "WaitAbuse",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "MergeAbusIPBD",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Dedupe Cortex Observables": {
+      "main": [
+        [
+          {
+            "node": "Cortex Eligibility",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cortex Eligibility": {
+      "main": [
+        [
+          {
+            "node": "Cortex eligible?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cortex eligible?": {
+      "main": [
+        [
+          {
+            "node": "router of types",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mark Cortex skipped",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark Cortex skipped": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 7
+          }
+        ]
+      ]
+    },
+    "Error Formatter - Maltiverse": {
+      "main": [
+        [
+          {
+            "node": "MergeMaltiverse",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Error Formatter - AbuseIDPB": {
+      "main": [
+        [
+          {
+            "node": "MergeAbusIPBD",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Error Formatter - TeamCymru": {
+      "main": [
+        [
+          {
+            "node": "MergeTeamCymru",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Error Formatter - CirclHash": {
+      "main": [
+        [
+          {
+            "node": "MergeCirclHash",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Error Formatter - VirusTotal": {
+      "main": [
+        [
+          {
+            "node": "MergeVirusTotal",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Error Formatter - MISP": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 8
+          }
+        ]
+      ]
+    },
+    "Deduplication": {
+      "main": [
+        [
+          {
+            "node": "New Alert?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "New Alert?": {
+      "main": [
+        [
+          {
+            "node": "Split Cortex Observables",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Count - Dedup New",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get a filtered list of attributes",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Count - Dedup Duplicate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Scoring": {
+      "main": [
+        [
+          {
+            "node": "Lookup Asset",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Scoring Config": {
+      "main": [
+        [
+          {
+            "node": "Scoring",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lookup Asset": {
+      "main": [
+        [
+          {
+            "node": "Decision",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Decision": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Count - TheHive Skipped",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Apply TheHive Handling Policy",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build TheHive Alert": {
+      "main": [
+        [
+          {
+            "node": "Create an alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create an alert": {
+      "main": [
+        [
+          {
+            "node": "Prepare TheHive Observables",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Count - TheHive Alert Created",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare TheHive Observables": {
+      "main": [
+        [
+          {
+            "node": "Create an observable",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Apply TheHive Handling Policy": {
+      "main": [
+        [
+          {
+            "node": "Build TheHive Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Count - Dedup New": {
+      "main": [
+        []
+      ]
+    },
+    "Count Cortex Results": {
+      "main": [
+        [
+          {
+            "node": "Count - Cortex Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Count - Dedup Duplicate": {
+      "main": [
+        []
+      ]
+    },
+    "Count - TheHive Alert Created": {
+      "main": [
+        []
+      ]
+    },
+    "Count - Raw Alert": {
+      "main": [
+        []
+      ]
+    },
+    "Audit - Record Decision": {
+      "main": [
+        []
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Audit - Record Decision",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "WaitVirus1": {
+      "main": [
+        [
+          {
+            "node": "Get a report UnshortenLink",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items Virus": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 6
+          }
+        ],
+        [
+          {
+            "node": "Execute VirusTotal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WaitCircl1": {
+      "main": [
+        [
+          {
+            "node": "Get a report CirclHash",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items Circl": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 5
+          }
+        ],
+        [
+          {
+            "node": "Execute CirclHash",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items TeamCymru": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 4
+          }
+        ],
+        [
+          {
+            "node": "Execute TeamCymru",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WaitCymru1": {
+      "main": [
+        [
+          {
+            "node": "Get a report TeamCymru",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items Abuse": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ],
+        [
+          {
+            "node": "Execute AbuseIPDB",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WaitAbuse1": {
+      "main": [
+        [
+          {
+            "node": "Get a report AbuseIPBD",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items Multiverse": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "Execute Maltiverse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WaitMalti1": {
+      "main": [
+        [
+          {
+            "node": "Get a report  Maltiverse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "1a8e859a-19b4-48f0-aee1-c5cb7b13fe3f",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "nodeGroups": [],
+  "id": "JqM02cALddRCz3a4",
+  "tags": [
+    {
+      "updatedAt": "2026-11-04T14:31:38.164Z",
+      "createdAt": "2026-11-04T14:31:38.164Z",
+      "id": "ALUBTUpA2dLRW9s3",
+      "name": "main"
+    }
+  ]
+}

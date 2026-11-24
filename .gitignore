@@ -25,6 +25,8 @@ wg*.conf
 *.rdp
 
 # --- Lab files that contain secrets ---
+# curl header file with the n8n webhook token (soar/n8n/README.md)
+wazuh-webhook-header
 # backups made before editing configs (e.g. ossec.conf.bak-2026-10-19 holds the real webhook URL)
 *.bak
 *.bak-*
