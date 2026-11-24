@@ -78,7 +78,7 @@ python3 scripts/sanitize_export.py --check .   # must report 0 findings
 
 Before you export an n8n workflow, remove pinned data, because it holds real alerts. The script does not recognise n8n webhook paths, so replace the Webhook node `path` with a placeholder yourself.
 
-**Uploading a file through the browser ("Add files via upload")?** The pre-commit hooks do not run then, and the commit is public at once. Check the file on your computer first: `python3 scripts/sanitize_export.py --check file`, and a screenshot: `python3 scripts/check_images.py --ocr screenshot.png`. Details, the private `.leakcheck-local` list (your IP, surname) and what to do after a leak: [SECURITY.md](soar/shuffle/integration/SECURITY.md).
+**Uploading a file through the browser ("Add files via upload")?** The pre-commit hooks do not run then, and the commit is public at once. Check the file on your computer first: `python3 scripts/sanitize_export.py --check file`, and a screenshot: `python3 scripts/check_images.py --ocr screenshot.png`. Details, the private `.leakcheck-local` list (your IP, surname) and what to do after a leak: [SECURITY.md](SECURITY.md).
 
 On Windows type `python` instead of `python3`. Look at the diff yourself anyway - the scripts catch typical cases, not all of them.
 
@@ -100,13 +100,44 @@ On Windows type `python` instead of `python3`. Look at the diff yourself anyway 
 | Step-by-step instructions | `docs/runbooks/` |
 | Screenshots | `docs/images/<component>/` (check them with `check_images.py` and by eye!) |
 
-## 6. Definition of done
+## 6. Component README
+
+One component = one folder in the stage it belongs to (`detection/`, `soar/`, `enrichment/`, `case-management/`), with its configuration and one `README.md`. Every component README uses the same sections in the same order, so a reader always knows where to look:
+
+```markdown
+# <Component> – <one-line role>
+
+## Role in the pipeline
+2–3 sentences, then where the component sits, e.g. Wazuh → **n8n** → TheHive.
+
+## What is in this folder
+Table: file → what it is for.
+
+## Deployment in the lab
+VM, VLAN, ports, versions. Link to the runbook.
+
+## Configuration
+Key settings only. Placeholders instead of secrets (`<API_KEY>`).
+
+## Verify it works
+A quick test with the expected result that does not depend on other components.
+
+## Troubleshooting
+Problem → cause → fix.
+
+## Decisions and evidence
+Links to ADRs, validation pages, screenshots and samples.
+```
+
+Step-by-step instructions longer than a few commands go to `docs/runbooks/` and are linked from the README. Screenshots go to `docs/images/<component>/<issue>-<description>.png`.
+
+## 7. Definition of done
 
 - [ ] change tested in the lab where applicable (validation described in the PR),
 - [ ] documentation updated (README / runbook / ADR),
 - [ ] `pre-commit run --all-files` passes,
 - [ ] reviewed by at least one person.
 
-## 7. Language
+## 8. Language
 
 The whole repository is in **English**: documentation, comments in code and configuration, commits, branch names, issues and pull requests.

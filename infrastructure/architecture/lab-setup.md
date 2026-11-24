@@ -42,7 +42,7 @@ Step-by-step notes for each component live in [`runbooks/`](../../docs/runbooks/
 ## Infrastructure Overview
 The infrastructure is divided into isolated network segments to simulate a realistic enterprise environment. Windows and Linux endpoints generate security events, while dedicated SOC services handle detection, enrichment, automation, and incident investigation.
 
-![SOC Automation Lab Infrastructure](../images/architecture/lab-overview.png)
+![SOC Automation Lab Infrastructure](../../docs/images/architecture/lab-overview.png)
 
 ### Security Monitoring and Alert Flow
 

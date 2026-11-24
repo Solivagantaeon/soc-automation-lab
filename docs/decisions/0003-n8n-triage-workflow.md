@@ -256,7 +256,7 @@ MISP returned two attributes for `1.1.1.1`. Both had `to_ids: false`. One includ
 
 On 17 November, the final merge ran once in each of three editor runs, including one with ten Cortex jobs. The [delayed-report check (#93)](../regression-evidence/poc-live-workflow-after-bug-fix.md#93-one-decision-per-alert) records the node counts. The [event-tag check (#96)](../regression-evidence/poc-live-workflow-after-bug-fix.md#96-misp-event-tags-reach-decision) follows the MISP tag into Decision.
 
-The [n8n triage runbook](../runbooks/n8n-triage.md#4-misp-and-cortex) documents the node settings and test steps. The [MISP README](../../enrichment/misp/README.md#n8n-lab-context--issue-69) and [Cortex README](../../enrichment/cortex/README.md#n8n-cortex-workflow--issue-69) describe the lab context.
+The [n8n triage runbook](../runbooks/n8n-triage.md#4-misp-and-cortex) documents the node settings and test steps. The [MISP README](../../enrichment/misp/README.md#n8n-triage-workflow-issue-69) and [Cortex README](../../enrichment/cortex/README.md#n8n-triage-workflow-issue-69) describe the lab context.
 
 ### 5. Score
 

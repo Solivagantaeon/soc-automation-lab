@@ -77,7 +77,7 @@ sequenceDiagram
     T-->>A: Alert available for review
 ```
 
-Workflow overview screenshot: [Shuffle editor](../docs/images/shuffle/06-shuffle-running.png). TheHive output screenshot: [test alerts](../images/thehive/06-thehive-running.png). Successful operation of specific enrichment providers requires validation of their corresponding workflow executions.
+Workflow overview screenshot: [Shuffle editor](../../docs/images/shuffle/06-shuffle-running.png). TheHive output screenshot: [test alerts](../../docs/images/thehive/06-thehive-running.png). Successful operation of specific enrichment providers requires validation of their corresponding workflow executions.
 
 ## Key design decisions
 
@@ -89,4 +89,11 @@ Workflow overview screenshot: [Shuffle editor](../docs/images/shuffle/06-shuffle
 
 ## Component reference
 
-Complete deployment, independent health checks, troubleshooting, and ports are documented in [`components.md`](../components/).
+Deployment, ports, independent health checks and troubleshooting are documented in the README of each component:
+
+| Stage | Component README |
+|---|---|
+| Detection | [Wazuh](../../detection/wazuh/README.md), [Sysmon](../../detection/sysmon/README.md), [Suricata](../../detection/suricata/README.md) |
+| SOAR | [n8n](../../soar/n8n/README.md) |
+| Enrichment | [Cortex](../../enrichment/cortex/README.md), [MISP](../../enrichment/misp/README.md) |
+| Case management | [TheHive](../../case-management/thehive/README.md) |

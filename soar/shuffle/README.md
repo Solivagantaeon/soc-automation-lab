@@ -26,6 +26,9 @@ engines is in the research note linked above.
 | [`docs/wazuh-integration.md`](docs/wazuh-integration.md) | Runbook: connecting Wazuh to the Shuffle webhook |
 | [`docs/deduplication.md`](docs/deduplication.md) | How the workflow deduplicated alerts and updated TheHive (#16) |
 | [`docs/deployment.md`](docs/deployment.md) | Shuffle VM, ports and start-up checks |
+| [`docs/cortex-enrichment.md`](docs/cortex-enrichment.md) | Cortex analyzer routing, scoring and evidence from the workflow (#9) |
+| [`docs/misp-lookup.md`](docs/misp-lookup.md) | MISP attribute lookups and the all-observable test (#10) |
+| [`docs/thehive-alerts.md`](docs/thehive-alerts.md) | TheHive alert fields, tags and the end-to-end test (#11) |
 
 Related files kept elsewhere:
 
