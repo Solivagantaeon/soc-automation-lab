@@ -117,7 +117,7 @@ The test on 2026-11-02 produced the Wazuh alert at 23:36:28 and a successful n8n
 2. Name the node `Normalize` (or keep the current node name if it is already referenced elsewhere in the workflow).
 3. Set **Mode** to `Run Once for All Items`.
 4. Set **Language** to `JavaScript`.
-5. Copy the contents of [`normalize-v1.2.js`](../../soar/n8n/nodes/normalize-v1.2.js) into the Code node editor.
+5. Copy the contents of [`normalize.js`](../../soar/n8n/nodes/normalize.js) into the Code node editor.
 6. Connect the Code node output to the next workflow stage.
 7. Save the workflow.
 
@@ -461,13 +461,13 @@ The screenshots show the workflow with the new nodes, the Dedup output for a dup
 
 1. Add a JavaScript **Code** node after `Split Cortex Observables`.
 2. Set **Mode** to `Run Once for All Items`.
-3. Use the implementation in [`dedupe-cortex-observadables.js`](../../soar/n8n/nodes/dedupe-cortex-observadables.js).
+3. Use the implementation in [`dedupe-cortex-observables.js`](../../soar/n8n/nodes/dedupe-cortex-observables.js).
 
 | Setting | Value |
 |---|---|
 | Mode | `Run Once for All Items` |
 | Language | `JavaScript` |
-| Implementation | [`dedupe-cortex-observadables.js`](../../soar/n8n/nodes/dedupe-cortex-observadables.js) |
+| Implementation | [`dedupe-cortex-observables.js`](../../soar/n8n/nodes/dedupe-cortex-observables.js) |
 
 **How to test it:** Confirm that repeated type/value pairs produce one item and that the retained item preserves its source fields and `internal` flag.
 
@@ -725,7 +725,7 @@ The `Scoring` node checks the config before using it. An unknown key, a value of
 2. Name the node `Scoring`.
 3. Set **Mode** to `Run Once for All Items`.
 4. Set **Language** to `JavaScript`.
-5. Copy the contents of [`score-v0.2.js`](../../soar/n8n/nodes/score-v0.2.js) into the Code node editor.
+5. Copy the contents of [`score.js`](../../soar/n8n/nodes/score.js) into the Code node editor.
 6. Connect the node output to the next workflow stage.
 7. Save the workflow.
 
@@ -734,7 +734,7 @@ The `Scoring` node checks the config before using it. An unknown key, a value of
 | Node type | `Code` |
 | Mode | `Run Once for All Items` |
 | Language | `JavaScript` |
-| Implementation | [`score-v0.2.js`](../../soar/n8n/nodes/score-v0.2.js) |
+| Implementation | [`score.js`](../../soar/n8n/nodes/score.js) |
 
 **Input fields used:**
 
@@ -917,7 +917,7 @@ Current lab rows:
 
 1. Add a **Code** node after `Lookup Asset` and name it `Decision`.
 2. Set **Mode** to **Run Once for All Items** and **Language** to **JavaScript**.
-3. Copy [`decision-v0.1.js`](../../soar/n8n/nodes/decision-v0.1.js) into the Code editor.
+3. Copy [`decision.js`](../../soar/n8n/nodes/decision.js) into the Code editor.
 4. Keep the scoring node named exactly `Scoring`.
 5. Connect the Code node output to the next stage.
 
@@ -926,7 +926,7 @@ Current lab rows:
 | Node type | `Code` |
 | Mode | `Run Once for All Items` |
 | Language | `JavaScript` |
-| Implementation | [`decision-v0.1.js`](../../soar/n8n/nodes/decision-v0.1.js) |
+| Implementation | [`decision.js`](../../soar/n8n/nodes/decision.js) |
 
 **Decision rules:**
 
@@ -1203,7 +1203,7 @@ The builder validates the outcome and fails visibly if the false route receives 
 1. Add a **Code** node to the false output of `If`, before `Build TheHive Alert`.
 2. Name it exactly `Apply TheHive Handling Policy`.
 3. Set **Mode** to **Run Once for All Items** and **Language** to **JavaScript**.
-4. Paste [`thehive-handling-policy-v0.1.js`](../../soar/n8n/nodes/thehive-handling-policy-v0.1.js).
+4. Paste [`thehive-handling-policy.js`](../../soar/n8n/nodes/thehive-handling-policy.js).
 5. Keep the upstream node named exactly `Webhook`. the policy reads the original `rule.groups` and source markings there because `Normalize Alert` does not preserve `rule.groups`.
 
 The policy uses the most restrictive explicit source marking. If no source markings are available, the exact rule group `soc-lab-test` gets TLP CLEAR (`0`). other or unclassified alerts default to TLP AMBER (`2`). PAP defaults independently to AMBER (`2`) in the current implementation. The SOC owner must approve this default for the intended environment. Neither value is derived from severity.
@@ -1220,7 +1220,7 @@ This node runs after MISP/Cortex enrichment. It sets the markings that TheHive r
 
 1. Add a **Code** node after `Apply TheHive Handling Policy` and name it `Build TheHive Alert`.
 2. Set **Mode** to **Run Once for All Items** and **Language** to **JavaScript**.
-3. Paste [`thehive-alert-v0.3.js`](../../soar/n8n/nodes/thehive-alert-v0.3.js).
+3. Paste [`thehive-alert.js`](../../soar/n8n/nodes/thehive-alert.js).
 4. Keep the node names `Normalize Alert`, `Dedup`, and `Apply TheHive Handling Policy` unchanged. The code reads data from those nodes by name.
 5. Confirm the output has top-level alert fields and `thehive_observables` before connecting the TheHive node.
 
@@ -1261,7 +1261,7 @@ The builder uses the Wazuh alert ID as `sourceRef`. It fails if the ID is missin
 
 1. Add a **Code** node after `Create an alert` and name it `Prepare TheHive Observables`.
 2. Set **Mode** to **Run Once for All Items** and **Language** to **JavaScript**.
-3. Paste [`prepare-thehive-observables-v0.1.js`](../../soar/n8n/nodes/prepare-thehive-observables-v0.1.js).
+3. Paste [`prepare-thehive-observables.js`](../../soar/n8n/nodes/prepare-thehive-observables.js).
 4. Keep the nodes named exactly `Build TheHive Alert` and `Create an alert`. The code reads `thehive_observables` from the builder and the created alert `_id` from `Create an alert`.
 5. Confirm that the node emits one item per eligible observable with `alertId`, `dataType`, `data`, `message`, `tags`, `tlp`, `pap`, and `ioc`.
 

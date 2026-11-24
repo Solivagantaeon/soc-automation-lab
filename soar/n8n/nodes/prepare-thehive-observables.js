@@ -1,3 +1,4 @@
+// n8n Code node "Prepare TheHive Observables" in workflow "SOC - Wazuh alert triage". Version 0.1 - history: git log.
 const createdAlerts = $input.all();
 const builtAlerts = $('Build TheHive Alert').all();
 

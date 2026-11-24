@@ -124,7 +124,7 @@ Normalize v1.2 passed six functional tests using synthetic lab data:
 
 The Code node was also verified to use **Run Once for All Items** mode.
 
-These tests validate the normalization logic with the supplied test data. They do not, by themselves, validate Webhook authentication, live Wazuh delivery, downstream MISP/Cortex enrichment, or end-to-end deduplication. [Normalize v1.2 Code node](../../soar/n8n/nodes/normalize-v1.2.js)
+These tests validate the normalization logic with the supplied test data. They do not, by themselves, validate Webhook authentication, live Wazuh delivery, downstream MISP/Cortex enrichment, or end-to-end deduplication. [Normalize v1.2 Code node](../../soar/n8n/nodes/normalize.js)
 Detailed build and test instructions are recorded in the [n8n triage runbook](../runbooks/n8n-triage.md#2-normalize).
 
 #### Follow-up
@@ -296,7 +296,7 @@ The stage follows these rules:
 - Weights, thresholds, and on/off switches are read from `scoring_config`. The node checks them. A wrong value is replaced by the default and reported in `scoring.config_warnings`.
 - The stage only produces the `scoring` object (score, verdict, coverage, sources, and a breakdown with a reason for every point). It does not close or escalate an alert.
 
-The [Scoring v0.2 Code node](../../soar/n8n/nodes/score-v0.2.js) and the [default config](../../soar/n8n/nodes/score-config.json) are kept in the repository. Build and test steps are in the [n8n triage runbook](../runbooks/n8n-triage.md#5-score).
+The [Scoring v0.2 Code node](../../soar/n8n/nodes/score.js) and the [default config](../../soar/n8n/nodes/score-config.json) are kept in the repository. Build and test steps are in the [n8n triage runbook](../runbooks/n8n-triage.md#5-score).
 
 #### Rationale
 
@@ -379,7 +379,7 @@ Malicious signals are: MISP tag `soc-lab:malicious`; Maltiverse classification `
 
 An asset with `critical` criticality is never auto-closed, even if `auto_close_allowed` is true. The current inventory marks SOC-DC01 and OPNsense as critical; the list can grow as the lab changes.
 
-The implementation is kept in [`decision-v0.1.js`](../../soar/n8n/nodes/decision-v0.1.js). Build steps and test results are in the [n8n triage runbook](../runbooks/n8n-triage.md#6-decision).
+The implementation is kept in [`decision.js`](../../soar/n8n/nodes/decision.js). Build steps and test results are in the [n8n triage runbook](../runbooks/n8n-triage.md#6-decision).
 
 Decision returns an outcome in the workflow item. It does not change Wazuh alert status.
 
@@ -505,10 +505,10 @@ The final branch is:
 | Node | Responsibility |
 |---|---|
 | `If` | The true output represents `closed` and bypasses TheHive. The false output continues to alert creation. |
-| [`Apply TheHive Handling Policy`](../../soar/n8n/nodes/thehive-handling-policy-v0.1.js) | Adds TheHive TLP/PAP markings. It reads the original Wazuh payload from `Webhook` because `Normalize Alert` does not retain `rule.groups`. |
-| [`Build TheHive Alert`](../../soar/n8n/nodes/thehive-alert-v0.3.js) | Builds top-level TheHive alert fields and a separate `thehive_observables` array from Decision, the normalized event, MISP, Cortex, processing status, and asset inventory. |
+| [`Apply TheHive Handling Policy`](../../soar/n8n/nodes/thehive-handling-policy.js) | Adds TheHive TLP/PAP markings. It reads the original Wazuh payload from `Webhook` because `Normalize Alert` does not retain `rule.groups`. |
+| [`Build TheHive Alert`](../../soar/n8n/nodes/thehive-alert.js) | Builds top-level TheHive alert fields and a separate `thehive_observables` array from Decision, the normalized event, MISP, Cortex, processing status, and asset inventory. |
 | `Create an alert`| Uses TheHive 5 `Alert → Create` with the saved credential and automatic field mapping. |
-| [`Prepare TheHive Observables`](../../soar/n8n/nodes/prepare-thehive-observables-v0.1.js) | Reads the created alert ID and the eligible observable list, then emits one item per observable for the TheHive Observable node. |
+| [`Prepare TheHive Observables`](../../soar/n8n/nodes/prepare-thehive-observables.js) | Reads the created alert ID and the eligible observable list, then emits one item per observable for the TheHive Observable node. |
 | [`Create an observable`](https://docs.n8n.io/integrations/builtin/app-nodes/n8n-nodes-base.thehive5/) | Uses TheHive 5 `Observable → Create in Alert` to attach each item to the created alert. |
 
 The `If` node condition is `{{ $json.decision.outcome === 'closed' }}`. Its true output bypasses TheHive. Its false output reaches `Apply TheHive Handling Policy` and the builder. The builder accepts only `analyst_review` and `malicious` and fails visibly for other outcomes.

@@ -15,10 +15,13 @@ Always note the time window, agents included and rule-set version, so runs are c
 
 ## Collection method
 
-- `scripts/collect_alerts.py` runs every 6h via cron on wazuh-master, reading
+The collection scripts are kept in [`scripts/`](scripts/), next to the data they produced. The
+cron job on wazuh-master runs its own copy, so moving them in the repository changed nothing there.
+
+- [`scripts/collect_alerts.py`](scripts/collect_alerts.py) runs every 6h via cron on wazuh-master, reading
   `/var/ossec/logs/alerts/` (read-only). Writes per-window counts to `counts/` and the
   full alerts of the window to `raw/` (real IPs — not committed).
-- `scripts/aggregate_baseline.py` combines four 6h windows into one 24h measurement in
+- [`scripts/aggregate_baseline.py`](scripts/aggregate_baseline.py) combines four 6h windows into one 24h measurement in
   the format above, plus a `*_baseline-by-rule.csv` / `*_normal-day-by-rule.csv`
   breakdown by agent/rule_id/level.
 - Counting rule used for every measurement below: all alert levels (`min_level=0`), all

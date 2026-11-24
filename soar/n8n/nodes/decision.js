@@ -1,3 +1,4 @@
+// n8n Code node "Decision" in workflow "SOC - Wazuh alert triage". Version 0.1 - history: git log.
 /**
  * SOC n8n Decision stage
  * Input: rows returned by Lookup Asset

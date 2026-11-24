@@ -7,7 +7,7 @@
 | `compose.yml` | Defines the stack: Caddy (HTTPS proxy), n8n main, n8n worker, task runner, PostgreSQL and Redis, with networks, volumes, healthchecks and memory limits | `/opt/n8n/compose.yml` |
 | `Caddyfile` | HTTPS reverse proxy for n8n: certificates from Caddy's internal CA (by hostname and by IP), HTTP → HTTPS redirect, access log with the webhook token removed | `/opt/n8n/Caddyfile` (mounted read-only into the `caddy` container) |
 | `make-env.sh` | Generates `.env` (mode 600) with pinned versions, addressing and random secrets; never overwrites an existing `.env`, prints only variable names and checks the result with `docker compose config -q` | `/opt/n8n/make-env.sh` (root only, mode 700) |
-| `soc-queue-smoke-test.json` | Test workflow (Webhook → Code → Respond to Webhook) that echoes the posted JSON; proves the path webhook → queue → worker → runner works (runbook step 8.2) | `/opt/n8n/soc-queue-smoke-test.json` |
+| [`../workflows/soc-queue-smoke-test.json`](../workflows/soc-queue-smoke-test.json) | Test workflow (Webhook → Code → Respond to Webhook) that echoes the posted JSON; proves the path webhook → queue → worker → runner works (runbook step 8.2). Kept in `workflows/` with the other n8n workflows | `/opt/n8n/soc-queue-smoke-test.json` |
 
 ## Values to change on another environment
 
@@ -31,6 +31,8 @@ sudo N8N_HOST=n8n.example.test N8N_IP=192.0.2.10 TZ=UTC ./make-env.sh
 The script generates `POSTGRES_PASSWORD`, `N8N_ENCRYPTION_KEY` and `N8N_RUNNERS_AUTH_TOKEN` randomly; do not set them by hand. Back up `N8N_ENCRYPTION_KEY` (or the whole `.env`) to a password manager. Without it, stored credentials cannot be decrypted, even from a database backup. To change a value after `.env` exists, edit `.env` itself; the script never overwrites it.
 
 ## Checksums of the deployed files
+
+As they are named in `/opt/n8n` on the VM (`soc-queue-smoke-test.json` comes from [`../workflows/`](../workflows/)).
 
 ```text
 361cb570ddb4a248092dbc9fa123d5c36b4e33e18668425ffc156969a0caed4d  compose.yml
