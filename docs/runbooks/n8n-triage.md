@@ -561,7 +561,7 @@ The tested retry condition is `{{ $runIndex < 6 }}` on each branch's limit node.
 
 *Execution 16687. AbuseIPDB processed two IPs. Cortex was queried four times for those two jobs. The loop returned two results on completion.*
 
-The [routing settings](../../soar/n8n/triage/enrichment-routing.json) list the exact node names, expressions and connections. n8n documents the two outputs in [Loop Over Items](https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.splitinbatches/).
+The [workflow export](../../soar/n8n/workflows/soc-wazuh-alert-triage.json) contains the exact node names, expressions and connections. n8n documents the two outputs in [Loop Over Items](https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.splitinbatches/).
 
 #### Node: Summary Enrichments
 

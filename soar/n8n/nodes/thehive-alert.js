@@ -268,7 +268,7 @@ function buildDescription(item, normalizedAlert, outcome, tlp, pap, observables,
   const pending = asArray(processing.pending);
   let dedup = {};
   try {
-    dedup = $('Dedup').first().json ?? {};
+    dedup = $('Deduplication').first().json ?? {};
   } catch {
     dedup = {};
   }
