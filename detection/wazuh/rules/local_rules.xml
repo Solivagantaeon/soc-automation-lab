@@ -1,0 +1,79 @@
+<!-- Local rules -->
+
+<!-- Modify it at your will. -->
+<!-- Copyright (C) 2015, Wazuh Inc. -->
+
+<!-- Example shipped with Wazuh (1.1.1.1 is a placeholder) -->
+<group name="local,syslog,sshd,">
+
+  <!--
+  Dec 10 01:02:02 host sshd[1234]: Failed none for root from 1.1.1.1 port 1066 ssh2
+  -->
+  <rule id="100001" level="5">
+    <if_sid>5716</if_sid>
+    <srcip>1.1.1.1</srcip>
+    <description>sshd: authentication failed from IP 1.1.1.1.</description>
+    <group>authentication_failed,pci_dss_10.2.4,pci_dss_10.2.5,</group>
+  </rule>
+
+</group>
+
+<!-- Pipeline tests: any log line containing the marker string -->
+<group name="local,test,">
+  <rule id="100900" level="12">
+    <match>SOC_TEST_CRITICAL</match>
+    <description>SOC lab test: critical test event</description>
+  </rule>
+</group>
+
+<group name="local,test,">
+  <rule id="100901" level="7">
+    <match>SOC_TEST_MID</match>
+    <description>SOC lab test: mid test event</description>
+  </rule>
+</group>
+
+
+<!-- Enrichment tests: known test indicators that MISP and Cortex should recognise -->
+<group name="local,soc_test,">
+  <!-- Sysmon DNS query (EID 22) for the WICAR malware test domain -->
+  <rule id="100910" level="13">
+    <if_sid>61650</if_sid>
+    <field name="win.eventdata.queryName" type="pcre2">(?i)(^|\.)wicar\.org$</field>
+    <description>SOC lab test: DNS query to malware test domain $(win.eventdata.queryName)</description>
+    <mitre>
+      <id>T1071.004</id>
+    </mitre>
+  </rule>
+
+  <!-- Sysmon network connection (EID 3) to the test IOC stored in MISP -->
+  <rule id="100911" level="13">
+    <if_sid>61605, 92101</if_sid>
+    <field name="win.eventdata.destinationIp">^199\.34\.228\.69$</field>
+    <description>SOC lab test: connection to MISP test IOC $(win.eventdata.destinationIp) by $(win.eventdata.image)</description>
+    <mitre>
+      <id>T1071.001</id>
+    </mitre>
+  </rule>
+
+  <!-- Controlled benign test: SSH login attempt with the non-existent user soc-poc-benign (5710) -->
+  <rule id="100920" level="12">
+    <if_sid>5710</if_sid>
+    <match>soc-poc-benign</match>
+    <description>SOC lab PoC: controlled benign test event</description>
+  </rule>
+</group>
+
+<group name="local,sysmon,soc_detection,">
+  <!-- Executable in the user's Temp folder opened an outbound connection to a non-private address -->
+  <rule id="100921" level="12">
+    <if_group>sysmon_event3</if_group>
+    <field name="win.eventdata.image" type="pcre2">(?i)appdata.+local.+temp.+\.exe$</field>
+    <field name="win.eventdata.initiated">^true$</field>
+    <field name="win.eventdata.destinationIp" type="pcre2" negate="yes">^(10\.|127\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)</field>
+    <description>Executable from user Temp folder connected to $(win.eventdata.destinationIp):$(win.eventdata.destinationPort)</description>
+    <mitre>
+      <id>T1105</id>
+    </mitre>
+  </rule>
+</group>

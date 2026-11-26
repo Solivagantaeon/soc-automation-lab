@@ -27,6 +27,8 @@ sha256:5f1d4a27e6b3ab04734f8fa067d5928ae606cd7a4718a7bac60b9e484e5ccb66  docs/im
 # --- MISP test IOCs (enrichment/misp/events/, PR #43) -----------------------------------
 # Known-malicious test indicator from the abuse.ch Feodo feed; must match MISP exactly
 50.16.16.211
+# Test IOC stored in MISP and detected by Wazuh rule 100911 (detection/wazuh/rules/); must match the rule exactly
+199.34.228.69
 
 # --- samples/normalized/maltiverse-normalized-example.json -----------------------------
 # A/AAAA records of example.com returned by the Maltiverse API (public CDN, not lab data)
