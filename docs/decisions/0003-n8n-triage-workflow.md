@@ -124,7 +124,7 @@ Normalize v1.2 passed six functional tests using synthetic lab data:
 
 The Code node was also verified to use **Run Once for All Items** mode.
 
-These tests validate the normalization logic with the supplied test data. They do not, by themselves, validate Webhook authentication, live Wazuh delivery, downstream MISP/Cortex enrichment, or end-to-end deduplication. [Normalize v1.2 Code node](../../soar/n8n/nodes/normalize-v1.2.js)
+These tests validate the normalization logic with the supplied test data. They do not, by themselves, validate Webhook authentication, live Wazuh delivery, downstream MISP/Cortex enrichment, or end-to-end deduplication. [Normalize v1.2 Code node](../../soar/n8n/nodes/normalize.js)
 Detailed build and test instructions are recorded in the [n8n triage runbook](../runbooks/n8n-triage.md#2-normalize).
 
 #### Follow-up
@@ -229,7 +229,7 @@ Before sending observables to Cortex, the workflow splits them into individual i
 
 The workflow does not send file contents or filenames to Cortex. It can send a file hash.
 
-The [second EICAR run in the live PoC](../poc-live-workflow.md#issues-found-in-the-first-run) used a ten-second initial wait. Each analyzer branch now uses a one-item loop. It starts one Cortex job per eligible observable, waits two seconds and polls the same job ID until it has a terminal result or reaches its limit. The branch merge returns a completed report, the last pending report at the polling limit, or an error record to its loop. The loop's done output sends the branch's collected records to the final merge. This prevents a late report for the same alert from starting a second decision. The [polling settings in runbook §4](../runbooks/n8n-triage.md#cortex-analyzer-execution-and-report-polling) show how the retry limit is applied.
+The [second EICAR run in the live PoC](../validation/poc-live-workflow.md#issues-found-in-the-first-run) used a ten-second initial wait. Each analyzer branch now uses a one-item loop. It starts one Cortex job per eligible observable, waits two seconds and polls the same job ID until it has a terminal result or reaches its limit. The branch merge returns a completed report, the last pending report at the polling limit, or an error record to its loop. The loop's done output sends the branch's collected records to the final merge. This prevents a late report for the same alert from starting a second decision. The [polling settings in runbook §4](../runbooks/n8n-triage.md#cortex-analyzer-execution-and-report-polling) show how the retry limit is applied.
 
 `Summary Enrichments` combines the MISP matches, Cortex results, skipped observables, and job status.
 
@@ -254,9 +254,9 @@ The workflow finished with no pending or failed jobs. VirusTotal did not find th
 
 MISP returned two attributes for `1.1.1.1`. Both had `to_ids: false`. One included a warninglist comment identifying it as a known public DNS resolver. These attributes provide context, not a standalone verdict.
 
-On 17 November, the final merge ran once in each of three editor runs, including one with ten Cortex jobs. The [delayed-report check (#93)](../regressionEvidence/poc-live-workflow-after-bug-fix.md#93-one-decision-per-alert) records the node counts. The [event-tag check (#96)](../regressionEvidence/poc-live-workflow-after-bug-fix.md#96-misp-event-tags-reach-decision) follows the MISP tag into Decision.
+On 17 November, the final merge ran once in each of three editor runs, including one with ten Cortex jobs. The [delayed-report check (#93)](../validation/regression-after-bug-fixes.md#93-one-decision-per-alert) records the node counts. The [event-tag check (#96)](../validation/regression-after-bug-fixes.md#96-misp-event-tags-reach-decision) follows the MISP tag into Decision.
 
-The [n8n triage runbook](../runbooks/n8n-triage.md#4-misp-and-cortex) documents the node settings and test steps. The [MISP README](../../enrichment/misp/README.md#n8n-lab-context--issue-69) and [Cortex README](../../enrichment/cortex/README.md#n8n-cortex-workflow--issue-69) describe the lab context.
+The [n8n triage runbook](../runbooks/n8n-triage.md#4-misp-and-cortex) documents the node settings and test steps. The [MISP README](../../enrichment/misp/README.md#n8n-triage-workflow-issue-69) and [Cortex README](../../enrichment/cortex/README.md#n8n-triage-workflow-issue-69) describe the lab context.
 
 ### 5. Score
 
@@ -296,7 +296,7 @@ The stage follows these rules:
 - Weights, thresholds, and on/off switches are read from `scoring_config`. The node checks them. A wrong value is replaced by the default and reported in `scoring.config_warnings`.
 - The stage only produces the `scoring` object (score, verdict, coverage, sources, and a breakdown with a reason for every point). It does not close or escalate an alert.
 
-The [Scoring v0.2 Code node](../../soar/n8n/nodes/score-v0.2.js) and the [default config](../../soar/n8n/nodes/score-config.json) are kept in the repository. Build and test steps are in the [n8n triage runbook](../runbooks/n8n-triage.md#5-score).
+The [Scoring v0.2 Code node](../../soar/n8n/nodes/score.js) and the [default config](../../soar/n8n/nodes/score-config.json) are kept in the repository. Build and test steps are in the [n8n triage runbook](../runbooks/n8n-triage.md#5-score).
 
 #### Rationale
 
@@ -379,7 +379,7 @@ Malicious signals are: MISP tag `soc-lab:malicious`; Maltiverse classification `
 
 An asset with `critical` criticality is never auto-closed, even if `auto_close_allowed` is true. The current inventory marks SOC-DC01 and OPNsense as critical; the list can grow as the lab changes.
 
-The implementation is kept in [`decision-v0.1.js`](../../soar/n8n/nodes/decision-v0.1.js). Build steps and test results are in the [n8n triage runbook](../runbooks/n8n-triage.md#6-decision).
+The implementation is kept in [`decision.js`](../../soar/n8n/nodes/decision.js). Build steps and test results are in the [n8n triage runbook](../runbooks/n8n-triage.md#6-decision).
 
 Decision returns an outcome in the workflow item. It does not change Wazuh alert status.
 
@@ -505,10 +505,10 @@ The final branch is:
 | Node | Responsibility |
 |---|---|
 | `If` | The true output represents `closed` and bypasses TheHive. The false output continues to alert creation. |
-| [`Apply TheHive Handling Policy`](../../soar/n8n/nodes/thehive-handling-policy-v0.1.js) | Adds TheHive TLP/PAP markings. It reads the original Wazuh payload from `Webhook` because `Normalize Alert` does not retain `rule.groups`. |
-| [`Build TheHive Alert`](../../soar/n8n/nodes/thehive-alert-v0.3.js) | Builds top-level TheHive alert fields and a separate `thehive_observables` array from Decision, the normalized event, MISP, Cortex, processing status, and asset inventory. |
+| [`Apply TheHive Handling Policy`](../../soar/n8n/nodes/thehive-handling-policy.js) | Adds TheHive TLP/PAP markings. It reads the original Wazuh payload from `Webhook` because `Normalize Alert` does not retain `rule.groups`. |
+| [`Build TheHive Alert`](../../soar/n8n/nodes/thehive-alert.js) | Builds top-level TheHive alert fields and a separate `thehive_observables` array from Decision, the normalized event, MISP, Cortex, processing status, and asset inventory. |
 | `Create an alert`| Uses TheHive 5 `Alert → Create` with the saved credential and automatic field mapping. |
-| [`Prepare TheHive Observables`](../../soar/n8n/nodes/prepare-thehive-observables-v0.1.js) | Reads the created alert ID and the eligible observable list, then emits one item per observable for the TheHive Observable node. |
+| [`Prepare TheHive Observables`](../../soar/n8n/nodes/prepare-thehive-observables.js) | Reads the created alert ID and the eligible observable list, then emits one item per observable for the TheHive Observable node. |
 | [`Create an observable`](https://docs.n8n.io/integrations/builtin/app-nodes/n8n-nodes-base.thehive5/) | Uses TheHive 5 `Observable → Create in Alert` to attach each item to the created alert. |
 
 The `If` node condition is `{{ $json.decision.outcome === 'closed' }}`. Its true output bypasses TheHive. Its false output reaches `Apply TheHive Handling Policy` and the builder. The builder accepts only `analyst_review` and `malicious` and fails visibly for other outcomes.
@@ -519,7 +519,7 @@ The builder uses the original Wazuh alert ID as `sourceRef`, with type `external
 
 The alert description includes the Decision outcome and rationale, score, verdict, coverage, analysis status, asset and user context, source alert and rule details, MITRE ATT&CK data, IOC verdicts, MISP references, Cortex summaries, and unavailable or pending sources. Only eligible external IP, domain, URL, and hash observables are attached. Internal addresses and hostnames are excluded. Each observable carries its own IOC verdict, evidence message, and the alert's TLP/PAP markings.
 
-For an individual IOC, an IDS-enabled MISP attribute counts as adverse evidence under the lab policy. An AbuseIPDB whitelist entry for that same IOC counts as benign evidence. The builder records both and marks the IOC `unknown` when they conflict. Matched attributes retain their own IDs even when a single reference line can describe their shared evidence. The [stored IP verdict (#97)](../regressionEvidence/poc-live-workflow-after-bug-fix.md#97-thehive-shows-conflicting-evidence-for-an-ip) and [local reference-format replay (#98)](../regressionEvidence/poc-live-workflow-after-bug-fix.md#98-misp-references-keep-distinct-attributes) show the two outputs. [Runbook §8](../runbooks/n8n-triage.md#8-thehive) documents the alert builder and observable nodes.
+For an individual IOC, an IDS-enabled MISP attribute counts as adverse evidence under the lab policy. An AbuseIPDB whitelist entry for that same IOC counts as benign evidence. The builder records both and marks the IOC `unknown` when they conflict. Matched attributes retain their own IDs even when a single reference line can describe their shared evidence. The [stored IP verdict (#97)](../validation/regression-after-bug-fixes.md#97-thehive-shows-conflicting-evidence-for-an-ip) and [local reference-format replay (#98)](../validation/regression-after-bug-fixes.md#98-misp-references-keep-distinct-attributes) show the two outputs. [Runbook §8](../runbooks/n8n-triage.md#8-thehive) documents the alert builder and observable nodes.
 
 TheHive severity is calculated after Decision by `Build TheHive Alert`:
 

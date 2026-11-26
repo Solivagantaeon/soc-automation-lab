@@ -1,3 +1,4 @@
+// n8n Code node "Cortex Eligibility" in workflow "SOC - Wazuh alert triage". History: git log.
 const INTERNAL_DOMAIN_SUFFIXES = [
   'lab',
   'local',

@@ -26,13 +26,13 @@ git config user.email "<id>+<login>@users.noreply.github.com"
 2. Create a branch from the current `main`:
 ```bash
    git switch main && git pull
-   git switch -c feat/12-shuffle-cortex-step   # type/issue-number-short-description
+   git switch -c feat/12-n8n-cortex-step   # type/issue-number-short-description
 ```
    Branch types: `feat/`, `fix/`, `docs/`, `detection/`, `chore/`.
    
 3. Commit in small steps. Message format:
 ```
-   feat(shuffle): add cortex_run step to the triage workflow
+   feat(n8n): add the Cortex step to the triage workflow
    fix(wazuh): change the integration filter to rule_id 86601
    docs: describe the MISP configuration in TheHive
 ```
@@ -59,20 +59,24 @@ Labels let anyone filter the backlog in one click, e.g. open tests nobody has ta
 The repository is public. Anything that reaches the git history stays there forever - even if you delete the file later.
 
 **We never commit:**
-- passwords, API keys (Wazuh, Cortex, TheHive, MISP, Shuffle), tokens, session cookies,
+- passwords, API keys (Wazuh, Cortex, TheHive, MISP, n8n), tokens, session cookies,
 - private keys (WireGuard, SSH, TLS certificates),
-- Shuffle webhook URLs (anyone who knows the URL can run the workflow),
+- the n8n webhook URL and the Wazuh webhook token sent in `X-Wazuh-Token`,
+- `N8N_ENCRYPTION_KEY` and n8n credential exports (`n8n export:credentials`),
+- webhook URLs of the archived Shuffle workflow (anyone who knows the URL can run it),
 - the public IP address of the home network or router credentials,
-- `credentials.txt`, `.env`, VM backups, memory dumps.
+- `credentials.txt`, `.env` (including `/opt/n8n/.env`), VM backups, memory dumps.
 
 **Instead:** placeholders like `<CORTEX_API_KEY>` and the `.env.example` file.
 
-**Shuffle workflow exports and `ossec.conf` snippets** always go through the script:
+**n8n workflow exports and `ossec.conf` snippets** always go through the script:
 
 ```bash
-python3 scripts/sanitize_export.py export.json -o soar/shuffle/workflows/soc-automation-v1.0.json
+python3 scripts/sanitize_export.py export.json -o clean.json
 python3 scripts/sanitize_export.py --check .   # must report 0 findings
 ```
+
+Before you export an n8n workflow, remove pinned data, because it holds real alerts. The script does not recognise n8n webhook paths, so replace the Webhook node `path` with a placeholder yourself.
 
 **Uploading a file through the browser ("Add files via upload")?** The pre-commit hooks do not run then, and the commit is public at once. Check the file on your computer first: `python3 scripts/sanitize_export.py --check file`, and a screenshot: `python3 scripts/check_images.py --ocr screenshot.png`. Details, the private `.leakcheck-local` list (your IP, surname) and what to do after a leak: [SECURITY.md](SECURITY.md).
 
@@ -87,21 +91,57 @@ On Windows type `python` instead of `python3`. Look at the diff yourself anyway 
 | Wazuh rules and decoders | `detection/wazuh/rules/`, `detection/wazuh/decoders/` |
 | Agent configuration (`agent.conf`) | `detection/wazuh/agent-config/` |
 | `ossec.conf` snippets (integrations) | `detection/wazuh/integrations/` |
-| Shuffle workflows (JSON, sanitised) | `soar/shuffle/workflows/` |
+| n8n node code, deployment files and workflow references | `soar/n8n/` (layout in its README) |
+| Shuffle workflow v0.1 (archived, not changed any more) | `soar/shuffle/` |
 | Sample alerts for testing | `samples/alerts/` (synthetic or anonymised) |
 | Normalised alerts and enrichment results | `samples/normalized/` |
 | Alert-funnel measurements | `metrics/` |
+| Lab infrastructure (Proxmox, VLANs, VMs, build order) | `infrastructure/` |
+| How the pipeline works (architecture, alert schema) | `docs/architecture/` |
 | Architecture decisions | `docs/decisions/` (ADR format, copy `0000-template.md`) |
+| Research and tool comparisons | `docs/research/` |
 | Step-by-step instructions | `docs/runbooks/` |
+| Test runs and evidence (end-to-end tests, PoC, regression checks) | `docs/validation/` |
 | Screenshots | `docs/images/<component>/` (check them with `check_images.py` and by eye!) |
 
-## 6. Definition of done
+## 6. Component README
+
+One component = one folder in the stage it belongs to (`detection/`, `soar/`, `enrichment/`, `case-management/`), with its configuration and one `README.md`. Every component README uses the same sections in the same order, so a reader always knows where to look:
+
+```markdown
+# <Component> – <one-line role>
+
+## Role in the pipeline
+2–3 sentences, then where the component sits, e.g. Wazuh → **n8n** → TheHive.
+
+## What is in this folder
+Table: file → what it is for.
+
+## Deployment in the lab
+VM, VLAN, ports, versions. Link to the runbook.
+
+## Configuration
+Key settings only. Placeholders instead of secrets (`<API_KEY>`).
+
+## Verify it works
+A quick test with the expected result that does not depend on other components.
+
+## Troubleshooting
+Problem → cause → fix.
+
+## Decisions and evidence
+Links to ADRs, validation pages, screenshots and samples.
+```
+
+Step-by-step instructions longer than a few commands go to `docs/runbooks/` and are linked from the README. Screenshots go to `docs/images/<component>/<issue>-<description>.png`.
+
+## 7. Definition of done
 
 - [ ] change tested in the lab where applicable (validation described in the PR),
 - [ ] documentation updated (README / runbook / ADR),
 - [ ] `pre-commit run --all-files` passes,
 - [ ] reviewed by at least one person.
 
-## 7. Language
+## 8. Language
 
 The whole repository is in **English**: documentation, comments in code and configuration, commits, branch names, issues and pull requests.

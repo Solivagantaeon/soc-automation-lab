@@ -3,7 +3,7 @@
 n8n is the SOAR engine of the pipeline: Wazuh pushes selected alerts to an n8n webhook, and n8n normalizes them,
 removes duplicates, enriches observables with MISP and Cortex, scores the result and creates alerts in TheHive.
 It replaced Shuffle in October 2026 - the Shuffle workflow is archived as v0.1 in [`soar/shuffle/`](../shuffle/),
-and the reasons are recorded in [ADR 0002](../../docs/decisions/0002-soar-n8n.md).
+and the trade-offs behind the switch are compared in the [SOAR engine comparison](../../docs/research/soar-engine-comparison.md#72-findings).
 
 n8n runs self-hosted in queue mode on a dedicated VM in the SOC VLAN, behind an HTTPS reverse proxy, so a burst of
 alerts is queued and processed by a worker instead of slowing down the web interface.
@@ -53,15 +53,15 @@ Only Caddy publishes ports. PostgreSQL, Redis and n8n itself are not reachable f
 
 | Path | Content |
 |---|---|
-| [`deploy/`](deploy/) | `compose.yml`, `Caddyfile`, `make-env.sh` (generates `.env` on the VM) and the queue smoke test workflow `soc-queue-smoke-test.json` |
-| [`nodes/`](nodes/) | JavaScript used in the triage workflow, including the enrichment summary and TheHive alert builder |
-| [`workflows/`](workflows/) | Export of the triage workflow, ready to import: [`soc-wazuh-alert-triage.json`](workflows/soc-wazuh-alert-triage.json) |
+| [`deploy/`](deploy/) | `compose.yml`, `Caddyfile` and `make-env.sh` (generates `.env` on the VM) |
+| [`nodes/`](nodes/) | Code node scripts and [`score-config.json`](nodes/score-config.json). Script names omit version numbers. The headers identify the nodes and Git records earlier versions. |
+| [`workflows/`](workflows/) | [SOC alert triage](workflows/soc-wazuh-alert-triage.json) and [queue smoke test](workflows/soc-queue-smoke-test.json) |
 
 ## Deployment
 
 Step-by-step runbook, with a test after every step: [`docs/runbooks/n8n-deploy.md`](../../docs/runbooks/n8n-deploy.md).
 
-First working end-to-end test (Wazuh → n8n → MISP/Cortex → TheHive): [`docs/e2e-test.md`](../../docs/e2e-test.md).
+First working end-to-end test (Wazuh → n8n → MISP/Cortex → TheHive): [`docs/validation/e2e-first-run.md`](../../docs/validation/e2e-first-run.md).
 
 | Component | Tested version |
 |---|---|

@@ -1,3 +1,4 @@
+// n8n Code nodes "Error Formatter - <service>" (one per Cortex service) in workflow "SOC - Wazuh alert triage". History: git log.
 /**
  * SOC - Error Formatter (Cortex services)
  * Stage: Failure handling (#72)

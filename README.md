@@ -52,7 +52,7 @@ flowchart LR
     D -. optional, time-limited .-> AR[Wazuh<br/>Active Response]
 ```
 
-More detail: [`infrastructure/architecture/architecture.md`](infrastructure/architecture/architecture.md).
+More detail: [`docs/architecture/architecture.md`](docs/architecture/architecture.md).
 
 ## Tech stack
 
@@ -75,7 +75,8 @@ case-management/  TheHive templates and configuration notes
 scripts/          Helper tooling (e.g. secret sanitiser for exports)
 samples/alerts/   Synthetic sample alerts used for testing the pipeline
 metrics/          Alert-reduction measurements (before / after)
-docs/             Architecture, lab setup, decision records, runbooks
+infrastructure/   Lab layer: Proxmox host, VLANs, VMs, lab setup
+docs/             Architecture, decision records, research, runbooks, validation evidence
 ```
 
 ## Results
@@ -84,7 +85,7 @@ _To be filled in at the end of the project:_ alert volume before vs after each p
 
 ## Reproducing the lab
 
-See [`infrastructure/architecture/lab-setup.md`](infrastructure/architecture/lab-setup.md). The lab runs on a single Proxmox host; all addresses are private lab ranges.
+See [`infrastructure/lab-setup.md`](infrastructure/lab-setup.md). The lab runs on a single Proxmox host; all addresses are private lab ranges.
 
 
 ## Disclaimer
