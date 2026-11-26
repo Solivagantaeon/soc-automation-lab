@@ -1,3 +1,4 @@
+// n8n Code node "Dedupe Cortex Observables" in workflow "SOC - Wazuh alert triage". History: git log.
 const items = $input.all();
 const seen = new Map();
 const output = [];

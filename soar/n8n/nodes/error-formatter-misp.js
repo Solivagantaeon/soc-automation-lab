@@ -1,3 +1,4 @@
+// n8n Code node "Error Formatter - MISP" in workflow "SOC - Wazuh alert triage". History: git log.
 /**
  * SOC - Error Formatter (MISP)
  * Stage: Failure handling (#72)

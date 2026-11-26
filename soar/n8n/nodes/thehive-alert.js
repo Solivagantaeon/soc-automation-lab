@@ -1,3 +1,4 @@
+// n8n Code node "Build TheHive Alert" in workflow "SOC - Wazuh alert triage". Version 0.3 - history: git log.
 /**
  * SOC n8n TheHive alert builder
  * Input: output from the Decision node for analyst_review or malicious.

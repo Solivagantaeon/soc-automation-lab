@@ -18,9 +18,9 @@ The code that builds the alert lives with the workflow:
 
 | Path | Content |
 |---|---|
-| [`soar/n8n/nodes/thehive-handling-policy-v0.1.js`](../../soar/n8n/nodes/thehive-handling-policy-v0.1.js) | Sets TLP and PAP for the alert |
-| [`soar/n8n/nodes/thehive-alert-v0.3.js`](../../soar/n8n/nodes/thehive-alert-v0.3.js) | Builds the alert fields, description, tags and the list of eligible observables |
-| [`soar/n8n/nodes/prepare-thehive-observables-v0.1.js`](../../soar/n8n/nodes/prepare-thehive-observables-v0.1.js) | Emits one item per observable with the created alert ID |
+| [`soar/n8n/nodes/thehive-handling-policy.js`](../../soar/n8n/nodes/thehive-handling-policy.js) | Sets TLP and PAP for the alert |
+| [`soar/n8n/nodes/thehive-alert.js`](../../soar/n8n/nodes/thehive-alert.js) | Builds the alert fields, description, tags and the list of eligible observables |
+| [`soar/n8n/nodes/prepare-thehive-observables.js`](../../soar/n8n/nodes/prepare-thehive-observables.js) | Emits one item per observable with the created alert ID |
 
 ## Deployment in the lab
 
@@ -69,7 +69,7 @@ The native **TheHive 5** node in n8n creates the alert with automatic field mapp
 | `tlp` / `pap` | From the handling policy (below) |
 | `tags` | `auto-triage`, `source:wazuh`, `decision:<outcome>`, `verdict:<verdict>`, `severity:<level>`, `analysis:complete` or `incomplete-analysis`, and `asset:critical` for critical assets |
 
-**Severity** (in `thehive-alert-v0.3.js`):
+**Severity** (in `thehive-alert.js`):
 
 | Condition | Severity |
 |---|---|

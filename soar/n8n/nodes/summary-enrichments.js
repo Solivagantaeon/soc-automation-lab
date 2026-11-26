@@ -1,3 +1,4 @@
+// n8n Code node "Summary Enrichments" in workflow "SOC - Wazuh alert triage". History: git log.
 const rows = $input.all().map(item => item.json ?? {});
 const errorRows = rows.filter(item => item.service && item.error !== undefined);
 

@@ -322,7 +322,7 @@ cd /opt/n8n
 nano compose.yml                 # paste soar/n8n/deploy/compose.yml
 nano Caddyfile                   # paste soar/n8n/deploy/Caddyfile
 nano make-env.sh                 # paste soar/n8n/deploy/make-env.sh
-nano soc-queue-smoke-test.json   # paste soar/n8n/deploy/soc-queue-smoke-test.json (used in step 8.2)
+nano soc-queue-smoke-test.json   # paste soar/n8n/workflows/soc-queue-smoke-test.json (used in step 8.2)
 chmod 644 compose.yml Caddyfile soc-queue-smoke-test.json
 chmod 700 make-env.sh
 ```

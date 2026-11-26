@@ -1,3 +1,4 @@
+// n8n Code node "Scoring" in workflow "SOC - Wazuh alert triage". Version 0.2.3 - history: git log.
 /**
  * SOC - Alert Scoring
  * Stage: Scoring (after "Summary Enrichments", before "Create an alert")

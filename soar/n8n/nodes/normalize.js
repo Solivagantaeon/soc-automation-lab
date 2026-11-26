@@ -1,3 +1,4 @@
+// n8n Code node "Normalize Alert" in workflow "SOC - Wazuh alert triage". Version 1.2 - history: git log.
 /**
  * SOC - Wazuh Alert Normalization
  * Stage: Normalize (#67)

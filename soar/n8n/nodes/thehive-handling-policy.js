@@ -1,3 +1,4 @@
+// n8n Code node "Apply TheHive Handling Policy" in workflow "SOC - Wazuh alert triage". Version 0.1 - history: git log.
 /**
  * SOC n8n handling policy for TheHive and external enrichment.
  *

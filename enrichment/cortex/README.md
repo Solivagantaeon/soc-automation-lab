@@ -22,7 +22,7 @@ Related files elsewhere:
 |---|---|
 | [`samples/results/cortex/`](../../samples/results/cortex/) | Raw analyzer reports from the manual test (2026-10-20) |
 | [`soar/n8n/nodes/cortex-eligibility.js`](../../soar/n8n/nodes/cortex-eligibility.js) | n8n: which observables may be sent to Cortex |
-| [`soar/n8n/nodes/dedupe-cortex-observadables.js`](../../soar/n8n/nodes/dedupe-cortex-observadables.js) | n8n: removes duplicate observables before the analyzers |
+| [`soar/n8n/nodes/dedupe-cortex-observables.js`](../../soar/n8n/nodes/dedupe-cortex-observables.js) | n8n: removes duplicate observables before the analyzers |
 | [`soar/n8n/nodes/error-formatter-cortex.js`](../../soar/n8n/nodes/error-formatter-cortex.js) | n8n: formats failed Cortex jobs for the alert summary |
 
 ## Deployment in the lab

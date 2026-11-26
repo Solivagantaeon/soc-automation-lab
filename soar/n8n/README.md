@@ -53,8 +53,9 @@ Only Caddy publishes ports. PostgreSQL, Redis and n8n itself are not reachable f
 
 | Path | Content |
 |---|---|
-| [`deploy/`](deploy/) | `compose.yml`, `Caddyfile`, `make-env.sh` (generates `.env` on the VM) and the queue smoke test workflow `soc-queue-smoke-test.json` |
-| [`nodes/`](nodes/) | JavaScript used in the triage workflow, including the enrichment summary and TheHive alert builder |
+| [`deploy/`](deploy/) | `compose.yml`, `Caddyfile` and `make-env.sh` (generates `.env` on the VM) |
+| [`nodes/`](nodes/) | JavaScript of the Code nodes in the triage workflow, one file per node, named after the node. The first line of each file names the node and its version; older versions are in the git history |
+| [`workflows/`](workflows/) | Workflow exports ready to import: the queue smoke test [`soc-queue-smoke-test.json`](workflows/soc-queue-smoke-test.json) |
 | [`triage/enrichment-routing.json`](triage/enrichment-routing.json) | MISP request settings, Cortex loop connections and final merge inputs for the existing triage workflow. Use this reference with the [enrichment runbook](../../docs/runbooks/n8n-triage.md#4-misp-and-cortex). |
 
 ## Deployment
