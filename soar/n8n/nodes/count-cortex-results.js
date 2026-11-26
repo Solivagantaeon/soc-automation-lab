@@ -1,3 +1,4 @@
+// n8n Code node "Count Cortex Results" in workflow "SOC - Wazuh alert triage". History: git log.
 const items = $input.all();
 
 return items.map(item => {
