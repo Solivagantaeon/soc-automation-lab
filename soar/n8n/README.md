@@ -61,7 +61,7 @@ Only Caddy publishes ports. PostgreSQL, Redis and n8n itself are not reachable f
 
 Step-by-step runbook, with a test after every step: [`docs/runbooks/n8n-deploy.md`](../../docs/runbooks/n8n-deploy.md).
 
-First working end-to-end test (Wazuh → n8n → MISP/Cortex → TheHive): [`docs/e2e-test.md`](../../docs/e2e-test.md).
+First working end-to-end test (Wazuh → n8n → MISP/Cortex → TheHive): [`docs/validation/e2e-first-run.md`](../../docs/validation/e2e-first-run.md).
 
 | Component | Tested version |
 |---|---|

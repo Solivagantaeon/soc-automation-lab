@@ -44,7 +44,7 @@ sudo systemctl start wazuh-indexer wazuh-manager filebeat wazuh-dashboard
 sudo systemctl enable wazuh-indexer wazuh-manager filebeat wazuh-dashboard
 ```
 
-Configuration entry points include `/var/ossec/etc/ossec.conf` and the sanitized agent-group configuration in [`../../../detection/wazuh/agent-config/agent.conf`](../../../detection/wazuh/agent-config/agent.conf). The runbook index and operational instructions are described in [`runbooks/README.md`](../../../docs/runbooks/README.md).
+Configuration entry points include `/var/ossec/etc/ossec.conf` and the sanitized agent-group configuration in [`agent-config/agent.conf`](agent-config/agent.conf). The runbook index and operational instructions are described in [`runbooks/README.md`](../../docs/runbooks/README.md).
 
 ### 2.4 Standalone verification
 
@@ -79,12 +79,12 @@ Expected result: a JSON response listing manager daemon statuses (authenticated 
 
 - **Time synchronization:** a domain-controller time-zone/clock offset was addressed by making OPNsense the NTP source, synchronizing the DC and its domain members, and updating Linux time sources. See [Issue #5](https://github.com/Solivagantaeon/soc-automation-lab/issues/5) and its runbook. Correct timestamps are required for reliable cross-platform correlation.
 - **Indexer/API troubleshooting:** previous test environments exhibited indexer authorization/shard and dashboard-API connectivity symptoms. The documented operational baseline is the clean single-node installation on VM 203, with its services active.
-- **Rule-based forwarding:** Wazuh-to-Shuffle filtering uses rule IDs rather than severity alone; this preserves low-level Suricata alerts such as rule `86601` for the intended workflows. See the [architecture decisions](../../architecture/architecture.md#key-design-decisions).
+- **Rule-based forwarding:** Wazuh-to-Shuffle filtering uses rule IDs rather than severity alone; this preserves low-level Suricata alerts such as rule `86601` for the intended workflows. See the [architecture decisions](../../docs/architecture/architecture.md#key-design-decisions).
 
 ### 2.6 Evidence and related files
 
-- ![Wazuh agent inventory](../../images/wazuh/04-wazuh-agents.png)
-- Agent configuration: [`../../../detection/wazuh/agent-config/agent.conf`](../../../detection/wazuh/agent-config/agent.conf)
+- ![Wazuh agent inventory](../../docs/images/wazuh/04-wazuh-agents.png)
+- Agent configuration: [`agent-config/agent.conf`](agent-config/agent.conf)
 - Related ingestion issue: [#4 — Wazuh agents, Sysmon and Suricata](https://github.com/Solivagantaeon/soc-automation-lab/issues/4)
 
 ---

@@ -1,6 +1,6 @@
 # Architecture
 
-> Documentation baseline: 18 October 2026. The diagram and [communication matrix](../README.md#2-communication-matrix) use the same component names and transport assumptions. Solid lines indicate observed ingestion or implemented/tested paths; dashed lines represent architecture/integration paths whose individual results are validated separately.
+> Documentation baseline: 18 October 2026. The diagram and [communication matrix](../../infrastructure/README.md#2-communication-matrix) use the same component names and transport assumptions. Solid lines indicate observed ingestion or implemented/tested paths; dashed lines represent architecture/integration paths whose individual results are validated separately.
 
 ## Network segmentation
 
@@ -12,7 +12,7 @@
 | ATTACK | `10.10.30.0/24` | Kali attack simulation |
 | VPN | `10.10.250.0/24` | WireGuard access for administrators |
 
-Refer to [lab setup](lab-setup.md) for segmentation and policies. The lab is isolated from the home network.
+Refer to [lab setup](../../infrastructure/lab-setup.md) for segmentation and policies. The lab is isolated from the home network.
 
 ## Component communication diagram
 
@@ -77,7 +77,7 @@ sequenceDiagram
     T-->>A: Alert available for review
 ```
 
-Workflow overview screenshot: [Shuffle editor](../docs/images/shuffle/06-shuffle-running.png). TheHive output screenshot: [test alerts](../images/thehive/06-thehive-running.png). Successful operation of specific enrichment providers requires validation of their corresponding workflow executions.
+Workflow overview screenshot: [Shuffle editor](../images/shuffle/06-shuffle-running.png). TheHive output screenshot: [test alerts](../images/thehive/06-thehive-running.png). Successful operation of specific enrichment providers requires validation of their corresponding workflow executions.
 
 ## Key design decisions
 
@@ -89,4 +89,11 @@ Workflow overview screenshot: [Shuffle editor](../docs/images/shuffle/06-shuffle
 
 ## Component reference
 
-Complete deployment, independent health checks, troubleshooting, and ports are documented in [`components.md`](../components/).
+Deployment, ports, independent health checks and troubleshooting are documented in the README of each component:
+
+| Stage | Component README |
+|---|---|
+| Detection | [Wazuh](../../detection/wazuh/README.md), [Sysmon](../../detection/sysmon/README.md), [Suricata](../../detection/suricata/README.md) |
+| SOAR | [n8n](../../soar/n8n/README.md) |
+| Enrichment | [Cortex](../../enrichment/cortex/README.md), [MISP](../../enrichment/misp/README.md) |
+| Case management | [TheHive](../../case-management/thehive/README.md) |
