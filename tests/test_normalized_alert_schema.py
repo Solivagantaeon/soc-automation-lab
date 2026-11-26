@@ -6,7 +6,7 @@ from pathlib import Path
 from jsonschema import Draft202012Validator, FormatChecker
 
 ROOT = Path(__file__).resolve().parents[1]
-SCHEMA_FILE = ROOT / "soar/shuffle/schema/normalized-alert.schema.json"
+SCHEMA_FILE = ROOT / "soar/schema/normalized-alert.schema.json"
 SAMPLE_FILE = ROOT / "samples/normalized/normalized-alert-example.json"
 
 

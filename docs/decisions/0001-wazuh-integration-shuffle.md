@@ -1,6 +1,6 @@
 # ADR 0001 – Wazuh → Shuffle integration: transport, TLS and alert filter
 
-- **Status:** Superseded by [0002](0002-soar-n8n.md)
+- **Status:** Superseded - Shuffle was replaced by n8n, see the [SOAR engine comparison](../research/soar-engine-comparison.md) and [ADR 0003](0003-n8n-triage-workflow.md). Archived files: [`soar/shuffle/`](../../soar/shuffle/)
 - **Date:** 2026-10-19
 - **Issue:** #7 – [Z2] Wazuh and IDS → Shuffle: webhook
 
@@ -43,7 +43,7 @@ The only rules dropped before Shuffle are the hard-coded `SKIP_RULE_IDS` in `shu
 
 ### 3. One integration block, one webhook
 
-The two old blocks were removed and replaced with a single block pointing at the workflow's webhook (`detection/wazuh/integrations/shuffle-integration.xml`, URL as placeholder). The real webhook URL is kept only on the server.
+The two old blocks were removed and replaced with a single block pointing at the workflow's webhook (`soar/shuffle/integration/shuffle-integration.xml`, URL as placeholder). The real webhook URL is kept only on the server.
 
 ### 4. IDS path: Suricata → Wazuh → Shuffle (not IDS → Shuffle directly)
 

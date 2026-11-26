@@ -1,5 +1,7 @@
 
 <!--
+  ARCHIVED (v0.1): not deployed since 2026-10-22, replaced by the custom-n8n integration
+  (detection/wazuh/integrations/). Kept as the record of v0.1, see soar/shuffle/README.md.
   Wazuh manager: /var/ossec/etc/ossec.conf, inside <ossec_config>.
   Exactly one shuffle block. All alerts of level >= 3 (= everything Wazuh logs, log_alert_level 3)
   go to Shuffle; filtering, deduplication and enrichment happen in the workflow (ADR 0001).

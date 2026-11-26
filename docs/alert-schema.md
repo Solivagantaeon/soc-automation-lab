@@ -307,7 +307,7 @@ Evidence artifact:
 
 - Normalized enrichment results (AbuseIPDB, DShield, Google DNS, Maltiverse, MISP, Team Cymru, VirusTotal) and validation outputs: `samples/normalized/`
 - Raw input alerts used in the manual tests: `samples/alerts/`
-- Schema: `soar/shuffle/schema/normalized-alert.schema.json`, checked in CI by `tests/test_normalized_alert_schema.py`
+- Schema: `soar/schema/normalized-alert.schema.json`, checked in CI by `tests/test_normalized_alert_schema.py`
 
 ## Security and privacy
 

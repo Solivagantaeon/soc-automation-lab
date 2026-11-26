@@ -221,7 +221,7 @@ The Wazuh alert deduplication flow fingerprints the incoming event and keeps thr
 
 For a new alert, the workflow extracts the single successful `body._id` from the Create Alert response and stores it as a scalar under the fingerprint. For a repeated alert, it reads that cached ID and passes it to the TheHive app's `Update Alert` action through `$get_thehive_alert_id.value`. The first repeat is counted as occurrence `2`; later repeats increment the stored count. This alert-level deduplication cache is separate from any cache of enrichment results by IOC.
 
-The workflow mapping, screenshots, and test evidence are documented in [Shuffle alert deduplication](../../docs/shuffle-deduplication.md).
+The workflow mapping, screenshots, and test evidence are documented in [Shuffle alert deduplication](../../soar/shuffle/docs/deduplication.md).
 
 ## Safe exports
 
