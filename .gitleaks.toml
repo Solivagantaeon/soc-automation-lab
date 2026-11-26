@@ -49,6 +49,13 @@ paths = ['^soar/n8n/nodes/summary-enrichments\.js$']
 regexTarget = "line"
 regexes = ['(?m)^[ \t]*const key = trimmedName\.toLowerCase\(\);[ \t]*$']
 
+[[rules.allowlists]]
+description = "The same getTagNames line inside the Summary Enrichments node of the exported triage workflow"
+condition = "AND"
+paths = ['^soar/n8n/workflows/soc-wazuh-alert-triage\.json$']
+regexTarget = "secret"
+regexes = ['^trimmedName\.toLowerCase$']
+
 [[rules]]
 id = "url-secret-param"
 description = "Credential in a URL query (?apikey=, &token=, &password=, ...)"
