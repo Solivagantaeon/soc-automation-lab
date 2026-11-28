@@ -66,7 +66,7 @@ First working end-to-end test (Wazuh → n8n → MISP/Cortex → TheHive): [`doc
 | Component | Tested version |
 |---|---|
 | Proxmox VE | 9.2 |
-| Ubuntu | 24.04.5 LTS (cloud image), kernel 6.8.0-147 |
+| Ubuntu | 24.04.5 LTS (cloud image), kernel 6.8.0-149 |
 | Docker Engine / Compose | 29.9.2 / v5.6.1 |
 | n8n (`n8nio/n8n`, `n8nio/runners`) | 2.44.6 |
 | PostgreSQL / Redis / Caddy | 17.11 / 7.4.11-alpine / 2.11.7-alpine |
@@ -89,9 +89,9 @@ any name works, as long as you select it in step 2.
 | Credential type | Lab name | Used by |
 |---|---|---|
 | Header Auth (header name `X-Wazuh-Token`, value = the token from the Wazuh `<api_key>`) | `Wazuh webhook token` | `Webhook` |
-| MISP API | `MISP API (n8n)` | `Get a filtered list of attributes` |
-| Cortex API | `Cortex API (n8n)` | the 5 `Execute …` and 5 `Get a report …` nodes |
-| TheHive 5 API (Service account in the analysts' organisation) | `TheHive API (n8n)` | `Create an alert`, `Create an observable` |
+| MISP API | `MISP account` | `Get a filtered list of attributes` |
+| Cortex API | `Cortex account` | the 5 `Execute …` and 5 `Get a report …` nodes |
+| TheHive 5 API (Service account in the analysts' organisation) | `The Hive 5 account` | `Create an alert`, `Create an observable` |
 
 **2. Import the workflow.** *Overview → Create workflow → ⋯ → Import from File* and select the JSON file,
 or on the n8n VM:
@@ -128,8 +128,11 @@ An agent missing from `soc_asset_inventory` is never closed automatically - its 
 **5. Point Wazuh at the webhook.** Copy the **production URL** from the `Webhook` node into `<hook_url>` of the
 `custom-n8n` integration on the Wazuh manager (`ossec.conf`), restart the manager.
 
-**6. Test before publishing.** In the `Webhook` node click *Listen for test event* and send a sample alert to the
-**test URL** (`/webhook-test/…`). Keep the token out of the shell history - read it from a file:
+**6. Test before publishing.** On the canvas click *Execute workflow* (it waits for a test event) and send a sample
+alert to the **test URL** (`/webhook-test/…`). *Listen for test event* inside the opened `Webhook` node runs only that
+node. `<n8n-host>` must be a name Caddy serves (`n8n.lab` or the VM's IP address): any other host name, including
+`127.0.0.1` on the VM itself, gets an empty `200` from Caddy and never reaches n8n. Keep the token out of the shell
+history - read it from a file:
 
 ```bash
 curl -sk -X POST "https://<n8n-host>/webhook-test/<webhook-path>" \

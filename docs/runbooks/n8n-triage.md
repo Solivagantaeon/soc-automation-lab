@@ -544,8 +544,8 @@ Each analyzer branch uses **Loop Over Items** with **Batch Size** `1` and **Rese
 
 | Analyzer | Loop node on the canvas | Branch merge (Append, 3 inputs) | Final Merge input |
 |---|---|---|---:|
-| Maltiverse | `Loop Over Items Multiverse` | `MergeMaltiverse` | 2 |
-| AbuseIPDB | `Loop Over Items Abuse` | `MergeAbusIPBD` | 3 |
+| Maltiverse | `Loop Over Items Maltiverse` | `MergeMaltiverse` | 2 |
+| AbuseIPDB | `Loop Over Items Abuse` | `MergeAbuseIPDB` | 3 |
 | Team Cymru MHR | `Loop Over Items TeamCymru` | `MergeTeamCymru` | 5 |
 | CIRCL Hashlookup | `Loop Over Items Circl` | `MergeCirclHash` | 6 |
 | VirusTotal | `Loop Over Items Virus` | `MergeVirusTotal` | 7 |
@@ -1021,7 +1021,7 @@ These are n8n lab results, not production threshold calibration. TheHive deliver
 | Execute CirclHash | 3 | 2 000 ms | Continue (using error output) |
 | Get a report CirclHash | 3 | 3 000 ms | Continue (using error output) |
 | Execute VirusTotal | 3 | 2 000 ms | Continue (using error output) |
-| Get a report UnshortenLink | 3 | 3 000 ms | Continue (using error output) |
+| Get a report VirusTotal | 3 | 3 000 ms | Continue (using error output) |
 | Get a filtered list of attributes (MISP) | 5 | 2 000 ms | Continue (using error output) |
 
 **How to test it:** Run the test in [How to test the stage](#how-to-test-the-stage). The execution must finish, and the failed node must show items on its red error output.
@@ -1066,7 +1066,7 @@ These are n8n lab results, not production threshold calibration. TheHive deliver
 | Error Formatter - AbuseIPDB | `AbuseIPDB` | `Execute AbuseIPDB` | `Get a report AbuseIPDB` | `Filter Cortex-Eligible IPs` | `ip` |
 | Error Formatter - TeamCymru | `TeamCymru` | `Execute TeamCymru` | `Get a report TeamCymru` | `Normalize Alert`, `Dedupe Cortex Observables` | `hash` |
 | Error Formatter - CirclHash | `CirclHash` | `Execute CirclHash` | `Get a report CirclHash` | `Normalize Alert`, `Dedupe Cortex Observables` | `hash` |
-| Error Formatter - VirusTotal | `VirusTotal` | `Execute VirusTotal` | `Get a report UnshortenLink` | `Normalize Alert`, `Dedupe Cortex Observables` | `url` |
+| Error Formatter - VirusTotal | `VirusTotal` | `Execute VirusTotal` | `Get a report VirusTotal` | `Normalize Alert`, `Dedupe Cortex Observables` | `url` |
 | Error Formatter - MISP | `MISP` | - | - | `Normalize Alert`, `Dedupe Cortex Observables` | all types |
 
 `TYPES` must match the `router of types` rule that sends observables to that branch. `SERVICE_NAME` must contain the name the Score stage uses for the service (`abuseipdb`, `maltiverse`, `teamcymru`, `circl`, `virustotal`, `misp`, case-insensitive).

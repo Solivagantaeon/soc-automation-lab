@@ -1,4 +1,4 @@
-// n8n Code node "Dedup" in workflow "SOC - Wazuh alert triage". History: git log.
+// n8n Code node "Deduplication" in workflow "SOC - Wazuh alert triage". History: git log.
 const WINDOW_MS = 7 * 60 * 1000; // dedup window, 7 minutes
 
 // temp for time

@@ -424,7 +424,7 @@ The stage was added to the `SOC - n8n E2E Skeleton` workflow on top of the MISP 
 | Node | Max. Tries | Wait Between Tries |
 |---|---|---|
 | Execute Maltiverse, Execute AbuseIPDB, Execute TeamCymru, Execute CirclHash, Execute VirusTotal | 3 | 2 000 ms |
-| Get a report Maltiverse, Get a report AbuseIPDB, Get a report TeamCymru, Get a report CirclHash, Get a report UnshortenLink | 3 | 3 000 ms |
+| Get a report Maltiverse, Get a report AbuseIPDB, Get a report TeamCymru, Get a report CirclHash, Get a report VirusTotal | 3 | 3 000 ms |
 | Get a filtered list of attributes (MISP) | 5 | 2 000 ms |
 
 **A failure goes to an error output.** The same nodes use **On Error → Continue (using error output)**. When the last retry fails, the failed items leave through the error output instead of stopping the workflow. The other services keep running and the alert still reaches the summary.
@@ -488,7 +488,7 @@ Build and test instructions, screenshots and the test alert are in the [n8n tria
 - **AbuseIPDB:** run the test with two real public IPs and `TEST FAILED` on `Execute AbuseIPDB`. Expect one record per IP, and neither IP in `skipped_by_filter`. Redact the IPs in any screenshot.
 - **Score:** run the test alert through the Score stage and confirm that every failed service is listed under `scoring.sources.failed`, `coverage` is below `min_coverage_for_fp` and the verdict is `needs_review`.
 - **Results in two batches (#92, mitigated):** `Merge` passes data on each time an input receives items, so a report that needed another polling round started a second run of Scoring and Decision with part of the results. In the PoC (#92) this produced two `SOC_Audit` rows for one alert (scenario 1) and a TheHive alert without the MD5 evidence plus a rejected duplicate create request (scenario 3). A 10-second wait before the first report check makes all reports reach `Merge` together in normal conditions. It is not a full fix: a report that is still not ready after 10 seconds starts a second batch again. A full fix would poll with Cortex `GET /api/job/<id>/waitreport` in one request per job, or collect all results before `Merge`.
-- **Node names:** the Error Formatters find their nodes by name, so renaming a node requires updating the constants in the formatter. The VirusTotal report node is still named `Get a report UnshortenLink`. Renaming it to `Get a report VirusTotal` would match the analyzer it polls.
+- **Node names:** the Error Formatters find their nodes by name, so renaming a node requires updating the constants in the formatter. On 28 November 2026 the misspelled nodes were renamed together with these constants: `Get a report UnshortenLink` → `Get a report VirusTotal`, `Get a report AbuseIPBD` → `Get a report AbuseIPDB`, `Get a report  Maltiverse` (two spaces) → `Get a report Maltiverse`, `Loop Over Items Multiverse` → `Loop Over Items Maltiverse`, `MergeAbusIPBD` → `MergeAbuseIPDB` and `Error Formatter - AbuseIDPB` → `Error Formatter - AbuseIPDB`.
 
 ### 8. TheHive
 

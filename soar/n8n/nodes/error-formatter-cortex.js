@@ -20,7 +20,7 @@
  * | AbuseIPDB  | AbuseIPDB    | Execute AbuseIPDB  | Get a report AbuseIPDB     | Filter Cortex-Eligible IPs                     | ip       |
  * | TeamCymru  | TeamCymru    | Execute TeamCymru  | Get a report TeamCymru     | Normalize Alert, Dedupe Cortex Observables     | hash     |
  * | CirclHash  | CirclHash    | Execute CirclHash  | Get a report CirclHash     | Normalize Alert, Dedupe Cortex Observables     | hash     |
- * | VirusTotal | VirusTotal   | Execute VirusTotal | Get a report UnshortenLink | Normalize Alert, Dedupe Cortex Observables     | url      |
+ * | VirusTotal | VirusTotal   | Execute VirusTotal | Get a report VirusTotal    | Normalize Alert, Dedupe Cortex Observables     | url      |
  *
  * How the failed observable is found:
  * An error item contains only the error message, and n8n item linking is not
