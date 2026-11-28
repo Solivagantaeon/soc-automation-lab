@@ -24,10 +24,10 @@ except `<description>`).
 | 100910 | 13 | Sysmon DNS query (61650) for `wicar.org` or a subdomain - malware test domain | `Resolve-DnsName wicar.org` on a Windows agent | - |
 | 100911 | 13 | Sysmon network connection (61605, 92101) to the MISP test IOC 199.34.228.69 | connection to that IP from a Windows agent | - |
 | 100920 | 12 | SSH login attempt with the non-existent user `soc-poc-benign` (5710) - controlled benign event | `ssh soc-poc-benign@<linux-agent>` | - |
-| 100921 | 12 | Executable in the user's `AppData\Local\Temp` opened an outbound connection to a non-private address (Sysmon EID 3), T1105 | renamed `curl.exe` in `%TEMP%` connecting to a public address | [PoC scenario 2](../../../docs/poc-live-workflow.md), [alert](../../../docs/images/wazuh/92-s2-alert-100921.png) |
+| 100921 | 12 | Executable in the user's `AppData\Local\Temp` opened an outbound connection to a non-private address (Sysmon EID 3), T1105 | renamed `curl.exe` in `%TEMP%` connecting to a public address | [PoC scenario 2](../../../docs/validation/poc-live-workflow.md), [alert](../../../docs/images/wazuh/92-s2-alert-100921.png) |
 
 Rules 100910, 100911 and 100921 have level 12 or higher, so the `custom-n8n` integration (`<level>12</level>`)
-forwards them to n8n.
+forwards them to n8n.\
 
 ## Noise reduction (`local_rules_noise_reduction.xml`)
 
