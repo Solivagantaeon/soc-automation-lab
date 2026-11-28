@@ -113,7 +113,7 @@ The test on 2026-11-02 produced the Wazuh alert at 23:36:28 and a successful n8n
 
 **How to build it:**
 
-1. Add a **Code** node immediately after the Webhook node in the Skeleton workflow.
+1. Add a **Code** node immediately after the Webhook node in the triage workflow (`SOC - Wazuh alert triage`).
 2. Name the node `Normalize` (or keep the current node name if it is already referenced elsewhere in the workflow).
 3. Set **Mode** to `Run Once for All Items`.
 4. Set **Language** to `JavaScript`.

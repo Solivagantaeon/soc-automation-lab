@@ -13,6 +13,8 @@ We start from `SOC - n8n E2E Skeleton`. It has five nodes (Webhook, MISP, two Co
 
 We extend the Skeleton with the stages below. Each stage has one owner, who builds it and fills in its section in this document while working on it.
 
+> **Where the stages ended up.** Each owner built the stage in a draft copy of the Skeleton. The stages were then combined into a new workflow, `SOC - Wazuh alert triage` (ID `JqM02cALddRCz3a4`, created on 13 November 2026). This is the published workflow that receives the Wazuh alerts, and its export is [`soar/n8n/workflows/soc-wazuh-alert-triage.json`](../../soar/n8n/workflows/soc-wazuh-alert-triage.json). The Skeleton itself (now named `SOC - n8n end to end`) still has its original five nodes.
+
 ```mermaid
 flowchart LR
     A[Webhook] --> B[Normalize]
